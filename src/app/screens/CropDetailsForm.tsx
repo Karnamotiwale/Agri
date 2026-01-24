@@ -76,7 +76,8 @@ export function CropDetailsForm() {
       location: 'Field',
       landArea: '1 Hectares of land',
       landSize: '1 Hectares of land',
-      sowingDate: formattedDate,
+      landSize: '1 Hectares',
+      sowingDate: sowingDate, // Use raw YYYY-MM-DD for DB compatibility
       sowingPeriod: sowingPeriod,
       currentStage: 'Planting Phase',
       stageDate: shortDate,

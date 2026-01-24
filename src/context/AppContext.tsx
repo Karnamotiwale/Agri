@@ -384,6 +384,10 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const login = useCallback(async (email?: string, phone?: string) => {
     // For phone/email login form
     if (email) {
+      // MOCK LOGIN: Bypassing real Supabase Auth for now to ensure access
+      console.log("Mock Login: Skipping Supabase Auth for", email);
+
+      /* 
       const defaultPassword = 'agrismart_password_123';
       // Try to sign in first
       const { error: signInError } = await authService.signIn(email, defaultPassword);
@@ -399,6 +403,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
           throw signUpError;
         }
       }
+      */
     }
     // Note: Phone auth mock not fully implemented in backend restore yet aside from 'login' dispatch
     // Use dispatch to ensure local state updates even if backend part is partial for phone
