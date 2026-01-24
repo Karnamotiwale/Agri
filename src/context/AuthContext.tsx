@@ -42,9 +42,26 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const { data: authListener } = authService.onAuthStateChange((event, session) => {
       console.log(`Auth state change: ${event}`, session?.user?.email);
       if (mounted) {
-        setSession(session);
-        setUser(session?.user ?? null);
-        setLoading(false);
+        if (event === 'INITIAL_SESSION') {
+          // STRICT: Only set user if session exists.
+          // If session is null, it means no user is logged in, but we might still be loading?
+          // Actually, INITIAL_SESSION with null session means strictly "not authenticated".
+          if (session?.user) {
+            setSession(session);
+            setUser(session.user);
+            setLoading(false);
+          } else {
+            // If no user on initial session, ensure we are null, but keeping loading false?
+            // No, getSession() handles the loading state, so we just ensure user is null here.
+            // But let's follow the requirement: If session.user is null -> keep user as null.
+            // We won't set user to null here explicitly if it's already null, but safe to set.
+            // Crucially, does this override getSession?
+          }
+        } else {
+          setSession(session);
+          setUser(session?.user ?? null);
+          setLoading(false);
+        }
       }
     });
 

@@ -270,7 +270,7 @@ const AppContext = createContext<AppContextValue | null>(null);
 export function AppProvider({ children }: { children: ReactNode }) {
   const [state, dispatch] = useReducer(appReducer, initialState);
 
-  const { user } = useAuth();
+  const { user, loading } = useAuth();
 
   // Helper to fetch initial data
   const fetchData = useCallback(async () => {
@@ -298,13 +298,15 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
   // Sync AuthContext state with AppContext state
   useEffect(() => {
+    if (loading) return; // Wait for auth check to complete
+
     if (user) {
       dispatch({ type: 'LOGIN', email: user.email, phone: user.phone });
       fetchData();
     } else {
       dispatch({ type: 'LOGOUT' });
     }
-  }, [user, fetchData]);
+  }, [user, loading, fetchData]);
 
   // Realtime Subscriptions with user_id filtering
   useEffect(() => {
@@ -313,7 +315,10 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
     const setupRealtimeSubscriptions = async () => {
       try {
+        if (loading) return;
+
         if (!user) {
+          // Only log if not loading, so we don't spam during initial load
           console.log('No authenticated user, skipping real-time subscriptions');
           return;
         }
@@ -378,7 +383,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
         supabase.removeChannel(cropsChannel);
       }
     };
-  }, [user, fetchData]);
+  }, [user, loading, fetchData]);
 
 
   const login = useCallback(async (email?: string, phone?: string) => {

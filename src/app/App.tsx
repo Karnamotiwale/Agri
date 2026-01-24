@@ -1,6 +1,7 @@
 import { BrowserRouter, Routes, Route, Navigate, Outlet } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { LoginScreen } from './screens/LoginScreen';
+import { AuthCallback } from './routes/AuthCallback';
 import { FarmRegistration } from './screens/FarmRegistration';
 import { CropRegistration } from './screens/CropRegistration';
 import { SensorGuide } from './screens/SensorGuide';
@@ -40,13 +41,8 @@ function ProtectedRoute() {
 function PublicRoute() {
   const { user, loading } = useAuth();
 
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center min-h-screen bg-gray-50">
-        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-green-500"></div>
-      </div>
-    );
-  }
+  // if (loading) return <Loading />; // REMOVED: Show login UI immediately
+  // if (user) return <Navigate ... />;
 
   if (user) {
     return <Navigate to="/dashboard" replace />;
@@ -62,6 +58,7 @@ export default function App() {
         {/* Public Routes */}
         <Route element={<PublicRoute />}>
           <Route path="/login" element={<LoginScreen />} />
+          <Route path="/auth/callback" element={<AuthCallback />} />
           <Route path="/" element={<Navigate to="/login" replace />} />
         </Route>
 

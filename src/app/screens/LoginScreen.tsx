@@ -2,18 +2,20 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Sprout, Mail, Phone, ArrowRight, Loader2, AlertCircle } from 'lucide-react';
 import { useApp } from '../../context/AppContext';
+import { useAuth } from '../../context/AuthContext';
 
 export function LoginScreen() {
   const navigate = useNavigate();
   const { login, loginWithGoogle, auth } = useApp();
+  const { user, loading } = useAuth();
 
   // Auto-redirect if logged in
   useEffect(() => {
-    if (auth.isLoggedIn) {
+    if (!loading && user) {
       console.log("LoginScreen: User is logged in, redirecting to dashboard...");
       navigate(auth.hasCompletedOnboarding ? '/dashboard' : '/action-selection');
     }
-  }, [auth.isLoggedIn, auth.hasCompletedOnboarding, navigate]);
+  }, [user, loading, auth.hasCompletedOnboarding, navigate]);
 
   // Login Method State
   const [loginMethod, setLoginMethod] = useState<'phone' | 'email'>('phone');
@@ -78,11 +80,13 @@ export function LoginScreen() {
   const handleGoogleLogin = async () => {
     try {
       setError(null);
+      setIsLoading(true);
       await loginWithGoogle();
       // Note: Redirect will happen, so loading state persists until unload
     } catch (err: any) {
       console.error("Google login failed", err);
       setError("Google Login failed. Please try again or check your internet connection.");
+      setIsLoading(false);
     }
   };
 
@@ -179,7 +183,25 @@ export function LoginScreen() {
                 )}
               </button>
 
-              {/* Google Login Removed by User Request */}
+              <div className="flex items-center gap-4 my-6">
+                <div className="h-px bg-gray-200 flex-1"></div>
+                <span className="text-sm text-gray-400 font-medium">Or</span>
+                <div className="h-px bg-gray-200 flex-1"></div>
+              </div>
+
+              <button
+                type="button"
+                onClick={handleGoogleLogin}
+                disabled={isLoading}
+                className="w-full bg-white text-gray-700 border border-gray-200 py-4 rounded-xl font-semibold text-lg hover:bg-gray-50 hover:shadow-md hover:border-gray-300 active:scale-[0.98] transition-all flex items-center justify-center gap-3 group disabled:opacity-70 disabled:cursor-not-allowed"
+              >
+                {isLoading && loginMethod !== 'phone' && loginMethod !== 'email' ? (
+                  <Loader2 className="w-6 h-6 animate-spin text-gray-600" />
+                ) : (
+                  <img src="https://www.svgrepo.com/show/475656/google-color.svg" className="w-6 h-6" alt="Google" />
+                )}
+                Continue with Google
+              </button>
 
             </div>
           ) : (
