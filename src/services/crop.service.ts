@@ -9,8 +9,11 @@ export const cropService = {
         try {
             const userId = await getCurrentUserId();
             if (!userId) {
+                console.error("CropService: No user ID found during fetch");
                 throw new Error('User not authenticated');
             }
+
+            console.log("CropService: Fetching crops for user", userId);
 
             const { data, error } = await supabase
                 .from('crops')
@@ -18,7 +21,12 @@ export const cropService = {
                 .eq('user_id', userId)
                 .order('created_at', { ascending: false });
 
-            if (error) throw error;
+            if (error) {
+                console.error("CropService: Supabase error", error);
+                throw error;
+            }
+
+            console.log("CropService: Fetched data", data);
 
             return (data || []).map((c: any) => ({
                 id: c.id,

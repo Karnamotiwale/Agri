@@ -291,8 +291,9 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
       dispatch({ type: 'SET_FARMS', farms: farmsWithCrops });
       dispatch({ type: 'ADD_CROPS', crops });
-    } catch (err) {
-      console.error("Failed to fetch initial data", err);
+    } catch (err: any) {
+      console.error("Failed to fetch initial data:", err);
+      // Optional: Add a UI notification here using a toast if available
     }
   }, []);
 
