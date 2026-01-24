@@ -11,40 +11,33 @@ export function FarmDetailsForm() {
   const { addFarm } = useApp();
   const [farmName, setFarmName] = useState('');
   const [totalArea, setTotalArea] = useState('');
-  const [showMap, setShowMap] = useState(false);
-  const [farmLocation, setFarmLocation] = useState<{ x: number; y: number } | null>(null);
+  // Location removed by request, defaulting to 0,0 in submit
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const mapRef = useRef<HTMLDivElement>(null);
-
-  const handleMapClick = (e: React.MouseEvent<HTMLDivElement>) => {
-    if (!mapRef.current) return;
-    const rect = mapRef.current.getBoundingClientRect();
-    const x = ((e.clientX - rect.left) / rect.width) * 100;
-    const y = ((e.clientY - rect.top) / rect.height) * 100;
-    setFarmLocation({ x, y });
-  };
 
   const handleSubmit = async () => {
-    if (!farmName || !totalArea || !farmLocation) {
-      toast.error('Please fill all fields', 'Farm name, area, and location are required');
+    if (!farmName || !totalArea) {
+      toast.error('Please fill all fields', 'Farm name and area are required');
       return;
     }
 
     setIsSubmitting(true);
 
     try {
-      const lands: LandLocation[] = farmLocation ? [{
+      // Default location since map is removed
+      const defaultLocation = { x: 0, y: 0 };
+
+      const lands: LandLocation[] = [{
         id: 'temp-land',
         name: 'Main Farm',
         area: parseFloat(totalArea),
-        x: farmLocation.x,
-        y: farmLocation.y,
-      }] : [];
+        x: defaultLocation.x,
+        y: defaultLocation.y,
+      }];
 
       const farm: Farm = {
         id: '', // Will be set by database
         name: farmName,
-        location: 'Marked on map',
+        location: 'Not Specified',
         area: `${totalArea} acres`,
         lands: lands,
         crops: [],
@@ -66,7 +59,7 @@ export function FarmDetailsForm() {
     }
   };
 
-  const isFormValid = farmName && totalArea && farmLocation && !isSubmitting;
+  const isFormValid = farmName && totalArea && !isSubmitting;
 
   return (
     <div className="min-h-screen bg-white flex flex-col">
@@ -116,61 +109,7 @@ export function FarmDetailsForm() {
               />
             </div>
 
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Land Details
-              </label>
-              {!showMap ? (
-                <button
-                  onClick={() => setShowMap(true)}
-                  disabled={isSubmitting}
-                  className="w-full px-4 py-4 bg-gradient-to-br from-green-50 to-green-100 border-2 border-green-200 rounded-2xl hover:border-green-300 hover:shadow-md transition-all flex items-center justify-center gap-2 text-green-700 font-semibold disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  <MapPin className="w-5 h-5" />
-                  Set Location on Map
-                </button>
-              ) : (
-                <div className="space-y-4">
-                  <div
-                    ref={mapRef}
-                    onClick={handleMapClick}
-                    className="w-full h-64 bg-[#e6f0e6] rounded-2xl relative overflow-hidden cursor-crosshair border-2 border-green-200"
-                    style={{
-                      backgroundImage: 'radial-gradient(#c2e0c2 1px, transparent 1px)',
-                      backgroundSize: '20px 20px'
-                    }}
-                  >
-                    {farmLocation && (
-                      <div
-                        className="absolute transform -translate-x-1/2 -translate-y-full"
-                        style={{ left: `${farmLocation.x}%`, top: `${farmLocation.y}%` }}
-                      >
-                        <MapPin className="w-10 h-10 text-green-600" fill="currentColor" />
-                      </div>
-                    )}
-                    {!farmLocation && (
-                      <div className="absolute inset-0 flex items-center justify-center">
-                        <p className="bg-white/90 backdrop-blur px-4 py-2 rounded-full text-green-800 font-medium text-sm">
-                          Click to mark farm location
-                        </p>
-                      </div>
-                    )}
-                  </div>
-                  {farmLocation && (
-                    <button
-                      onClick={() => {
-                        setFarmLocation(null);
-                        setShowMap(false);
-                      }}
-                      disabled={isSubmitting}
-                      className="w-full px-4 py-3 bg-gray-100 text-gray-700 rounded-xl font-medium hover:bg-gray-200 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                    >
-                      Change Location
-                    </button>
-                  )}
-                </div>
-              )}
-            </div>
+            {/* Location Map Removed as per request */}
           </div>
         </div>
 

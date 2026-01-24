@@ -1,235 +1,248 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Sprout, Mail, Phone, ArrowRight } from 'lucide-react';
+import { Sprout, Mail, Phone, ArrowRight, Loader2, AlertCircle } from 'lucide-react';
 import { useApp } from '../../context/AppContext';
 
 export function LoginScreen() {
   const navigate = useNavigate();
   const { login, loginWithGoogle, auth } = useApp();
+
+  // Auto-redirect if logged in
+  useEffect(() => {
+    if (auth.isLoggedIn) {
+      console.log("LoginScreen: User is logged in, redirecting to dashboard...");
+      navigate(auth.hasCompletedOnboarding ? '/dashboard' : '/action-selection');
+    }
+  }, [auth.isLoggedIn, auth.hasCompletedOnboarding, navigate]);
+
+  // Login Method State
   const [loginMethod, setLoginMethod] = useState<'phone' | 'email'>('phone');
+
+  // Form State
   const [phoneNumber, setPhoneNumber] = useState('');
   const [email, setEmail] = useState('');
-  const [showOTP, setShowOTP] = useState(false);
   const [otp, setOtp] = useState('');
+  const [showOTP, setShowOTP] = useState(false);
+
+  // UI State
+  const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const handleSendOTP = () => {
+  const handleSendOTP = async () => {
     setError(null);
+    setIsLoading(true);
+
+    // Simulate network delay for better UX
+    await new Promise(resolve => setTimeout(resolve, 800));
+
     if (loginMethod === 'phone') {
       const digits = phoneNumber.replace(/\D/g, '');
       if (digits.length < 10) {
-        setError('Enter a valid 10-digit phone number.');
+        setError('Please enter a valid 10-digit phone number.');
+        setIsLoading(false);
         return;
       }
     } else {
       if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-        setError('Enter a valid email address.');
+        setError('Please enter a valid email address.');
+        setIsLoading(false);
         return;
       }
     }
+
     setShowOTP(true);
+    setIsLoading(false);
   };
 
   const handleVerifyOTP = async () => {
     setError(null);
     if (otp.length !== 6) {
-      setError('Enter the 6-digit code.');
+      setError('Please enter the 6-digit code sent to your device.');
       return;
     }
 
-    // For demo/prototype: we accept any 6 digit code. 
-    // In production, this should verify against backend.
-    // The previous logic called login() which did a password sign-in.
+    setIsLoading(true);
 
     try {
+      // For demo/prototype: we accept any 6 digit code.
       await login(loginMethod === 'email' ? email : undefined, loginMethod === 'phone' ? phoneNumber : undefined);
       navigate(auth.hasCompletedOnboarding ? '/dashboard' : '/action-selection');
     } catch (err: any) {
       console.error("Login failed", err);
-      setError(err.message || "Login failed. Please try again.");
+      setError(err.message || "Verification failed. Please try again.");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleGoogleLogin = async () => {
+    try {
+      setError(null);
+      await loginWithGoogle();
+      // Note: Redirect will happen, so loading state persists until unload
+    } catch (err: any) {
+      console.error("Google login failed", err);
+      setError("Google Login failed. Please try again or check your internet connection.");
     }
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-green-50 via-white to-blue-50/30 flex flex-col items-center justify-center p-6">
-      <div className="max-w-md w-full">
-        {/* Logo and Title */}
-        <div className="text-center mb-10">
-          <div className="inline-flex items-center justify-center w-28 h-28 bg-gradient-to-br from-green-100 to-green-200 rounded-3xl mb-6 relative shadow-lg shadow-green-900/10">
-            <Sprout className="w-14 h-14 text-green-600" />
-            <div className="absolute inset-0 bg-green-200 rounded-3xl animate-ping opacity-20"></div>
+    <div className="min-h-screen relative overflow-hidden flex items-center justify-center p-4">
+      {/* Background with modern abstract shapes */}
+      <div className="absolute inset-0 bg-[#F0FDF4]">
+        <div className="absolute top-[-10%] right-[-5%] w-[500px] h-[500px] bg-green-200/40 rounded-full blur-[100px]" />
+        <div className="absolute bottom-[-10%] left-[-10%] w-[600px] h-[600px] bg-emerald-200/30 rounded-full blur-[120px]" />
+      </div>
+
+      <div className="max-w-[440px] w-full relative z-10">
+
+        {/* Brand Header */}
+        <div className="text-center mb-8 animate-fade-in-down">
+          <div className="inline-flex items-center justify-center w-20 h-20 bg-gradient-to-br from-green-500 to-emerald-600 rounded-2xl mb-6 shadow-xl shadow-green-500/20 rotate-3 hover:rotate-6 transition-transform duration-300">
+            <Sprout className="w-10 h-10 text-white" strokeWidth={2.5} />
           </div>
-          <h1 className="text-4xl font-bold text-gray-900 mb-2 bg-gradient-to-r from-green-700 to-green-600 bg-clip-text text-transparent">
-            AgriSmart
+          <h1 className="text-3xl font-bold text-gray-900 mb-2 tracking-tight">
+            Welcome to <span className="text-transparent bg-clip-text bg-gradient-to-r from-green-600 to-emerald-600">AgriSmart</span>
           </h1>
-          <p className="text-gray-600 font-medium text-base">
-            Your Digital Farming Companion
-          </p>
+          <p className="text-gray-500 font-medium">Your intelligent farming companion</p>
         </div>
 
-        {/* Login Card */}
-        <div className="bg-white/80 backdrop-blur-sm p-2 rounded-3xl shadow-xl shadow-gray-900/10 border border-gray-100/50">
+        {/* Main Card */}
+        <div className="bg-white/70 backdrop-blur-xl rounded-[32px] p-8 shadow-2xl shadow-gray-200/50 border border-white/50 ring-1 ring-gray-100">
+
           {!showOTP ? (
-            <>
+            <div className="animate-fade-in">
               {/* Login Method Toggle */}
-              <div className="flex gap-2 p-1 bg-gradient-to-r from-gray-50 to-gray-50/50 rounded-2xl mb-8 shadow-inner">
+              <div className="flex p-1.5 bg-gray-100/80 rounded-2xl mb-8 relative">
+                <div
+                  className={`absolute top-1.5 bottom-1.5 w-[calc(50%-4px)] bg-white rounded-xl shadow-sm transition-all duration-300 ease-out ${loginMethod === 'email' ? 'translate-x-[calc(100%+2px)]' : 'translate-x-0'
+                    }`}
+                />
                 <button
-                  type="button"
                   onClick={() => setLoginMethod('phone')}
-                  className={`flex-1 py-3 px-4 rounded-xl font-semibold text-sm transition-all duration-300 ${loginMethod === 'phone'
-                    ? 'bg-white text-green-700 shadow-md shadow-green-900/10'
-                    : 'text-gray-500 hover:text-gray-700'
+                  className={`flex-1 relative z-10 py-2.5 text-sm font-semibold rounded-xl transition-colors duration-300 ${loginMethod === 'phone' ? 'text-gray-900' : 'text-gray-500 hover:text-gray-700'
                     }`}
                 >
-                  Phone Number
+                  Phone
                 </button>
                 <button
-                  type="button"
                   onClick={() => setLoginMethod('email')}
-                  className={`flex-1 py-3 px-4 rounded-xl font-semibold text-sm transition-all duration-300 ${loginMethod === 'email'
-                    ? 'bg-white text-green-700 shadow-md shadow-green-900/10'
-                    : 'text-gray-500 hover:text-gray-700'
+                  className={`flex-1 relative z-10 py-2.5 text-sm font-semibold rounded-xl transition-colors duration-300 ${loginMethod === 'email' ? 'text-gray-900' : 'text-gray-500 hover:text-gray-700'
                     }`}
                 >
-                  Email Address
+                  Email
                 </button>
               </div>
 
-              {/* Input Field */}
-              <div className="mb-8">
-                {loginMethod === 'phone' ? (
-                  <div className="space-y-2">
-                    <label className="text-sm font-medium text-gray-700 ml-1">
-                      Phone Number
-                    </label>
-                    <div className="relative">
-                      <div className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400">
-                        <Phone className="w-5 h-5" />
-                      </div>
-                      <input
-                        type="tel"
-                        value={phoneNumber}
-                        onChange={(e) => setPhoneNumber(e.target.value)}
-                        placeholder="+91 98765 43210"
-                        className="w-full pl-12 pr-4 py-4 bg-gradient-to-br from-gray-50 to-gray-50/80 border border-gray-200/50 rounded-2xl focus:bg-white focus:border-green-500 focus:ring-4 focus:ring-green-500/15 focus:shadow-lg focus:shadow-green-500/10 transition-all outline-none text-gray-900 font-medium"
-                      />
+              {/* Input Fields */}
+              <div className="space-y-4 mb-8">
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 mb-2 ml-1">
+                    {loginMethod === 'phone' ? 'Phone Number' : 'Email Address'}
+                  </label>
+                  <div className="relative group">
+                    <div className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-green-600 transition-colors">
+                      {loginMethod === 'phone' ? <Phone className="w-5 h-5" /> : <Mail className="w-5 h-5" />}
                     </div>
+                    <input
+                      type={loginMethod === 'phone' ? 'tel' : 'email'}
+                      value={loginMethod === 'phone' ? phoneNumber : email}
+                      onChange={(e) => loginMethod === 'phone' ? setPhoneNumber(e.target.value) : setEmail(e.target.value)}
+                      placeholder={loginMethod === 'phone' ? "+91 98765 43210" : "farmer@example.com"}
+                      className="w-full pl-12 pr-4 py-3.5 bg-white border border-gray-200 rounded-xl focus:border-green-500 focus:ring-4 focus:ring-green-500/10 transition-all outline-none font-medium text-gray-900 placeholder:text-gray-400"
+                    />
                   </div>
-                ) : (
-                  <div className="space-y-2">
-                    <label className="text-sm font-medium text-gray-700 ml-1">
-                      Email Address
-                    </label>
-                    <div className="relative">
-                      <div className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400">
-                        <Mail className="w-5 h-5" />
-                      </div>
-                      <input
-                        type="email"
-                        value={email}
-                        onChange={(e) => setEmail(e.target.value)}
-                        placeholder="farmer@example.com"
-                        className="w-full pl-12 pr-4 py-4 bg-gradient-to-br from-gray-50 to-gray-50/80 border border-gray-200/50 rounded-2xl focus:bg-white focus:border-green-500 focus:ring-4 focus:ring-green-500/15 focus:shadow-lg focus:shadow-green-500/10 transition-all outline-none text-gray-900 font-medium"
-                      />
-                    </div>
-                  </div>
-                )}
+                </div>
               </div>
 
-              {error && <p className="text-sm text-red-600 mb-4 font-medium bg-red-50 px-3 py-2 rounded-xl border border-red-100">{error}</p>}
-              {/* Send OTP Button */}
+              {/* Error Message */}
+              {error && (
+                <div className="mb-6 p-3 bg-red-50 border border-red-100 rounded-xl flex items-start gap-3 animate-shake">
+                  <AlertCircle className="w-5 h-5 text-red-500 flex-shrink-0 mt-0.5" />
+                  <p className="text-sm text-red-600 font-medium leading-tight">{error}</p>
+                </div>
+              )}
+
+              {/* Submit Button */}
               <button
                 onClick={handleSendOTP}
-                className="w-full bg-gradient-to-r from-green-600 to-green-700 text-white py-4 rounded-2xl font-semibold text-lg hover:from-green-700 hover:to-green-800 hover:shadow-xl hover:shadow-green-600/30 active:scale-[0.98] transition-all flex items-center justify-center gap-2 group shadow-lg shadow-green-600/25"
+                disabled={isLoading}
+                className="w-full bg-gradient-to-r from-green-600 to-emerald-600 text-white py-4 rounded-xl font-bold text-lg shadow-lg shadow-green-600/20 hover:shadow-xl hover:shadow-green-600/30 hover:-translate-y-0.5 active:translate-y-0 active:scale-[0.98] transition-all flex items-center justify-center gap-2 disabled:opacity-70 disabled:cursor-not-allowed group"
               >
-                Get OTP
-                <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
+                {isLoading ? (
+                  <Loader2 className="w-6 h-6 animate-spin" />
+                ) : (
+                  <>
+                    Get OTP Code
+                    <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
+                  </>
+                )}
               </button>
 
-              <div className="flex items-center gap-4 my-6">
-                <div className="h-px bg-gray-200 flex-1"></div>
-                <span className="text-sm text-gray-400 font-medium">Or</span>
-                <div className="h-px bg-gray-200 flex-1"></div>
-              </div>
+              {/* Google Login Removed by User Request */}
 
-              {/* Google Login Button */}
-              <button
-                type="button"
-                onClick={async (e) => {
-                  e.preventDefault();
-                  console.log("Google Login Clicked");
-                  await loginWithGoogle();
-                }}
-                className="w-full bg-white text-gray-700 border border-gray-200 py-4 rounded-2xl font-semibold text-lg hover:bg-gray-50 hover:shadow-md hover:border-gray-300 active:scale-[0.98] transition-all flex items-center justify-center gap-3 group"
-              >
-                <img src="https://www.svgrepo.com/show/475656/google-color.svg" className="w-6 h-6" alt="Google" />
-                Continue with Google
-              </button>
-            </>
+            </div>
           ) : (
-            <>
+            <div className="animate-fade-in-up">
               <div className="text-center mb-8">
-                <h2 className="text-xl font-semibold text-gray-900 mb-2">
-                  Verify OTP
-                </h2>
+                <div className="w-16 h-16 bg-blue-50 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <Mail className="w-8 h-8 text-blue-500" />
+                </div>
+                <h2 className="text-xl font-bold text-gray-900 mb-2">Verification Code</h2>
                 <p className="text-gray-500 text-sm">
-                  Sent to {loginMethod === 'phone' ? phoneNumber : email}
+                  We sent a code to <br />
+                  <span className="text-gray-900 font-semibold">{loginMethod === 'phone' ? phoneNumber : email}</span>
                 </p>
               </div>
 
-              {/* OTP Input */}
               <div className="mb-8">
                 <input
+                  autoFocus
                   type="text"
-                  value={otp}
-                  onChange={(e) => setOtp(e.target.value)}
-                  placeholder="1 2 3 4 5 6"
                   maxLength={6}
-                  className="w-full px-4 py-5 bg-gradient-to-br from-gray-50 to-gray-50/80 border border-gray-200/50 rounded-2xl focus:bg-white focus:border-green-500 focus:ring-4 focus:ring-green-500/15 focus:shadow-lg focus:shadow-green-500/10 transition-all outline-none text-center text-3xl font-bold tracking-[0.5em] text-gray-900 placeholder:text-gray-300"
+                  value={otp}
+                  onChange={(e) => setOtp(e.target.value.replace(/\D/g, ''))}
+                  placeholder="000 000"
+                  className="w-full py-4 text-center text-3xl font-bold tracking-[0.5em] text-gray-900 bg-gray-50 border border-gray-200 rounded-xl focus:bg-white focus:border-green-500 focus:ring-4 focus:ring-green-500/10 transition-all outline-none placeholder:text-gray-300"
                 />
               </div>
 
-              <div className="mb-8 text-center">
-                <button
-                  onClick={() => setError(null)}
-                  className="text-sm font-semibold text-green-600 hover:text-green-700 transition-colors hover:underline"
-                >
-                  Resend Code
-                </button>
-              </div>
+              {error && (
+                <div className="mb-6 p-3 bg-red-50 border border-red-100 rounded-xl flex items-center gap-2 justify-center">
+                  <AlertCircle className="w-4 h-4 text-red-500" />
+                  <p className="text-sm text-red-600 font-medium">{error}</p>
+                </div>
+              )}
 
-              {error && <p className="text-sm text-red-600 mb-4 font-medium bg-red-50 px-3 py-2 rounded-xl border border-red-100">{error}</p>}
-              {/* Verify Button */}
               <button
                 onClick={handleVerifyOTP}
-                className="w-full bg-gradient-to-r from-green-600 to-green-700 text-white py-4 rounded-2xl font-semibold text-lg hover:from-green-700 hover:to-green-800 hover:shadow-xl hover:shadow-green-600/30 active:scale-[0.98] transition-all shadow-lg shadow-green-600/25"
+                disabled={isLoading}
+                className="w-full bg-gray-900 text-white py-4 rounded-xl font-bold text-lg shadow-lg hover:shadow-xl hover:-translate-y-0.5 active:translate-y-0 active:scale-[0.98] transition-all flex items-center justify-center gap-2 disabled:opacity-70"
               >
-                Verify & Login
+                {isLoading ? <Loader2 className="w-6 h-6 animate-spin" /> : "Verify & Login"}
               </button>
 
               <button
                 onClick={() => setShowOTP(false)}
-                className="w-full mt-4 text-gray-500 py-3 font-medium hover:text-gray-700 transition"
+                className="w-full mt-4 py-3 text-gray-500 font-medium hover:text-gray-900 transition-colors text-sm"
               >
-                Change {loginMethod === 'phone' ? 'Phone' : 'Email'}
+                Back to Login
               </button>
-            </>
-          )}
-
-          {/* New User Link */}
-          {!showOTP && (
-            <div className="mt-8 text-center">
-              <p className="text-gray-500">
-                New to AgriSmart?{' '}
-                <button
-                  onClick={() => navigate('/action-selection')}
-                  className="text-green-600 font-semibold hover:text-green-700 ml-1"
-                >
-                  Register Farm
-                </button>
-              </p>
             </div>
           )}
+        </div>
+
+        {/* Footer */}
+        <div className="mt-8 text-center">
+          <p className="text-sm text-gray-500">
+            Don't have an account?
+            <button
+              onClick={() => navigate('/action-selection')}
+              className="ml-1 font-semibold text-green-600 hover:text-green-700 hover:underline transition-all"
+            >
+              Sign up now
+            </button>
+          </p>
         </div>
       </div>
     </div>

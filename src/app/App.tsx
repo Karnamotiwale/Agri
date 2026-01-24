@@ -20,7 +20,7 @@ export default function App() {
   return (
     <BrowserRouter>
       <Routes>
-        <Route path="/" element={<Navigate to="/login" replace />} />
+        <Route path="/" element={<LoginScreen />} />
         <Route path="/login" element={<LoginScreen />} />
         {/* Redirect old farm-registration route to new action-selection */}
         <Route path="/farm-registration" element={<Navigate to="/action-selection" replace />} />
