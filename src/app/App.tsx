@@ -1,4 +1,5 @@
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, Navigate, Outlet } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext';
 import { LoginScreen } from './screens/LoginScreen';
 import { FarmRegistration } from './screens/FarmRegistration';
 import { CropRegistration } from './screens/CropRegistration';
@@ -16,30 +17,76 @@ import { ActionSelection } from './screens/ActionSelection';
 import { FarmDetailsForm } from './screens/FarmDetailsForm';
 import { CropDetailsForm } from './screens/CropDetailsForm';
 
+// Helper component for protected routes
+function ProtectedRoute() {
+  const { user, loading } = useAuth();
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen bg-gray-50">
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-green-500"></div>
+      </div>
+    );
+  }
+
+  if (!user) {
+    return <Navigate to="/login" replace />;
+  }
+
+  return <Outlet />;
+}
+
+// Helper component for public-only routes (like login)
+function PublicRoute() {
+  const { user, loading } = useAuth();
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen bg-gray-50">
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-green-500"></div>
+      </div>
+    );
+  }
+
+  if (user) {
+    return <Navigate to="/dashboard" replace />;
+  }
+
+  return <Outlet />;
+}
+
 export default function App() {
   return (
     <BrowserRouter>
       <Routes>
-        <Route path="/" element={<Navigate to="/login" replace />} />
-        <Route path="/login" element={<LoginScreen />} />
-        {/* Redirect old farm-registration route to new action-selection */}
-        <Route path="/farm-registration" element={<Navigate to="/action-selection" replace />} />
-        <Route path="/crop-registration" element={<CropRegistration />} />
-        <Route path="/sensor-guide" element={<SensorGuide />} />
-        <Route path="/dashboard" element={<Dashboard />} />
-        <Route path="/my-farm" element={<MyFarm />} />
-        <Route path="/profile" element={<ProfileScreen />} />
-        <Route path="/action-selection" element={<ActionSelection />} />
-        <Route path="/farm-details" element={<FarmDetailsForm />} />
-        <Route path="/crop-details" element={<CropDetailsForm />} />
+        {/* Public Routes */}
+        <Route element={<PublicRoute />}>
+          <Route path="/login" element={<LoginScreen />} />
+          <Route path="/" element={<Navigate to="/login" replace />} />
+        </Route>
 
-        {/* Crop Flow Routes */}
-        <Route path="/crop/:id/overview" element={<CropOverview />} />
-        <Route path="/crop/:id/details" element={<CropDetails />} />
-        <Route path="/crop/:id/full-details" element={<CropFullDetails />} />
-        <Route path="/crop/:id/health" element={<CropHealth />} />
-        <Route path="/crop/:id/statistics" element={<CropStatistics />} />
-        <Route path="/crop/:id/monitoring" element={<CropMonitoring />} />
+        {/* Protected Routes */}
+        <Route element={<ProtectedRoute />}>
+          {/* Redirect old farm-registration route to new action-selection */}
+          <Route path="/farm-registration" element={<Navigate to="/action-selection" replace />} />
+
+          <Route path="/crop-registration" element={<CropRegistration />} />
+          <Route path="/sensor-guide" element={<SensorGuide />} />
+          <Route path="/dashboard" element={<Dashboard />} />
+          <Route path="/my-farm" element={<MyFarm />} />
+          <Route path="/profile" element={<ProfileScreen />} />
+          <Route path="/action-selection" element={<ActionSelection />} />
+          <Route path="/farm-details" element={<FarmDetailsForm />} />
+          <Route path="/crop-details" element={<CropDetailsForm />} />
+
+          {/* Crop Flow Routes */}
+          <Route path="/crop/:id/overview" element={<CropOverview />} />
+          <Route path="/crop/:id/details" element={<CropDetails />} />
+          <Route path="/crop/:id/full-details" element={<CropFullDetails />} />
+          <Route path="/crop/:id/health" element={<CropHealth />} />
+          <Route path="/crop/:id/statistics" element={<CropStatistics />} />
+          <Route path="/crop/:id/monitoring" element={<CropMonitoring />} />
+        </Route>
       </Routes>
     </BrowserRouter>
   );

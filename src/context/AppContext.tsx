@@ -1,4 +1,5 @@
 import React, { createContext, useContext, useReducer, useCallback, ReactNode, useEffect } from 'react';
+import { useAuth } from './AuthContext';
 import { supabase } from '../lib/supabase';
 import { authService } from '../services/auth.service';
 import { farmService } from '../services/farm.service';
@@ -269,6 +270,8 @@ const AppContext = createContext<AppContextValue | null>(null);
 export function AppProvider({ children }: { children: ReactNode }) {
   const [state, dispatch] = useReducer(appReducer, initialState);
 
+  const { user } = useAuth();
+
   // Helper to fetch initial data
   const fetchData = useCallback(async () => {
     try {
@@ -293,35 +296,15 @@ export function AppProvider({ children }: { children: ReactNode }) {
     }
   }, []);
 
-  // Auth Initialization
+  // Sync AuthContext state with AppContext state
   useEffect(() => {
-    const initAuth = async () => {
-      try {
-        const { session } = await authService.getSession();
-        if (session?.user) {
-          dispatch({ type: 'LOGIN', email: session.user.email, phone: session.user.phone });
-          fetchData();
-        }
-      } catch (err) {
-        console.error('Error initializing auth:', err);
-      }
-    };
-    initAuth();
-
-    const { data: authListener } = authService.onAuthStateChange((event, session) => {
-      if (event === 'SIGNED_IN' && session?.user) {
-        dispatch({ type: 'LOGIN', email: session.user.email, phone: session.user.phone });
-        fetchData();
-      } else if (event === 'SIGNED_OUT') {
-        dispatch({ type: 'LOGOUT' });
-      }
-    });
-
-    return () => {
-      authListener.subscription.unsubscribe();
-    };
-  }, [fetchData]);
-
+    if (user) {
+      dispatch({ type: 'LOGIN', email: user.email, phone: user.phone });
+      fetchData();
+    } else {
+      dispatch({ type: 'LOGOUT' });
+    }
+  }, [user, fetchData]);
 
   // Realtime Subscriptions with user_id filtering
   useEffect(() => {
@@ -330,8 +313,6 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
     const setupRealtimeSubscriptions = async () => {
       try {
-        const { data: { user } } = await supabase.auth.getUser();
-
         if (!user) {
           console.log('No authenticated user, skipping real-time subscriptions');
           return;
@@ -397,7 +378,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
         supabase.removeChannel(cropsChannel);
       }
     };
-  }, [fetchData]);
+  }, [user, fetchData]);
 
 
   const login = useCallback(async (email?: string, phone?: string) => {
