@@ -1,7 +1,8 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Header } from '@/app/components/Header';
-import { ArrowRight, Calendar, Sprout, Database } from 'lucide-react';
+import { ArrowRight, Calendar, Sprout, Database, Camera, Upload, X } from 'lucide-react';
+import { useRef } from 'react';
 import { useApp } from '../../context/AppContext';
 import type { Crop, CropStage } from '../../context/AppContext';
 
@@ -34,6 +35,9 @@ export function CropDetailsForm() {
   const [sowingDate, setSowingDate] = useState('');
   const [seedsPlanted, setSeedsPlanted] = useState('');
   const [selectedFarmId, setSelectedFarmId] = useState('');
+  const [customImage, setCustomImage] = useState<string | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const cameraInputRef = useRef<HTMLInputElement>(null);
 
   const formatDate = (dateStr: string): string => {
     if (!dateStr) return '';
@@ -59,7 +63,7 @@ export function CropDetailsForm() {
 
     const formattedDate = formatDate(sowingDate);
     const shortDate = formatShortDate(sowingDate);
-    const cropImage = CROP_IMAGES[cropType.toLowerCase()] || CROP_IMAGES.default;
+    const cropImage = customImage || CROP_IMAGES[cropType.toLowerCase()] || CROP_IMAGES.default;
     const sowingPeriod = SOWING_PERIODS[cropType.toLowerCase()] || 'Jan – Dec';
 
     const defaultStages: CropStage[] = [
@@ -95,6 +99,25 @@ export function CropDetailsForm() {
 
   const isFormValid = cropName && cropType && sowingDate && seedsPlanted && selectedFarmId;
 
+  const handleImageUpload = (file: File) => {
+    if (file.size > 5 * 1024 * 1024) {
+      alert('Image size must be less than 5MB');
+      return;
+    }
+    if (!file.type.match(/^image\/(jpeg|jpg|png)$/)) {
+      alert('Please upload a JPG or PNG image');
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      const imageUrl = e.target?.result as string;
+      setCustomImage(imageUrl);
+    };
+    reader.readAsDataURL(file);
+  };
+
+
   return (
     <div className="min-h-screen bg-white flex flex-col">
       <Header
@@ -114,6 +137,60 @@ export function CropDetailsForm() {
               <h2 className="text-xl font-bold text-gray-900">Crop Information</h2>
               <p className="text-gray-600 text-sm font-medium mt-0.5">Add crop details</p>
             </div>
+          </div>
+
+          <div className="mb-6">
+            <label className="block text-sm font-semibold text-gray-700 mb-3">Crop Image</label>
+            
+            {customImage ? (
+              <div className="relative w-full h-48 rounded-2xl overflow-hidden shadow-md group">
+                <img src={customImage} alt="Crop preview" className="w-full h-full object-cover" />
+                <button
+                  onClick={() => setCustomImage(null)}
+                  className="absolute top-2 right-2 p-2 bg-black/50 hover:bg-black/70 text-white rounded-full transition-colors"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+            ) : (
+              <div className="grid grid-cols-2 gap-3">
+                <button
+                  onClick={() => cameraInputRef.current?.click()}
+                  className="flex flex-col items-center justify-center gap-2 p-6 rounded-2xl border-2 border-dashed border-gray-300 hover:border-green-500 hover:bg-green-50 transition-all group"
+                >
+                  <div className="w-12 h-12 rounded-full bg-green-100 flex items-center justify-center group-hover:bg-green-200 transition-colors">
+                    <Camera className="w-6 h-6 text-green-600" />
+                  </div>
+                  <span className="text-sm font-medium text-gray-600 group-hover:text-green-700">Capture</span>
+                </button>
+                
+                <button
+                  onClick={() => fileInputRef.current?.click()}
+                  className="flex flex-col items-center justify-center gap-2 p-6 rounded-2xl border-2 border-dashed border-gray-300 hover:border-green-500 hover:bg-green-50 transition-all group"
+                >
+                  <div className="w-12 h-12 rounded-full bg-blue-100 flex items-center justify-center group-hover:bg-blue-200 transition-colors">
+                    <Upload className="w-6 h-6 text-blue-600" />
+                  </div>
+                  <span className="text-sm font-medium text-gray-600 group-hover:text-blue-700">Upload</span>
+                </button>
+              </div>
+            )}
+
+            <input
+              ref={cameraInputRef}
+              type="file"
+              accept="image/*"
+              capture="environment"
+              className="hidden"
+              onChange={(e) => e.target.files?.[0] && handleImageUpload(e.target.files[0])}
+            />
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept="image/*"
+              className="hidden"
+              onChange={(e) => e.target.files?.[0] && handleImageUpload(e.target.files[0])}
+            />
           </div>
 
           <div className="space-y-6">

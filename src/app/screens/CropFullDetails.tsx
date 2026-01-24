@@ -29,6 +29,36 @@ export function CropFullDetails() {
       <Header title="Crop Details" showBack onBackClick={() => navigate('/dashboard')} />
 
       <div className="px-6 py-6 space-y-6">
+        {/* Growing Stages Section - Added as requested */}
+        <div className="bg-white rounded-3xl p-6 shadow-xl shadow-gray-900/10 border border-gray-100">
+          <h3 className="text-lg font-bold text-gray-900 mb-6 flex items-center gap-2">
+            <div className="w-1 h-5 bg-gradient-to-b from-green-500 to-green-600 rounded-full" />
+            Growing Stages
+          </h3>
+
+          <div className="relative pl-8">
+            <div className="absolute left-3 top-0 bottom-0 w-px border-l border-dashed border-green-300"></div>
+
+            <div className="space-y-6">
+              {crop.stages.map((stage: any, idx: number) => (
+                <div key={idx} className="relative">
+                  <div
+                    className={`absolute -left-[26px] top-1 w-4 h-4 rounded-full border-2 z-10 ${stage.isActive
+                      ? 'bg-green-600 border-green-600'
+                      : 'bg-white border-green-300'
+                      }`}
+                  />
+
+                  <div className={stage.isActive ? 'text-gray-900' : 'text-gray-400'}>
+                    <h4 className="font-bold text-base mb-1">{stage.name}</h4>
+                    <p className="text-sm">{stage.description}</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+
         {/* Live Sensor Data */}
         <div className="bg-white rounded-3xl p-6 shadow-xl shadow-gray-900/10 border border-gray-100">
           <h3 className="text-lg font-bold text-gray-900 mb-5 flex items-center gap-2">

@@ -51,7 +51,7 @@ export function Dashboard() {
               className="mt-1 flex-shrink-0 hover:scale-105 transition-transform duration-200"
             >
               <img
-                src="https://i.pravatar.cc/100"
+                src={useApp().auth.photoURL || "https://images.unsplash.com/photo-1633332755192-727a05c4013d?w=400&auto=format&fit=crop&q=60"}
                 alt="Profile"
                 className="w-11 h-11 rounded-full object-cover ring-3 ring-green-100 shadow-sm"
               />
@@ -127,7 +127,7 @@ export function Dashboard() {
       {/* Bottom Navigation */}
       <div className="fixed bottom-0 left-0 right-0 bg-white/95 backdrop-blur-sm border-t border-gray-200/80 px-6 py-3 z-[100] shadow-[0_-4px_20px_rgba(0,0,0,0.05)]">
         <div className="flex justify-between max-w-md mx-auto">
-          <button 
+          <button
             onClick={() => setActiveTab('home')}
             className="flex flex-col items-center gap-1 px-3 py-1.5 rounded-xl transition-all duration-200 hover:bg-green-50/50 active:scale-95"
           >
@@ -145,7 +145,7 @@ export function Dashboard() {
             <span className={`text-[10px] font-medium transition-colors ${activeTab === 'farms' ? 'text-green-600' : 'text-gray-500'}`}>Farms</span>
           </button>
 
-          <button 
+          <button
             onClick={() => setActiveTab('schemes')}
             className="flex flex-col items-center gap-1 px-3 py-1.5 rounded-xl transition-all duration-200 hover:bg-green-50/50 active:scale-95"
           >

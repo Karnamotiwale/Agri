@@ -57,6 +57,7 @@ export interface AuthState {
   isLoggedIn: boolean;
   email?: string;
   phone?: string;
+  photoURL?: string | null;
   hasCompletedOnboarding: boolean;
   isSystemReady: boolean;
 }
@@ -116,7 +117,7 @@ const initialCropControls: Record<string, CropControls> = {};
 // ---------------------------------------------------------------------------
 
 type AppAction =
-  | { type: 'LOGIN'; email?: string; phone?: string }
+  | { type: 'LOGIN'; email?: string; phone?: string; photoURL?: string | null }
   | { type: 'LOGOUT' }
   | { type: 'SET_ONBOARDING_COMPLETE' }
   | { type: 'SET_SYSTEM_READY' }
@@ -140,6 +141,7 @@ function appReducer(state: AppState, action: AppAction): AppState {
           isLoggedIn: true,
           email: action.email,
           phone: action.phone,
+          photoURL: action.photoURL,
         },
       };
     case 'LOGOUT':
@@ -302,7 +304,11 @@ export function AppProvider({ children }: { children: ReactNode }) {
     if (loading) return; // Wait for auth check to complete
 
     if (user) {
-      dispatch({ type: 'LOGIN', email: user.email, phone: user.phone });
+      console.log("User metadata:", user.user_metadata);
+      // Priority: user_metadata.avatar_url -> user_metadata.picture -> null
+      const photoURL = user.user_metadata?.avatar_url || user.user_metadata?.picture || null;
+
+      dispatch({ type: 'LOGIN', email: user.email, phone: user.phone, photoURL });
       fetchData();
     } else {
       dispatch({ type: 'LOGOUT' });
@@ -413,7 +419,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
     }
     // Note: Phone auth mock not fully implemented in backend restore yet aside from 'login' dispatch
     // Use dispatch to ensure local state updates even if backend part is partial for phone
-    dispatch({ type: 'LOGIN', email, phone });
+    dispatch({ type: 'LOGIN', email, phone, photoURL: null });
   }, []);
 
   const loginWithGoogle = useCallback(async () => {

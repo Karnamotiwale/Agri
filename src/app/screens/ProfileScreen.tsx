@@ -28,7 +28,7 @@ export function ProfileScreen() {
           <div className="flex flex-col items-center text-center">
             <div className="relative mb-5">
               <img
-                src="https://i.pravatar.cc/160"
+                src={auth.photoURL || "https://images.unsplash.com/photo-1633332755192-727a05c4013d?w=400&auto=format&fit=crop&q=60"}
                 alt="Profile"
                 className="w-28 h-28 rounded-full object-cover ring-4 ring-green-100 shadow-lg"
               />
@@ -99,7 +99,7 @@ export function ProfileScreen() {
         <div className="bg-white rounded-3xl shadow-xl shadow-gray-900/10 border border-gray-100/50 overflow-hidden mb-6">
           <div className="divide-y divide-gray-100/50">
             <button
-              onClick={() => {}}
+              onClick={() => { }}
               className="w-full px-5 py-4 flex items-center gap-4 hover:bg-gradient-to-r hover:from-gray-50 hover:to-transparent transition-all duration-200 text-left active:scale-[0.98]"
             >
               <div className="w-10 h-10 rounded-xl bg-gray-100 flex items-center justify-center">
