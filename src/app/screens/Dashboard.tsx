@@ -22,10 +22,12 @@ import { YieldPredictor } from '../../components/analytics/YieldPredictor';
 import { useApp } from '../../context/AppContext';
 import { useCropSensors } from '../../hooks/useCropSensors';
 import { ResourceUsageAnalytics } from '../../components/analytics/ResourceUsageAnalytics';
+import { useTranslation } from 'react-i18next';
 
 export function Dashboard() {
   const { getAllCrops, dashboardActiveTab, setDashboardTab, auth } = useApp();
   const navigate = useNavigate();
+  const { t } = useTranslation();
   const [selectedPlant, setSelectedPlant] = useState<{ id: string; name: string; location: string; image: string; farmId: string } | null>(null);
 
   const plants = getAllCrops().map((c) => ({

@@ -6,9 +6,11 @@ import {
     BarChart2, Landmark
 } from 'lucide-react';
 import { rlService, AIAction, AIPerformance } from '../../services/rl.service';
+import { useTranslation } from 'react-i18next';
 
 export function AIEngineDashboard() {
     const navigate = useNavigate();
+    const { t } = useTranslation();
     const [performance, setPerformance] = useState<AIPerformance | null>(null);
     const [actions, setActions] = useState<AIAction[]>([]);
     const [insights, setInsights] = useState<string[]>([]);
@@ -46,9 +48,9 @@ export function AIEngineDashboard() {
             <div className="bg-white border-b border-gray-200 px-6 py-5 sticky top-0 z-10 shadow-sm">
                 <h1 className="text-xl font-bold text-gray-900 flex items-center gap-2">
                     <Cpu className="w-6 h-6 text-purple-600" />
-                    AI Engine Dashboard
+                    {t('ai.title')}
                 </h1>
-                <p className="text-xs text-gray-500 mt-1">Real-time Reinforcement Learning Metrics</p>
+                <p className="text-xs text-gray-500 mt-1">{t('ai.subtitle')}</p>
             </div>
 
             <div className="p-6 space-y-6">
@@ -56,7 +58,7 @@ export function AIEngineDashboard() {
                 {/* 1. Performance Score Card */}
                 <div className="bg-white rounded-3xl p-6 shadow-xl shadow-purple-900/5 border border-purple-50">
                     <div className="flex items-center justify-between mb-4">
-                        <h2 className="text-sm font-bold text-gray-900 uppercase tracking-wider">AI Farming Efficiency</h2>
+                        <h2 className="text-sm font-bold text-gray-900 uppercase tracking-wider">{t('ai.farmingEfficiency')}</h2>
                         <span className="bg-purple-100 text-purple-700 text-[10px] font-bold px-2 py-1 rounded-full">RL MODEL V2.1</span>
                     </div>
 
@@ -100,22 +102,62 @@ export function AIEngineDashboard() {
                     </div>
                 </div>
 
-                {/* 2. Rewards Graph (Mock Visual) */}
-                <div className="bg-white rounded-3xl p-6 shadow-md border border-gray-100">
+                {/* 2. Rewards Graph (Enhanced) */}
+                <div className="bg-gradient-to-br from-blue-50 to-indigo-50 rounded-3xl p-6 shadow-xl border border-blue-100">
                     <h3 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
-                        <TrendingUp className="w-5 h-5 text-blue-500" />
+                        <TrendingUp className="w-5 h-5 text-blue-600" />
                         Reward History
+                        <span className="ml-auto text-xs bg-blue-100 text-blue-700 px-3 py-1 rounded-full font-bold">Last 7 Days</span>
                     </h3>
-                    <div className="h-40 flex items-end justify-between gap-2 px-2">
-                        {chartData.map((d, i) => (
-                            <div key={i} className="flex flex-col items-center gap-2 w-full">
-                                <div
-                                    className={`w-full rounded-t-lg transition-all duration-500 ${d.score > 0 ? 'bg-green-400' : 'bg-red-400'}`}
-                                    style={{ height: `${Math.abs(d.score)}%` }}
-                                />
-                                <span className="text-[10px] text-gray-400 font-medium">{d.date}</span>
-                            </div>
-                        ))}
+                    <div className="h-48 flex items-end justify-between gap-3 px-2 relative">
+                        {/* Zero line */}
+                        <div className="absolute left-0 right-0 bottom-1/2 h-px bg-gray-300 border-t-2 border-dashed border-gray-400"></div>
+
+                        {chartData.map((d, i) => {
+                            const isPositive = d.score > 0;
+                            const height = Math.abs(d.score);
+                            const maxHeight = 100;
+                            const barHeight = (height / maxHeight) * 100;
+
+                            return (
+                                <div key={i} className="flex flex-col items-center gap-2 w-full relative">
+                                    <div className="flex flex-col items-center justify-end h-24 w-full">
+                                        {isPositive ? (
+                                            <div
+                                                className="w-full rounded-t-xl transition-all duration-500 bg-gradient-to-t from-green-400 to-green-500 shadow-lg relative group cursor-pointer hover:scale-105"
+                                                style={{ height: `${barHeight}%` }}
+                                            >
+                                                <div className="absolute -top-8 left-1/2 -translate-x-1/2 bg-green-600 text-white text-xs font-bold px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap">
+                                                    +{d.score} pts
+                                                </div>
+                                            </div>
+                                        ) : (
+                                            <div className="w-full h-24 flex flex-col justify-start">
+                                                <div
+                                                    className="w-full rounded-b-xl transition-all duration-500 bg-gradient-to-b from-red-400 to-red-500 shadow-lg relative group cursor-pointer hover:scale-105"
+                                                    style={{ height: `${barHeight}%` }}
+                                                >
+                                                    <div className="absolute -bottom-8 left-1/2 -translate-x-1/2 bg-red-600 text-white text-xs font-bold px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap">
+                                                        {d.score} pts
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        )}
+                                    </div>
+                                    <span className="text-[10px] text-gray-600 font-bold mt-2">{d.date}</span>
+                                </div>
+                            );
+                        })}
+                    </div>
+                    <div className="flex justify-center gap-6 mt-6 pt-4 border-t border-blue-200">
+                        <div className="flex items-center gap-2">
+                            <div className="w-4 h-4 rounded bg-gradient-to-t from-green-400 to-green-500"></div>
+                            <span className="text-xs text-gray-600 font-medium">Positive Rewards</span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                            <div className="w-4 h-4 rounded bg-gradient-to-b from-red-400 to-red-500"></div>
+                            <span className="text-xs text-gray-600 font-medium">Negative Rewards</span>
+                        </div>
                     </div>
                 </div>
 
@@ -154,7 +196,7 @@ export function AIEngineDashboard() {
                                         <h4 className="font-bold text-gray-900 text-sm mt-0.5">{action.actionType}</h4>
                                     </div>
                                     <div className={`px-2 py-1 rounded text-xs font-bold ${action.reward > 0 ? 'bg-green-100 text-green-700' :
-                                            action.reward < 0 ? 'bg-red-100 text-red-700' : 'bg-gray-200 text-gray-600'
+                                        action.reward < 0 ? 'bg-red-100 text-red-700' : 'bg-gray-200 text-gray-600'
                                         }`}>
                                         {action.reward > 0 ? '+' : ''}{action.reward} pts
                                     </div>
@@ -164,7 +206,7 @@ export function AIEngineDashboard() {
                                 </p>
                                 <div className="flex items-center gap-3">
                                     <div className={`flex items-center gap-1 text-[10px] font-bold ${action.outcome === 'IMPROVED' ? 'text-green-600' :
-                                            action.outcome === 'WORSENED' ? 'text-red-600' : 'text-gray-500'
+                                        action.outcome === 'WORSENED' ? 'text-red-600' : 'text-gray-500'
                                         }`}>
                                         {action.outcome === 'IMPROVED' ? <CheckCircle2 className="w-3 h-3" /> :
                                             action.outcome === 'WORSENED' ? <XCircle className="w-3 h-3" /> : <div className="w-3 h-3 bg-gray-400 rounded-full" />}
@@ -176,6 +218,94 @@ export function AIEngineDashboard() {
                                 </div>
                             </div>
                         ))}
+                    </div>
+                </div>
+
+                {/* 5. Points Breakdown Table */}
+                <div className="bg-white rounded-3xl p-6 shadow-xl border border-gray-100">
+                    <h3 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
+                        <BarChart2 className="w-5 h-5 text-purple-600" />
+                        Points Breakdown
+                        <span className="ml-auto text-xs bg-purple-100 text-purple-700 px-3 py-1 rounded-full font-bold">
+                            Total: {performance?.overallScore || 0} pts
+                        </span>
+                    </h3>
+                    <div className="overflow-x-auto">
+                        <table className="w-full text-sm">
+                            <thead>
+                                <tr className="border-b-2 border-gray-200">
+                                    <th className="text-left py-3 px-2 font-bold text-gray-700 text-xs uppercase">Decision Type</th>
+                                    <th className="text-center py-3 px-2 font-bold text-gray-700 text-xs uppercase">Count</th>
+                                    <th className="text-right py-3 px-2 font-bold text-gray-700 text-xs uppercase">Points</th>
+                                    <th className="text-right py-3 px-2 font-bold text-gray-700 text-xs uppercase">Impact</th>
+                                </tr>
+                            </thead>
+                            <tbody className="divide-y divide-gray-100">
+                                <tr className="hover:bg-green-50 transition-colors">
+                                    <td className="py-3 px-2 flex items-center gap-2">
+                                        <span className="text-2xl">💧</span>
+                                        <span className="font-medium text-gray-900">Irrigation Optimized</span>
+                                    </td>
+                                    <td className="text-center py-3 px-2 text-gray-600 font-semibold">12</td>
+                                    <td className="text-right py-3 px-2 font-bold text-green-600">+24</td>
+                                    <td className="text-right py-3 px-2">
+                                        <span className="bg-green-100 text-green-700 px-2 py-1 rounded-full text-xs font-bold">Excellent</span>
+                                    </td>
+                                </tr>
+                                <tr className="hover:bg-green-50 transition-colors">
+                                    <td className="py-3 px-2 flex items-center gap-2">
+                                        <span className="text-2xl">🌱</span>
+                                        <span className="font-medium text-gray-900">Fertilization Timing</span>
+                                    </td>
+                                    <td className="text-center py-3 px-2 text-gray-600 font-semibold">8</td>
+                                    <td className="text-right py-3 px-2 font-bold text-green-600">+16</td>
+                                    <td className="text-right py-3 px-2">
+                                        <span className="bg-green-100 text-green-700 px-2 py-1 rounded-full text-xs font-bold">Good</span>
+                                    </td>
+                                </tr>
+                                <tr className="hover:bg-yellow-50 transition-colors">
+                                    <td className="py-3 px-2 flex items-center gap-2">
+                                        <span className="text-2xl">⏸️</span>
+                                        <span className="font-medium text-gray-900">Delayed Action</span>
+                                    </td>
+                                    <td className="text-center py-3 px-2 text-gray-600 font-semibold">5</td>
+                                    <td className="text-right py-3 px-2 font-bold text-yellow-600">+5</td>
+                                    <td className="text-right py-3 px-2">
+                                        <span className="bg-yellow-100 text-yellow-700 px-2 py-1 rounded-full text-xs font-bold">Neutral</span>
+                                    </td>
+                                </tr>
+                                <tr className="hover:bg-red-50 transition-colors">
+                                    <td className="py-3 px-2 flex items-center gap-2">
+                                        <span className="text-2xl">❌</span>
+                                        <span className="font-medium text-gray-900">Over-watering</span>
+                                    </td>
+                                    <td className="text-center py-3 px-2 text-gray-600 font-semibold">3</td>
+                                    <td className="text-right py-3 px-2 font-bold text-red-600">-6</td>
+                                    <td className="text-right py-3 px-2">
+                                        <span className="bg-red-100 text-red-700 px-2 py-1 rounded-full text-xs font-bold">Poor</span>
+                                    </td>
+                                </tr>
+                                <tr className="hover:bg-red-50 transition-colors">
+                                    <td className="py-3 px-2 flex items-center gap-2">
+                                        <span className="text-2xl">⚠️</span>
+                                        <span className="font-medium text-gray-900">Missed Opportunity</span>
+                                    </td>
+                                    <td className="text-center py-3 px-2 text-gray-600 font-semibold">2</td>
+                                    <td className="text-right py-3 px-2 font-bold text-red-600">-4</td>
+                                    <td className="text-right py-3 px-2">
+                                        <span className="bg-red-100 text-red-700 px-2 py-1 rounded-full text-xs font-bold">Needs Improvement</span>
+                                    </td>
+                                </tr>
+                                <tr className="bg-gradient-to-r from-purple-50 to-indigo-50 font-bold border-t-2 border-purple-200">
+                                    <td className="py-4 px-2 text-gray-900">TOTAL</td>
+                                    <td className="text-center py-4 px-2 text-gray-900">30</td>
+                                    <td className="text-right py-4 px-2 text-2xl text-purple-600">+35</td>
+                                    <td className="text-right py-4 px-2">
+                                        <span className="bg-purple-600 text-white px-3 py-1.5 rounded-full text-xs font-bold">Net Positive</span>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
                     </div>
                 </div>
 

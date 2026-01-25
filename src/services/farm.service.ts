@@ -63,8 +63,8 @@ export const farmService = {
                     user_id: userId,
                     farm_name: farm.name,
                     total_land_acres: areaValue,
-                    latitude: farm.lands[0]?.y || 0,
-                    longitude: farm.lands[0]?.x || 0
+                    latitude: farm.latitude || 0,
+                    longitude: farm.longitude || 0
                 })
                 .select()
                 .single();

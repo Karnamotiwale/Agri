@@ -31,7 +31,11 @@ export function FarmsView() {
                                             </div>
                                             <div>
                                                 <h3 className="font-bold text-gray-900 text-base">{farm.name}</h3>
-                                                <p className="text-sm text-gray-600 font-medium mt-0.5">{farm.location}</p>
+                                                <p className="text-sm text-gray-600 font-medium mt-0.5">
+                                                    {farm.latitude && farm.longitude
+                                                        ? `${farm.latitude.toFixed(4)}, ${farm.longitude.toFixed(4)}`
+                                                        : farm.location}
+                                                </p>
                                             </div>
                                         </div>
                                         <span className="px-3 py-1.5 bg-gradient-to-r from-gray-100 to-gray-50 text-gray-700 text-xs font-bold rounded-full border border-gray-200">
@@ -39,17 +43,26 @@ export function FarmsView() {
                                         </span>
                                     </div>
 
-                                    {/* Map Preview Placeholder */}
-                                    <button
-                                        type="button"
-                                        onClick={() => { }}
-                                        className="h-28 w-full bg-gradient-to-br from-green-100 to-emerald-100 rounded-xl relative overflow-hidden flex items-center justify-center border border-green-200/50 hover:shadow-md transition-shadow"
-                                    >
-                                        <div className="absolute inset-0 opacity-20" style={{ backgroundImage: 'radial-gradient(#86c286 1px, transparent 1px)', backgroundSize: '12px 12px' }}></div>
-                                        <p className="text-xs text-green-700 font-bold z-10 flex items-center gap-1.5 bg-white/80 px-3 py-1.5 rounded-lg shadow-sm">
-                                            <MapPin className="w-3.5 h-3.5" /> View on Map
-                                        </p>
-                                    </button>
+                                    {/* Map Preview */}
+                                    <div className="h-32 w-full rounded-xl relative overflow-hidden border border-green-200/50 shadow-sm mt-3">
+                                        {/* Use iframe for simple static-like preview to save resources, or GoogleMapSelector in read-only */}
+                                        {farm.latitude && farm.longitude ? (
+                                            <iframe
+                                                width="100%"
+                                                height="100%"
+                                                style={{ border: 0 }}
+                                                loading="lazy"
+                                                allowFullScreen
+                                                referrerPolicy="no-referrer-when-downgrade"
+                                                src={`https://www.google.com/maps/embed/v1/place?key=${import.meta.env.VITE_GOOGLE_MAPS_API_KEY}&q=${farm.latitude},${farm.longitude}&zoom=14`}
+                                            ></iframe>
+                                        ) : (
+                                            <div className="w-full h-full bg-gray-50 flex items-center justify-center flex-col gap-2">
+                                                <MapPin className="w-6 h-6 text-gray-300" />
+                                                <p className="text-xs text-gray-400 font-medium">Location not set</p>
+                                            </div>
+                                        )}
+                                    </div>
                                 </div>
 
                                 {/* Crops List */}

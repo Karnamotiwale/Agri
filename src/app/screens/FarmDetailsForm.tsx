@@ -5,13 +5,19 @@ import { MapPin, ArrowRight, Check } from 'lucide-react';
 import { useApp } from '../../context/AppContext';
 import { toast } from '../../lib/toast';
 import type { Farm, LandLocation } from '../../context/AppContext';
+import { useTranslation } from 'react-i18next';
+
+import { GoogleMapSelector } from '../../components/ui/GoogleMapSelector';
 
 export function FarmDetailsForm() {
   const navigate = useNavigate();
   const { addFarm } = useApp();
+  const { t } = useTranslation();
   const [farmName, setFarmName] = useState('');
   const [totalArea, setTotalArea] = useState('');
-  // Location removed by request, defaulting to 0,0 in submit
+  const [latitude, setLatitude] = useState<number | null>(null);
+  const [longitude, setLongitude] = useState<number | null>(null);
+
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const handleSubmit = async () => {
@@ -37,10 +43,12 @@ export function FarmDetailsForm() {
       const farm: Farm = {
         id: '', // Will be set by database
         name: farmName,
-        location: 'Not Specified',
+        location: latitude && longitude ? `${latitude.toFixed(4)}, ${longitude.toFixed(4)}` : 'Not Specified',
         area: `${totalArea} acres`,
         lands: lands,
         crops: [],
+        latitude: latitude || 0,
+        longitude: longitude || 0,
       };
 
       const id = await addFarm(farm);
@@ -64,7 +72,7 @@ export function FarmDetailsForm() {
   return (
     <div className="min-h-screen bg-white flex flex-col">
       <Header
-        title="Add Farm Details"
+        title={t('farm.addFarm')}
         showBack
         onBackClick={() => navigate('/dashboard')}
         hideRightIcon
@@ -109,7 +117,29 @@ export function FarmDetailsForm() {
               />
             </div>
 
-            {/* Location Map Removed as per request */}
+            {/* Google Map Integration */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                {t('farm.farmLocation')}
+              </label>
+              <GoogleMapSelector
+                apiKey={import.meta.env.VITE_GOOGLE_MAPS_API_KEY}
+                onLocationSelect={(lat, lng) => {
+                  setLatitude(lat);
+                  setLongitude(lng);
+                }}
+              />
+              <div className="flex gap-2 mt-2">
+                <div className="flex-1 bg-gray-50 border border-gray-200 rounded-lg px-3 py-2">
+                  <span className="text-xs text-gray-500 font-bold block">Latitude</span>
+                  <span className="text-sm font-mono text-gray-900">{latitude ? latitude.toFixed(6) : '--'}</span>
+                </div>
+                <div className="flex-1 bg-gray-50 border border-gray-200 rounded-lg px-3 py-2">
+                  <span className="text-xs text-gray-500 font-bold block">Longitude</span>
+                  <span className="text-sm font-mono text-gray-900">{longitude ? longitude.toFixed(6) : '--'}</span>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
 

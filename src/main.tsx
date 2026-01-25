@@ -4,6 +4,7 @@ import { AppProvider } from "./context/AppContext";
 import { AuthProvider } from "./context/AuthContext";
 import { Toaster } from "sonner";
 import "./styles/index.css";
+import "./i18n/config";
 
 createRoot(document.getElementById("root")!).render(
   <AuthProvider>

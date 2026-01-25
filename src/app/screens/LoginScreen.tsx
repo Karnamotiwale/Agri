@@ -3,11 +3,13 @@ import { useNavigate } from 'react-router-dom';
 import { Sprout, Mail, Phone, ArrowRight, Loader2, AlertCircle } from 'lucide-react';
 import { useApp } from '../../context/AppContext';
 import { useAuth } from '../../context/AuthContext';
+import { useTranslation } from 'react-i18next';
 
 export function LoginScreen() {
   const navigate = useNavigate();
   const { login, loginWithGoogle, auth } = useApp();
   const { user, loading } = useAuth();
+  const { t } = useTranslation();
 
   // Auto-redirect if logged in
   useEffect(() => {
