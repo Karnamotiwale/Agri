@@ -1,10 +1,11 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Header } from '@/app/components/Header';
-import { ArrowRight, Calendar, Sprout, Database, Camera, Upload, X } from 'lucide-react';
+import { ArrowRight, Calendar, Sprout, Database, Camera, Upload, X, Loader2 } from 'lucide-react';
 import { useRef } from 'react';
 import { useApp } from '../../context/AppContext';
 import type { Crop, CropStage } from '../../context/AppContext';
+import { cropService } from '../../services/crop.service';
 
 const CROP_IMAGES: Record<string, string> = {
   wheat: 'https://images.unsplash.com/photo-1625246333195-bf8f85404843?q=80&w=1000&auto=format&fit=crop',
@@ -36,6 +37,8 @@ export function CropDetailsForm() {
   const [seedsPlanted, setSeedsPlanted] = useState('');
   const [selectedFarmId, setSelectedFarmId] = useState('');
   const [customImage, setCustomImage] = useState<string | null>(null);
+  const [imageFile, setImageFile] = useState<File | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const cameraInputRef = useRef<HTMLInputElement>(null);
 
@@ -61,39 +64,62 @@ export function CropDetailsForm() {
       return;
     }
 
-    const formattedDate = formatDate(sowingDate);
-    const shortDate = formatShortDate(sowingDate);
-    const cropImage = customImage || CROP_IMAGES[cropType.toLowerCase()] || CROP_IMAGES.default;
-    const sowingPeriod = SOWING_PERIODS[cropType.toLowerCase()] || 'Jan – Dec';
+    setIsSubmitting(true);
 
-    const defaultStages: CropStage[] = [
-      { name: 'Planting Phase', description: `Planting phase started ${shortDate}`, date: shortDate, isActive: true },
-      { name: 'Vegetative Phase', description: 'Vegetative growth phase', date: '—', isActive: false },
-      { name: 'Flowering Phase', description: 'Flowering phase', date: '—', isActive: false },
-      { name: 'Harvesting Phase', description: 'Harvesting phase', date: '—', isActive: false },
-    ];
+    try {
+      const formattedDate = formatDate(sowingDate);
+      const shortDate = formatShortDate(sowingDate);
+      const cropImage = customImage || CROP_IMAGES[cropType.toLowerCase()] || CROP_IMAGES.default;
+      const sowingPeriod = SOWING_PERIODS[cropType.toLowerCase()] || 'Jan – Dec';
 
-    const newCrop: Crop = {
-      id: 'c' + Date.now(),
-      name: cropName,
-      image: cropImage,
-      location: 'Field',
-      landArea: '1 Hectares of land',
-      landSize: '1 Hectares of land',
-      landSize: '1 Hectares',
-      sowingDate: sowingDate, // Use raw YYYY-MM-DD for DB compatibility
-      sowingPeriod: sowingPeriod,
-      currentStage: 'Planting Phase',
-      stageDate: shortDate,
-      stages: defaultStages,
-      farmId: selectedFarmId,
-      seedsPlanted: seedsPlanted,
-      cropType: cropType,
-    };
+      const defaultStages: CropStage[] = [
+        { name: 'Planting Phase', description: `Planting phase started ${shortDate}`, date: shortDate, isActive: true },
+        { name: 'Vegetative Phase', description: 'Vegetative growth phase', date: '—', isActive: false },
+        { name: 'Flowering Phase', description: 'Flowering phase', date: '—', isActive: false },
+        { name: 'Harvesting Phase', description: 'Harvesting phase', date: '—', isActive: false },
+      ];
 
-    const success = await addCrop(newCrop, selectedFarmId);
-    if (success) {
-      navigate('/dashboard');
+      const newCrop: Crop = {
+        id: 'c' + Date.now(),
+        name: cropName,
+        image: cropImage,
+        location: 'Field',
+        landArea: '1 Hectares of land',
+        landSize: '1 Hectares of land',
+        sowingDate: sowingDate, // Use raw YYYY-MM-DD for DB compatibility
+        sowingPeriod: sowingPeriod,
+        currentStage: 'Planting Phase',
+        stageDate: shortDate,
+        stages: defaultStages,
+        farmId: selectedFarmId,
+        seedsPlanted: seedsPlanted,
+        cropType: cropType,
+      };
+
+      // We need to bypass the context addCrop for file upload because context might not expose the file param
+      // Or we can modify the context. For now, let's try to use the service directly if possible, 
+      // but AppContext keeps local state in sync. 
+      // The cleaner way is to update AppContext, but we don't have access to modify it easily right now without a full refactor.
+      // So we will upload the image first if it exists, get the URL, update the crop object, and then call addCrop.
+
+      let finalCrop = { ...newCrop };
+
+      if (imageFile) {
+        const uploadedUrl = await cropService.uploadCropImage(imageFile);
+        if (uploadedUrl) {
+          finalCrop.image = uploadedUrl;
+        }
+      }
+
+      const success = await addCrop(finalCrop, selectedFarmId);
+      if (success) {
+        navigate('/dashboard');
+      }
+    } catch (e) {
+      console.error("Failed to add crop", e);
+      alert("Failed to add crop. Please try again.");
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -109,10 +135,12 @@ export function CropDetailsForm() {
       return;
     }
 
+    setImageFile(file); // Store file for upload
+
     const reader = new FileReader();
     reader.onload = (e) => {
       const imageUrl = e.target?.result as string;
-      setCustomImage(imageUrl);
+      setCustomImage(imageUrl); // Preview
     };
     reader.readAsDataURL(file);
   };
@@ -141,12 +169,15 @@ export function CropDetailsForm() {
 
           <div className="mb-6">
             <label className="block text-sm font-semibold text-gray-700 mb-3">Crop Image</label>
-            
+
             {customImage ? (
               <div className="relative w-full h-48 rounded-2xl overflow-hidden shadow-md group">
                 <img src={customImage} alt="Crop preview" className="w-full h-full object-cover" />
                 <button
-                  onClick={() => setCustomImage(null)}
+                  onClick={() => {
+                    setCustomImage(null);
+                    setImageFile(null);
+                  }}
                   className="absolute top-2 right-2 p-2 bg-black/50 hover:bg-black/70 text-white rounded-full transition-colors"
                 >
                   <X className="w-5 h-5" />
@@ -163,7 +194,7 @@ export function CropDetailsForm() {
                   </div>
                   <span className="text-sm font-medium text-gray-600 group-hover:text-green-700">Capture</span>
                 </button>
-                
+
                 <button
                   onClick={() => fileInputRef.current?.click()}
                   className="flex flex-col items-center justify-center gap-2 p-6 rounded-2xl border-2 border-dashed border-gray-300 hover:border-green-500 hover:bg-green-50 transition-all group"
@@ -279,11 +310,20 @@ export function CropDetailsForm() {
 
         <button
           onClick={handleSubmit}
-          disabled={!isFormValid}
+          disabled={!isFormValid || isSubmitting}
           className="mt-auto w-full bg-gradient-to-r from-green-600 to-green-700 text-white py-4.5 rounded-2xl font-bold text-lg hover:from-green-700 hover:to-green-800 active:scale-[0.98] transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 shadow-xl shadow-green-600/30 hover:shadow-2xl hover:shadow-green-600/40"
         >
-          Register Crop
-          <ArrowRight className="w-5 h-5" />
+          {isSubmitting ? (
+            <>
+              <Loader2 className="w-5 h-5 animate-spin" />
+              Registering...
+            </>
+          ) : (
+            <>
+              Register Crop
+              <ArrowRight className="w-5 h-5" />
+            </>
+          )}
         </button>
       </div>
     </div>

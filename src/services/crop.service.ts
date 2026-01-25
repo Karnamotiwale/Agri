@@ -3,6 +3,35 @@ import type { Crop } from '../context/AppContext';
 
 export const cropService = {
     /**
+     * Upload crop image to storage
+     */
+    uploadCropImage: async (file: File): Promise<string | null> => {
+        try {
+            const userId = await getCurrentUserId();
+            if (!userId) throw new Error('User not authenticated');
+
+            const fileExt = file.name.split('.').pop();
+            const fileName = `${userId}/${Date.now()}.${fileExt}`;
+            const filePath = fileName;
+
+            const { error: uploadError } = await supabase.storage
+                .from('crop-images')
+                .upload(filePath, file);
+
+            if (uploadError) {
+                console.error('Error uploading image:', uploadError);
+                return null;
+            }
+
+            const { data } = supabase.storage.from('crop-images').getPublicUrl(filePath);
+            return data.publicUrl;
+        } catch (err) {
+            console.error('Exception uploading image:', err);
+            return null;
+        }
+    },
+
+    /**
      * Get all crops for the authenticated user
      */
     getAllCrops: async (): Promise<Crop[]> => {
@@ -31,7 +60,7 @@ export const cropService = {
             return (data || []).map((c: any) => ({
                 id: c.id,
                 name: c.crop_name,
-                image: 'https://images.unsplash.com/photo-1582515073490-dc84fbbf5f84?q=80&w=400',
+                image: c.image_url || 'https://images.unsplash.com/photo-1582515073490-dc84fbbf5f84?q=80&w=400',
                 location: 'Field',
                 landArea: (c.seeds_planted && c.seeds_planted > 0) ? (c.seeds_planted / 100) + ' Hectares' : '1 Hectares',
                 landSize: '1 Hectares',
@@ -72,7 +101,7 @@ export const cropService = {
             return (data || []).map((c: any) => ({
                 id: c.id,
                 name: c.crop_name,
-                image: 'https://images.unsplash.com/photo-1582515073490-dc84fbbf5f84?q=80&w=400',
+                image: c.image_url || 'https://images.unsplash.com/photo-1582515073490-dc84fbbf5f84?q=80&w=400',
                 location: 'Field',
                 landArea: (c.seeds_planted && c.seeds_planted > 0) ? (c.seeds_planted / 100) + ' Hectares' : '1 Hectares',
                 landSize: '1 Hectares',
@@ -94,7 +123,7 @@ export const cropService = {
     /**
      * Create a new crop for the authenticated user
      */
-    createCrop: async (crop: Crop, farmId: string): Promise<Crop> => {
+    createCrop: async (crop: Crop, farmId: string, imageFile?: File): Promise<Crop> => {
         try {
             const userId = await getCurrentUserId();
             if (!userId) {
@@ -113,6 +142,16 @@ export const cropService = {
                 throw new Error('Farm not found or access denied. Please select a valid farm.');
             }
 
+            let finalImageUrl = crop.image;
+
+            // Upload image if provided
+            if (imageFile) {
+                const uploadedUrl = await cropService.uploadCropImage(imageFile);
+                if (uploadedUrl) {
+                    finalImageUrl = uploadedUrl;
+                }
+            }
+
             const { data, error } = await supabase
                 .from('crops')
                 .insert({
@@ -121,14 +160,15 @@ export const cropService = {
                     crop_name: crop.name,
                     crop_type: crop.cropType,
                     sowing_date: crop.sowingDate,
-                    seeds_planted: crop.seedsPlanted ? parseFloat(crop.seedsPlanted) : 0
+                    seeds_planted: crop.seedsPlanted ? parseFloat(crop.seedsPlanted) : 0,
+                    image_url: finalImageUrl
                 })
                 .select()
                 .single();
 
             if (error) throw error;
 
-            return { ...crop, id: data.id, farmId: data.farm_id };
+            return { ...crop, id: data.id, farmId: data.farm_id, image: data.image_url || crop.image };
         } catch (err: any) {
             console.error('Error creating crop:', err);
             throw err;
@@ -150,6 +190,7 @@ export const cropService = {
             if (updates.cropType) dbUpdates.crop_type = updates.cropType;
             if (updates.sowingDate) dbUpdates.sowing_date = updates.sowingDate;
             if (updates.seedsPlanted) dbUpdates.seeds_planted = parseFloat(updates.seedsPlanted);
+            if (updates.image) dbUpdates.image_url = updates.image;
 
             const { data, error } = await supabase
                 .from('crops')
@@ -165,7 +206,7 @@ export const cropService = {
             return {
                 id: data.id,
                 name: data.crop_name,
-                image: 'https://images.unsplash.com/photo-1582515073490-dc84fbbf5f84?q=80&w=400',
+                image: data.image_url || 'https://images.unsplash.com/photo-1582515073490-dc84fbbf5f84?q=80&w=400',
                 location: 'Field',
                 landArea: (data.seeds_planted && data.seeds_planted > 0) ? (data.seeds_planted / 100) + ' Hectares' : '1 Hectares',
                 landSize: '1 Hectares',

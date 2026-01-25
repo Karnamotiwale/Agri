@@ -9,23 +9,31 @@ import {
   Landmark,
   MapPin,
   Plus,
+  BarChart2,
+  Sun,
+  Cpu,
 } from 'lucide-react';
 
 import { FarmsView } from '../components/FarmsView';
 import { GovernmentSchemes } from '../components/GovernmentSchemes';
+import { WeatherWidget } from '../../components/analytics/WeatherWidget';
+import { SoilAnalytics } from '../../components/analytics/SoilAnalytics';
+import { YieldPredictor } from '../../components/analytics/YieldPredictor';
 import { useApp } from '../../context/AppContext';
 import { useCropSensors } from '../../hooks/useCropSensors';
+import { ResourceUsageAnalytics } from '../../components/analytics/ResourceUsageAnalytics';
 
 export function Dashboard() {
+  const { getAllCrops, dashboardActiveTab, setDashboardTab, auth } = useApp();
   const navigate = useNavigate();
-  const { getAllCrops, dashboardActiveTab, setDashboardTab } = useApp();
-  const [selectedPlant, setSelectedPlant] = useState<{ id: string; name: string; location: string; image: string } | null>(null);
+  const [selectedPlant, setSelectedPlant] = useState<{ id: string; name: string; location: string; image: string; farmId: string } | null>(null);
 
   const plants = getAllCrops().map((c) => ({
     id: c.id,
     name: c.name,
     location: c.location,
     image: c.image,
+    farmId: c.farmId,
   }));
 
   const activeTab = dashboardActiveTab;
@@ -33,96 +41,182 @@ export function Dashboard() {
   const popupSensors = useCropSensors(selectedPlant?.id);
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-green-50/30 via-white to-white pb-24">
+    <div className="min-h-screen bg-gray-50 pb-24">
       {activeTab === 'home' && (
-        <div className="px-6 pt-6 pb-4">
-          {/* Greeting */}
-          <div className="flex items-start justify-between mb-6">
-            <div>
-              <h2 className="text-3xl font-light text-gray-900 mb-1.5 leading-tight">
-                Hello, Farmer
-              </h2>
-              <p className="text-sm text-gray-500 font-medium">
-                Your farming diary
-              </p>
-            </div>
-            <button
-              onClick={() => navigate('/profile')}
-              className="mt-1 flex-shrink-0 hover:scale-105 transition-transform duration-200"
-            >
-              <img
-                src={useApp().auth.photoURL || "https://images.unsplash.com/photo-1633332755192-727a05c4013d?w=400&auto=format&fit=crop&q=60"}
-                alt="Profile"
-                className="w-11 h-11 rounded-full object-cover ring-3 ring-green-100 shadow-sm"
-              />
-            </button>
-          </div>
+        <div className="relative">
+          {/* Green Gradient Header Section */}
+          <div className="bg-gradient-to-br from-green-700 via-green-600 to-green-500 rounded-b-[3rem] px-6 pt-8 pb-12 relative overflow-hidden">
+            {/* Decorative background elements */}
+            <div className="absolute top-0 right-0 w-64 h-64 bg-green-400/20 rounded-full -mr-32 blur-3xl"></div>
+            <div className="absolute bottom-0 left-0 w-48 h-48 bg-green-800/30 rounded-full -ml-24 -mb-24 blur-2xl"></div>
 
-          {/* Floating Action Button - Only visible on home tab */}
-          {activeTab === 'home' && (
-            <button
-              onClick={() => navigate('/action-selection')}
-              className="fixed bottom-24 right-6 w-14 h-14 bg-gradient-to-br from-green-600 to-green-700 text-white rounded-full shadow-xl shadow-green-600/40 hover:shadow-2xl hover:shadow-green-600/50 active:scale-95 transition-all duration-200 flex items-center justify-center z-[90]"
-            >
-              <Plus className="w-7 h-7" />
-            </button>
-          )}
-
-          {/* Illustration Section */}
-          <div className="mb-6">
-            <div className="relative rounded-3xl overflow-hidden shadow-lg shadow-green-900/5">
-              <img
-                src="https://images.unsplash.com/photo-1605000797499-95a51c5269ae?q=80&w=800"
-                alt="Farmer"
-                className="w-full h-48 object-cover"
-              />
-              <div className="absolute inset-0 bg-gradient-to-t from-green-900/20 to-transparent" />
-            </div>
-          </div>
-
-          {/* Plant List */}
-          <div>
-            <h3 className="text-sm font-semibold text-gray-800 mb-4 flex items-center gap-2">
-              <div className="w-1 h-4 bg-gradient-to-b from-green-500 to-green-600 rounded-full" />
-              Your Plants
-            </h3>
-
-            <div className="space-y-3">
-              {plants.map((plant) => (
-                <div
-                  key={plant.id}
-                  onClick={() => setSelectedPlant(plant)}
-                  className="bg-white p-4 rounded-2xl flex items-center gap-4 shadow-sm shadow-gray-900/5 border border-gray-100/50 cursor-pointer hover:shadow-md hover:shadow-green-900/5 hover:border-green-100 active:scale-[0.98] transition-all duration-200"
+            <div className="relative z-10">
+              {/* Header with icons */}
+              <div className="flex justify-between items-start mb-8">
+                <div>
+                  <h1 className="text-white text-2xl font-bold mb-1">
+                    Hello, Farmer!
+                  </h1>
+                  <p className="text-green-100 text-sm">Check your plants today</p>
+                </div>
+                <button
+                  onClick={() => navigate('/profile')}
+                  className="flex-shrink-0 hover:scale-105 transition-transform duration-200"
                 >
-                  <div className="relative">
-                    <img
-                      src={plant.image}
-                      alt={plant.name}
-                      className="w-12 h-12 rounded-xl object-cover ring-2 ring-green-50"
-                    />
-                    <div className="absolute -bottom-1 -right-1 w-4 h-4 bg-green-500 rounded-full border-2 border-white" />
-                  </div>
+                  <img
+                    src={auth?.photoURL || "https://images.unsplash.com/photo-1633332755192-727a05c4013d?w=400&auto=format&fit=crop&q=60"}
+                    alt="Profile"
+                    className="w-10 h-10 rounded-full object-cover ring-2 ring-white/30 shadow-sm"
+                  />
+                </button>
+              </div>
 
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm font-semibold text-gray-900 mb-0.5">
-                      {plant.name}
-                    </p>
-                    <p className="text-xs text-gray-500 font-medium">
-                      {plant.location}
-                    </p>
+              {/* Location and Date */}
+              <div className="flex items-center justify-between mb-6">
+                <div className="flex items-center gap-2 text-green-100">
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                  </svg>
+                  <span className="text-sm font-medium">Bangalore, India</span>
+                </div>
+                <span className="text-green-100 text-xs">
+                  {new Date().toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}
+                </span>
+              </div>
+
+              {/* Integrated Weather Display */}
+              <div className="bg-white/10 backdrop-blur-md rounded-3xl p-4 border border-white/20">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-4">
+                    <div className="w-16 h-16 bg-white/20 rounded-2xl flex items-center justify-center">
+                      <Sun className="w-10 h-10 text-yellow-300" />
+                    </div>
+                    <div>
+                      <div className="text-white text-4xl font-bold">26°C</div>
+                      <div className="text-green-100 text-sm">Partly cloudy</div>
+                    </div>
                   </div>
-                  <div className="w-6 h-6 rounded-full bg-green-50 flex items-center justify-center">
-                    <div className="w-2 h-2 bg-green-500 rounded-full" />
+                  <div className="text-right">
+                    <div className="text-green-100 text-xs mb-1">T:34° • R:22°</div>
+                    <div className="text-green-200 text-xs">1:34°</div>
                   </div>
                 </div>
-              ))}
+              </div>
             </div>
           </div>
+
+          {/* Farming Illustration Section */}
+          <div className="px-6 -mt-6 relative z-20">
+            <div className="bg-white rounded-3xl p-2 shadow-xl shadow-green-900/10">
+              <img
+                src="/farming_community.png"
+                alt="Farming Community"
+                className="w-full h-auto rounded-2xl"
+              />
+            </div>
+          </div>
+
+          {/* Your Farm Section */}
+          <div className="px-6 pt-6 pb-4">
+            <div className="bg-white rounded-3xl shadow-lg p-6">
+              <div className="flex justify-between items-center mb-6">
+                <h2 className="text-xl font-bold text-gray-900">Your farm</h2>
+                <button className="text-green-600 text-sm font-semibold hover:text-green-700">
+                  View All
+                </button>
+              </div>
+
+              {/* Farm/Plant Grid */}
+              <div className="grid grid-cols-2 gap-4">
+                {plants.slice(0, 4).map((plant) => (
+                  <div
+                    key={plant.id}
+                    onClick={() => setSelectedPlant(plant)}
+                    className="relative rounded-2xl overflow-hidden shadow-md cursor-pointer transform hover:scale-[1.02] transition-transform"
+                  >
+                    <div className="aspect-[4/3] relative">
+                      <img
+                        src={plant.image}
+                        alt={plant.name}
+                        className="w-full h-full object-cover"
+                      />
+                      <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/10 to-transparent"></div>
+
+                      {/* Badge */}
+                      <div className="absolute top-3 right-3">
+                        <span className="bg-amber-500/90 backdrop-blur-sm text-white text-xs font-medium px-3 py-1.5 rounded-full">
+                          About to ripen
+                        </span>
+                      </div>
+
+                      {/* Plant info */}
+                      <div className="absolute bottom-0 left-0 right-0 p-3">
+                        <h3 className="text-white font-bold text-sm mb-1">{plant.name}</h3>
+                        <div className="flex items-center gap-1 text-white/80 text-xs">
+                          <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                          </svg>
+                          <span>{plant.location}</span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              {plants.length === 0 && (
+                <div className="text-center py-12">
+                  <Sprout className="w-16 h-16 text-gray-300 mx-auto mb-4" />
+                  <p className="text-gray-500 text-sm">No plants yet</p>
+                  <p className="text-gray-400 text-xs mt-1">Add your first crop to get started</p>
+                </div>
+              )}
+            </div>
+          </div>
+
+
+          {/* Floating Action Button */}
+          <button
+            onClick={() => navigate('/action-selection')}
+            className="fixed bottom-24 right-6 w-14 h-14 bg-gradient-to-br from-green-600 to-green-700 text-white rounded-full shadow-xl shadow-green-600/40 hover:shadow-2xl hover:shadow-green-600/50 active:scale-95 transition-all duration-200 flex items-center justify-center z-[90]"
+          >
+            <Plus className="w-7 h-7" />
+          </button>
         </div>
       )}
 
       {activeTab === 'farms' && <FarmsView />}
       {activeTab === 'schemes' && <GovernmentSchemes />}
+
+      {/* Analytics View */}
+      {activeTab === 'analytics' && (
+        <div className="px-6 pt-6 pb-4 space-y-6">
+          <div className="mb-4">
+            <h2 className="text-2xl font-bold text-gray-900 mb-1">Advanced Analytics</h2>
+            <p className="text-sm text-gray-500">Real-time insights & predictions</p>
+          </div>
+
+          <div className="h-64">
+            <WeatherWidget />
+          </div>
+
+          <div className="h-96">
+            <SoilAnalytics />
+          </div>
+
+          <div className="h-80">
+            <YieldPredictor />
+          </div>
+
+          <div className="pb-24">
+            <ResourceUsageAnalytics
+              cropId="1"
+              cropName="All Fields Overview"
+            />
+          </div>
+        </div>
+      )}
 
       {/* Bottom Navigation */}
       <div className="fixed bottom-0 left-0 right-0 bg-white/95 backdrop-blur-sm border-t border-gray-200/80 px-6 py-3 z-[100] shadow-[0_-4px_20px_rgba(0,0,0,0.05)]">
@@ -136,13 +230,11 @@ export function Dashboard() {
           </button>
 
           <button
-            onClick={() => {
-              setActiveTab('farms');
-            }}
+            onClick={() => activeTab === 'analytics' ? setActiveTab('home') : setActiveTab('analytics')}
             className="flex flex-col items-center gap-1 px-3 py-1.5 rounded-xl transition-all duration-200 hover:bg-green-50/50 active:scale-95"
           >
-            <Sprout className={`w-6 h-6 transition-colors ${activeTab === 'farms' ? 'text-green-600' : 'text-gray-400'}`} />
-            <span className={`text-[10px] font-medium transition-colors ${activeTab === 'farms' ? 'text-green-600' : 'text-gray-500'}`}>Farms</span>
+            <BarChart2 className={`w-6 h-6 transition-colors ${activeTab === 'analytics' ? 'text-green-600' : 'text-gray-400'}`} />
+            <span className={`text-[10px] font-medium transition-colors ${activeTab === 'analytics' ? 'text-green-600' : 'text-gray-500'}`}>Analytics</span>
           </button>
 
           <button
@@ -174,13 +266,21 @@ export function Dashboard() {
             <MapPin className={`w-6 h-6 transition-colors ${activeTab === 'farm-details' ? 'text-green-600' : 'text-gray-400'}`} />
             <span className={`text-[10px] font-medium transition-colors ${activeTab === 'farm-details' ? 'text-green-600' : 'text-gray-500'}`}>Crops</span>
           </button>
+
+          <button
+            onClick={() => navigate('/ai-engine')}
+            className="flex flex-col items-center gap-1 px-3 py-1.5 rounded-xl transition-all duration-200 hover:bg-green-50/50 active:scale-95"
+          >
+            <Cpu className="w-6 h-6 text-gray-400" />
+            <span className="text-[10px] font-medium text-gray-500 whitespace-nowrap">AI Engine</span>
+          </button>
         </div>
       </div>
 
       {/* Plant Detail Popup */}
       {selectedPlant && (
-        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-end z-50 animate-in fade-in duration-200">
-          <div className="bg-white w-full rounded-t-3xl p-6 shadow-2xl animate-in slide-in-from-bottom duration-300">
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-end z-50 animate-in fade-in duration-200 overflow-y-auto">
+          <div className="bg-white w-full rounded-t-3xl p-6 shadow-2xl animate-in slide-in-from-bottom duration-300 min-h-[80vh]">
             <div className="flex justify-between items-start mb-5">
               <div className="flex items-center gap-3">
                 <div className="relative">
@@ -226,6 +326,8 @@ export function Dashboard() {
               </div>
             </div>
 
+
+
             <div className="rounded-2xl overflow-hidden mb-5 shadow-md">
               <img
                 src={selectedPlant.image}
@@ -243,6 +345,7 @@ export function Dashboard() {
               View Statistics
               <ArrowRight className="w-4 h-4" />
             </button>
+            <div className="h-4"></div>
           </div>
         </div>
       )}

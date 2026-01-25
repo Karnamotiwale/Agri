@@ -1,6 +1,7 @@
 import { MapPin, Sprout, Calendar, Database, CheckCircle2 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useApp } from '../../context/AppContext';
+import { CROP_GROWTH_STAGES, getCurrentStage } from '../../config/cropGrowthStages';
 
 export function FarmsView() {
     const navigate = useNavigate();
@@ -62,42 +63,89 @@ export function FarmsView() {
 
                                     {farmCrops.length > 0 ? (
                                         <div className="space-y-4">
-                                            {farmCrops.map((crop) => (
-                                                <div
-                                                    key={crop.id}
-                                                    onClick={() => navigate(`/crop/${crop.id}/full-details`)}
-                                                    className="bg-white border border-gray-200/50 rounded-2xl p-4 shadow-md shadow-gray-900/5 flex gap-4 cursor-pointer hover:shadow-lg hover:border-green-100 active:scale-[0.98] transition-all duration-200"
-                                                >
-                                                    <div className="w-20 h-20 rounded-xl overflow-hidden flex-shrink-0 ring-2 ring-green-100 shadow-sm">
-                                                        <img src={crop.image} alt={crop.name} className="w-full h-full object-cover" />
-                                                    </div>
-                                                    <div className="flex-1">
-                                                        <div className="flex items-start justify-between mb-2">
-                                                            <h5 className="font-bold text-gray-900 text-base">{crop.name}</h5>
-                                                            <span className="px-2 py-1 bg-gradient-to-r from-green-50 to-emerald-50 text-green-700 text-[10px] font-bold uppercase tracking-wide rounded-lg border border-green-200">
-                                                                Active
-                                                            </span>
+                                            {farmCrops.map((crop) => {
+                                                const sowingDate = crop.sowingDate || '15 Jan 2024';
+                                                const daysSincePlanting = Math.floor(
+                                                    (Date.now() - new Date(sowingDate).getTime()) / (1000 * 60 * 60 * 24)
+                                                );
+                                                const cropType = (crop.crop_type || crop.name || 'Maize')
+                                                    .replace(/wild /i, '')
+                                                    .replace(/onion/i, 'Maize');
+                                                const stages = CROP_GROWTH_STAGES[cropType] || CROP_GROWTH_STAGES.Default;
+                                                const currentStage = getCurrentStage(cropType, daysSincePlanting);
+
+                                                return (
+                                                    <div
+                                                        key={crop.id}
+                                                        className="bg-white border border-gray-100 rounded-[2rem] p-5 shadow-xl shadow-gray-900/5 hover:shadow-2xl hover:border-green-100 transition-all duration-300"
+                                                    >
+                                                        <div className="flex gap-4 mb-4">
+                                                            <div className="w-16 h-16 rounded-2xl overflow-hidden flex-shrink-0 shadow-md">
+                                                                <img src={crop.image} alt={crop.name} className="w-full h-full object-cover" />
+                                                            </div>
+                                                            <div className="flex-1">
+                                                                <h5 className="font-bold text-gray-900 text-lg leading-tight">{crop.name}</h5>
+                                                                <p className="text-xs text-gray-400 font-medium mt-0.5">
+                                                                    {farm.area} hectares of land – [Jan - Dec]
+                                                                </p>
+                                                            </div>
                                                         </div>
 
-                                                        <div className="grid grid-cols-2 gap-y-2.5 gap-x-4">
-                                                            <div className="bg-gray-50 rounded-lg px-2 py-1.5 min-w-0">
-                                                                <p className="text-[10px] text-gray-500 uppercase font-bold mb-1">Sown</p>
-                                                                <p className="text-xs text-gray-800 font-bold flex items-center gap-1 whitespace-nowrap overflow-hidden">
-                                                                    <Calendar className="w-3 h-3 text-gray-500 flex-shrink-0" />
-                                                                    <span className="overflow-hidden text-ellipsis">{crop.sowingDate}</span>
-                                                                </p>
-                                                            </div>
-                                                            <div className="bg-gray-50 rounded-lg px-2 py-1.5">
-                                                                <p className="text-[10px] text-gray-500 uppercase font-bold mb-1">Seeds</p>
-                                                                <p className="text-xs text-gray-800 font-bold flex items-center gap-1">
-                                                                    <Database className="w-3 h-3 text-gray-500" />
-                                                                    —
-                                                                </p>
+                                                        {/* Horizontal Growth Timeline */}
+                                                        <div className="relative pt-4 pb-8">
+                                                            {/* Track Line */}
+                                                            <div className="absolute top-[22px] left-2 right-2 h-[3px] bg-gray-100 rounded-full"></div>
+
+                                                            {/* Progress Line */}
+                                                            <div
+                                                                className="absolute top-[22px] left-2 h-[3px] bg-green-500 rounded-full transition-all duration-1000"
+                                                                style={{
+                                                                    width: `${Math.max(0, Math.min(100, (stages.indexOf(currentStage!) / (stages.length - 1)) * 100))}%`
+                                                                }}
+                                                            ></div>
+
+                                                            {/* Checkpoints */}
+                                                            <div className="relative flex justify-between px-1">
+                                                                {stages.map((stage, idx) => {
+                                                                    const stageIdx = stages.indexOf(currentStage!);
+                                                                    const isPassed = idx < stageIdx;
+                                                                    const isCurrent = idx === stageIdx;
+
+                                                                    return (
+                                                                        <div key={idx} className="relative">
+                                                                            <div className={`w-3.5 h-3.5 rounded-full border-2 transition-all duration-300 z-10 ${isPassed ? 'bg-green-500 border-green-500' :
+                                                                                isCurrent ? 'bg-white border-green-500 w-5 h-5 -mt-[3px] shadow-lg shadow-green-200' :
+                                                                                    'bg-white border-gray-200'
+                                                                                }`}>
+                                                                                {isCurrent && (
+                                                                                    <div className="w-2.5 h-2.5 bg-green-500 rounded-full m-auto mt-[1.5px]"></div>
+                                                                                )}
+                                                                            </div>
+                                                                        </div>
+                                                                    );
+                                                                })}
                                                             </div>
                                                         </div>
+
+                                                        <div className="flex items-center justify-between mt-2">
+                                                            <div>
+                                                                <p className="text-xs font-bold text-gray-400 uppercase tracking-tight">
+                                                                    {currentStage?.stage}
+                                                                </p>
+                                                                <p className="text-[10px] text-gray-400 font-medium">
+                                                                    ({new Date(sowingDate).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })})
+                                                                </p>
+                                                            </div>
+                                                            <button
+                                                                onClick={() => navigate(`/crop/${crop.id}/details`)}
+                                                                className="bg-green-500 hover:bg-green-600 text-white font-bold py-2.5 px-6 rounded-2xl text-xs uppercase tracking-wider shadow-lg shadow-green-500/30 active:scale-95 transition-all"
+                                                            >
+                                                                View Details
+                                                            </button>
+                                                        </div>
                                                     </div>
-                                                </div>
-                                            ))}
+                                                );
+                                            })}
 
                                             {/* Vegetation Registered Banner */}
                                             <div className="bg-gradient-to-r from-green-50 to-emerald-50 border border-green-200 rounded-xl p-4 flex items-center gap-3 shadow-sm">

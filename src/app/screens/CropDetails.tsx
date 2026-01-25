@@ -3,6 +3,8 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { ArrowLeft, Bell, Calendar, Droplets, FlaskConical, Leaf, Loader2, Camera, Upload, CheckCircle, AlertTriangle, XCircle, Clock, TrendingUp } from 'lucide-react';
 import { useApp } from '../../context/AppContext';
 import { useCropSensors } from '../../hooks/useCropSensors';
+import { CROP_GROWTH_STAGES, getCurrentStage } from '../../config/cropGrowthStages';
+import { SmartValveControl } from '../../components/smart-farming/SmartValveControl';
 // Mock services inline to replace missing backend/service files
 const evaluate = (sensors: any) => {
   return {
@@ -202,40 +204,71 @@ export function CropDetails() {
           </div>
         </div>
 
-        {/* Growing Stages Section */}
-        <div className="bg-white rounded-3xl p-6 shadow-xl shadow-gray-900/10 border border-gray-100">
-          <h3 className="text-lg font-bold text-gray-900 mb-6 flex items-center gap-2">
-            <div className="w-1 h-5 bg-gradient-to-b from-green-500 to-green-600 rounded-full" />
-            Growing Stages
-          </h3>
+        {/* Crop Harvesting Section */}
+        {(() => {
+          const sowingDate = crop.sowingDate || '15 Jan 2024';
+          const daysSincePlanting = Math.floor(
+            (Date.now() - new Date(sowingDate).getTime()) / (1000 * 60 * 60 * 24)
+          );
+          const cropType = (crop.cropType || crop.name || 'Maize')
+            .replace(/wild /i, '')
+            .replace(/onion/i, 'Maize');
+          const stages = CROP_GROWTH_STAGES[cropType] || CROP_GROWTH_STAGES.Default;
+          const currentStage = getCurrentStage(cropType, daysSincePlanting);
 
-          {/* Vertical Timeline */}
-          <div className="relative pl-8">
-            {/* Dashed vertical line */}
-            <div className="absolute left-3 top-0 bottom-0 w-px border-l border-dashed border-green-300"></div>
+          return (
+            <div className="bg-white rounded-3xl p-6 shadow-xl shadow-gray-900/10 border border-gray-100">
+              <h3 className="text-lg font-bold text-gray-900 mb-6 flex items-center gap-2">
+                <div className="w-1 h-5 bg-gradient-to-b from-green-500 to-green-600 rounded-full" />
+                Crop Harvesting
+              </h3>
 
-            {/* Stages */}
-            <div className="space-y-6">
-              {crop.stages.map((stage: any, idx: number) => (
-                <div key={idx} className="relative">
-                  {/* Circle marker */}
-                  <div
-                    className={`absolute -left-[26px] top-1 w-4 h-4 rounded-full border-2 z-10 ${stage.isActive
-                      ? 'bg-green-600 border-green-600'
-                      : 'bg-white border-green-300'
-                      }`}
-                  />
+              {/* Horizontal Growth Timeline */}
+              <div className="relative pt-4 pb-8">
+                {/* Track Line */}
+                <div className="absolute top-[22px] left-2 right-2 h-[3px] bg-gray-100 rounded-full"></div>
 
-                  {/* Stage content */}
-                  <div className={stage.isActive ? 'text-gray-900' : 'text-gray-400'}>
-                    <h4 className="font-bold text-base mb-1">{stage.name}</h4>
-                    <p className="text-sm">{stage.description}</p>
-                  </div>
+                {/* Progress Line */}
+                <div
+                  className="absolute top-[22px] left-2 h-[3px] bg-green-500 rounded-full transition-all duration-1000"
+                  style={{
+                    width: `${Math.max(0, Math.min(100, (stages.indexOf(currentStage!) / (stages.length - 1)) * 100))}%`
+                  }}
+                ></div>
+
+                {/* Checkpoints */}
+                <div className="relative flex justify-between px-1">
+                  {stages.map((stage: any, idx: number) => {
+                    const stageIdx = stages.indexOf(currentStage!);
+                    const isPassed = idx < stageIdx;
+                    const isCurrent = idx === stageIdx;
+
+                    return (
+                      <div key={idx} className="relative group">
+                        <div className={`w-3.5 h-3.5 rounded-full border-2 transition-all duration-300 z-10 ${isPassed ? 'bg-green-500 border-green-500' :
+                          isCurrent ? 'bg-white border-green-500 w-5 h-5 -mt-[3px] shadow-lg shadow-green-200' :
+                            'bg-white border-gray-200'
+                          }`}>
+                          {isCurrent && (
+                            <div className="w-2.5 h-2.5 bg-green-500 rounded-full m-auto mt-[1.5px]"></div>
+                          )}
+                        </div>
+                        {/* Tooltip-like stage name */}
+                        {isCurrent && (
+                          <div className="absolute top-8 left-1/2 -translate-x-1/2 whitespace-nowrap text-center">
+                            <p className="text-[10px] font-bold text-green-600 uppercase tracking-tighter shadow-sm">
+                              {stage.stage}
+                            </p>
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })}
                 </div>
-              ))}
+              </div>
             </div>
-          </div>
-        </div>
+          );
+        })()}
 
         {/* Live Field Status Section */}
         <div className="bg-white rounded-3xl p-6 mt-6 shadow-xl shadow-gray-900/10 border border-gray-100">
@@ -268,67 +301,8 @@ export function CropDetails() {
           </div>
         </div>
 
-        {/* Manual Control Section */}
-        <div className="bg-white rounded-3xl p-6 mt-6 shadow-xl shadow-gray-900/10 border border-gray-100">
-          <h3 className="text-lg font-bold text-gray-900 mb-5 flex items-center gap-2">
-            <div className="w-1 h-5 bg-gradient-to-b from-amber-500 to-amber-600 rounded-full" />
-            Manual Control
-          </h3>
-
-          <div className="mb-5 p-4 bg-gradient-to-br from-green-50 to-emerald-50 border border-green-200/50 rounded-xl shadow-sm">
-            <p className="text-xs font-bold text-green-800 mb-1.5 flex items-center gap-1.5">
-              <div className="w-1.5 h-1.5 bg-green-600 rounded-full" />
-              Recommendations
-            </p>
-            <p className="text-sm text-gray-700 leading-relaxed">{decision.explanation}</p>
-          </div>
-
-          <div className="space-y-3">
-            <button
-              onClick={handleIrrigation}
-              className="w-full py-4 rounded-2xl font-semibold text-base flex items-center justify-center gap-2 bg-gradient-to-r from-green-600 to-green-700 text-white hover:from-green-700 hover:to-green-800 active:scale-[0.98] transition-all shadow-lg shadow-green-600/25 hover:shadow-xl hover:shadow-green-600/30"
-            >
-              {isIrrigationRunning ? (
-                <>
-                  <Loader2 className="w-5 h-5 animate-spin" />
-                  Stop Irrigation
-                </>
-              ) : (
-                <>
-                  <Droplets className="w-5 h-5" />
-                  Start Irrigation
-                </>
-              )}
-            </button>
-
-            <button
-              onClick={handleFertilization}
-              className="w-full py-4 rounded-2xl font-semibold text-base flex items-center justify-center gap-2 bg-gradient-to-r from-emerald-500 to-emerald-600 text-white hover:from-emerald-600 hover:to-emerald-700 active:scale-[0.98] transition-all shadow-lg shadow-emerald-500/25 hover:shadow-xl hover:shadow-emerald-500/30"
-            >
-              {isFertilizationRunning ? (
-                <>
-                  <Loader2 className="w-5 h-5 animate-spin" />
-                  Stop Fertilization
-                </>
-              ) : (
-                <>
-                  <FlaskConical className="w-5 h-5" />
-                  Start Fertilization
-                </>
-              )}
-            </button>
-          </div>
-
-          <div className="mt-4 space-y-2">
-            {isIrrigationRunning && (
-              <p className="text-sm text-green-700 font-medium">Irrigation line active for this crop.</p>
-            )}
-            {isFertilizationRunning && (
-              <p className="text-sm text-green-700 font-medium">Fertilization line active for this crop.</p>
-            )}
-            <p className="text-xs text-gray-500 mt-2">Manual actions affect only the selected crop zone.</p>
-          </div>
-        </div>
+        {/* Smart Valve Scheduling (AI Controlled) */}
+        <SmartValveControl cropId={id || '1'} farmId={crop.farmId || 'f1'} />
 
         {/* AI-Based Crop Image Health Detection */}
         <div className="bg-white rounded-3xl p-6 mt-6 shadow-xl shadow-gray-900/10 border border-gray-100">
