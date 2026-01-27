@@ -119,7 +119,7 @@ export function LoginScreen() {
           {!showOTP ? (
             <div className="animate-fade-in">
               {/* Login Method Toggle */}
-              <div className="flex p-1.5 bg-gray-100/80 rounded-2xl mb-8 relative">
+              <div className="flex flex-col p-1.5 bg-gray-100/80 rounded-2xl mb-8 relative">
                 {/* The following div was incorrectly placed, it should be inside the main card or removed */}
                 {/* <div className="text-center mb-8">
                   <h1 className="text-4xl font-bold text-gray-900 mb-3">
@@ -218,69 +218,70 @@ export function LoginScreen() {
                 </button>
 
               </div>
-              ) : (
-              <div className="animate-fade-in-up">
-                <div className="text-center mb-8">
-                  <div className="w-16 h-16 bg-blue-50 rounded-full flex items-center justify-center mx-auto mb-4">
-                    <Mail className="w-8 h-8 text-blue-500" />
-                  </div>
-                  <h2 className="text-xl font-bold text-gray-900 mb-2">Verification Code</h2>
-                  <p className="text-gray-500 text-sm">
-                    We sent a code to <br />
-                    <span className="text-gray-900 font-semibold">{loginMethod === 'phone' ? phoneNumber : email}</span>
-                  </p>
-                </div>
-
-                <div className="mb-8">
-                  <input
-                    autoFocus
-                    type="text"
-                    maxLength={6}
-                    value={otp}
-                    onChange={(e) => setOtp(e.target.value.replace(/\D/g, ''))}
-                    placeholder="000 000"
-                    className="w-full py-4 text-center text-3xl font-bold tracking-[0.5em] text-gray-900 bg-gray-50 border border-gray-200 rounded-xl focus:bg-white focus:border-green-500 focus:ring-4 focus:ring-green-500/10 transition-all outline-none placeholder:text-gray-300"
-                  />
-                </div>
-
-                {error && (
-                  <div className="mb-6 p-3 bg-red-50 border border-red-100 rounded-xl flex items-center gap-2 justify-center">
-                    <AlertCircle className="w-4 h-4 text-red-500" />
-                    <p className="text-sm text-red-600 font-medium">{error}</p>
-                  </div>
-                )}
-
-                <button
-                  onClick={handleVerifyOTP}
-                  disabled={isLoading}
-                  className="w-full bg-gray-900 text-white py-4 rounded-xl font-bold text-lg shadow-lg hover:shadow-xl hover:-translate-y-0.5 active:translate-y-0 active:scale-[0.98] transition-all flex items-center justify-center gap-2 disabled:opacity-70"
-                >
-                  {isLoading ? <Loader2 className="w-6 h-6 animate-spin" /> : "Verify & Login"}
-                </button>
-
-                <button
-                  onClick={() => setShowOTP(false)}
-                  className="w-full mt-4 py-3 text-gray-500 font-medium hover:text-gray-900 transition-colors text-sm"
-                >
-                  Back to Login
-                </button>
-              </div>
-          )}
             </div>
+          ) : (
+            <div className="animate-fade-in-up">
+              <div className="text-center mb-8">
+                <div className="w-16 h-16 bg-blue-50 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <Mail className="w-8 h-8 text-blue-500" />
+                </div>
+                <h2 className="text-xl font-bold text-gray-900 mb-2">Verification Code</h2>
+                <p className="text-gray-500 text-sm">
+                  We sent a code to <br />
+                  <span className="text-gray-900 font-semibold">{loginMethod === 'phone' ? phoneNumber : email}</span>
+                </p>
+              </div>
+
+              <div className="mb-8">
+                <input
+                  autoFocus
+                  type="text"
+                  maxLength={6}
+                  value={otp}
+                  onChange={(e) => setOtp(e.target.value.replace(/\D/g, ''))}
+                  placeholder="000 000"
+                  className="w-full py-4 text-center text-3xl font-bold tracking-[0.5em] text-gray-900 bg-gray-50 border border-gray-200 rounded-xl focus:bg-white focus:border-green-500 focus:ring-4 focus:ring-green-500/10 transition-all outline-none placeholder:text-gray-300"
+                />
+              </div>
+
+              {error && (
+                <div className="mb-6 p-3 bg-red-50 border border-red-100 rounded-xl flex items-center gap-2 justify-center">
+                  <AlertCircle className="w-4 h-4 text-red-500" />
+                  <p className="text-sm text-red-600 font-medium">{error}</p>
+                </div>
+              )}
+
+              <button
+                onClick={handleVerifyOTP}
+                disabled={isLoading}
+                className="w-full bg-gray-900 text-white py-4 rounded-xl font-bold text-lg shadow-lg hover:shadow-xl hover:-translate-y-0.5 active:translate-y-0 active:scale-[0.98] transition-all flex items-center justify-center gap-2 disabled:opacity-70"
+              >
+                {isLoading ? <Loader2 className="w-6 h-6 animate-spin" /> : "Verify & Login"}
+              </button>
+
+              <button
+                onClick={() => setShowOTP(false)}
+                className="w-full mt-4 py-3 text-gray-500 font-medium hover:text-gray-900 transition-colors text-sm"
+              >
+                Back to Login
+              </button>
+            </div>
+          )}
+        </div>
 
         {/* Footer */}
-          <div className="mt-8 text-center">
-            <p className="text-sm text-gray-500">
-              Don't have an account?
-              <button
-                onClick={() => navigate('/action-selection')}
-                className="ml-1 font-semibold text-green-600 hover:text-green-700 hover:underline transition-all"
-              >
-                Sign up now
-              </button>
-            </p>
-          </div>
+        <div className="mt-8 text-center">
+          <p className="text-sm text-gray-500">
+            Don't have an account?
+            <button
+              onClick={() => navigate('/action-selection')}
+              className="ml-1 font-semibold text-green-600 hover:text-green-700 hover:underline transition-all"
+            >
+              Sign up now
+            </button>
+          </p>
         </div>
       </div>
-      );
+    </div>
+  );
 }
