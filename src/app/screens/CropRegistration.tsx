@@ -4,6 +4,7 @@ import { Header } from '@/app/components/Header';
 import { ArrowRight, Calendar, MapPin, Sprout, Upload } from 'lucide-react';
 import { useApp } from '../../context/AppContext';
 import { toast } from '../../lib/toast';
+import { useTranslation } from 'react-i18next';
 import type { Crop, CropStage } from '../../context/AppContext';
 
 const CROP_IMAGES: Record<string, string> = {
@@ -32,6 +33,7 @@ export function CropRegistration() {
   const [searchParams] = useSearchParams();
   const farmId = searchParams.get('farmId') || '';
   const { addCrop, getFarm } = useApp();
+  const { t } = useTranslation();
   const farm = getFarm(farmId);
 
   const [cropName, setCropName] = useState('');
@@ -123,7 +125,7 @@ export function CropRegistration() {
   return (
     <div className="min-h-screen bg-white flex flex-col">
       <Header
-        title="Register Crop"
+        title={t('crop.registerCrop')}
         showBack
         onBackClick={() => navigate('/dashboard')}
         hideRightIcon
@@ -136,7 +138,7 @@ export function CropRegistration() {
               <Sprout className="w-6 h-6" />
             </div>
             <div>
-              <h2 className="text-xl font-bold text-gray-900">Crop Information</h2>
+              <h2 className="text-xl font-bold text-gray-900">{t('crop.cropInformation')}</h2>
               <p className="text-gray-600 text-sm font-medium mt-0.5">
                 {farm ? `Registering crop for ${farm.name}` : 'Add crop details'}
               </p>
@@ -146,7 +148,7 @@ export function CropRegistration() {
           <div className="space-y-6">
             <div>
               <label className="block text-sm font-semibold text-gray-700 mb-2">
-                Crop Name
+                {t('crop.cropName')}
               </label>
               <input
                 type="text"
@@ -160,7 +162,7 @@ export function CropRegistration() {
 
             <div>
               <label className="block text-sm font-semibold text-gray-700 mb-2">
-                Crop Type
+                {t('crop.cropType')}
               </label>
               <select
                 value={cropType}
@@ -183,7 +185,7 @@ export function CropRegistration() {
             <div>
               <label className="block text-sm font-semibold text-gray-700 mb-2 flex items-center gap-2">
                 <Calendar className="w-4 h-4 text-gray-500" />
-                Sowing Date
+                {t('crop.sowingDate')}
               </label>
               <input
                 type="date"
@@ -197,7 +199,7 @@ export function CropRegistration() {
             <div>
               <label className="block text-sm font-semibold text-gray-700 mb-2 flex items-center gap-2">
                 <MapPin className="w-4 h-4 text-gray-500" />
-                Location / Greenhouse
+                {t('crop.location')}
               </label>
               <input
                 type="text"
@@ -211,7 +213,7 @@ export function CropRegistration() {
 
             <div>
               <label className="block text-sm font-semibold text-gray-700 mb-2">
-                Land Area (Hectares)
+                {t('crop.landArea')}
               </label>
               <input
                 type="number"
