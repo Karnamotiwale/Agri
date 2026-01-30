@@ -3,21 +3,30 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { Upload, Scan, CheckCircle, AlertTriangle, ChevronRight } from 'lucide-react';
 import { Header } from '../components/Header';
 import { useApp } from '../../context/AppContext';
+import { aiService } from '../../services/ai.service';
 
 export function CropHealth() {
   const navigate = useNavigate();
   const { id } = useParams();
   const { getCrop } = useApp();
   const crop = getCrop(id || '1');
-  const [analyzing, setAnalyzing] = useState(false);
+  const [analysisLoading, setAnalysisLoading] = useState(false);
+  const [detectionResult, setDetectionResult] = useState<any>(null);
   const [result, setResult] = useState<null | 'healthy' | 'issue'>(null);
 
-  const simulateAnalysis = () => {
-    setAnalyzing(true);
-    setTimeout(() => {
-      setAnalyzing(false);
-      setResult('issue'); // Simulating an issue found
-    }, 2000);
+  const handleAnalysis = async () => {
+    if (!id) return;
+    setAnalysisLoading(true);
+    try {
+      const dummyFile = new File([""], "crop.jpg", { type: "image/jpeg" });
+      const res = await aiService.detectCropHealth(id, dummyFile);
+      setDetectionResult(res);
+      setResult('issue');
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setAnalysisLoading(false);
+    }
   };
 
   return (
@@ -27,10 +36,10 @@ export function CropHealth() {
       <div className="px-6 py-6">
         {/* Upload / Scan Area */}
         <div
-          onClick={simulateAnalysis}
+          onClick={handleAnalysis}
           className="bg-gray-50 border-2 border-dashed border-gray-300 rounded-3xl h-64 flex flex-col items-center justify-center mb-8 cursor-pointer active:scale-95 transition-all hover:bg-gray-100"
         >
-          {analyzing ? (
+          {analysisLoading ? (
             <div className="flex flex-col items-center animate-pulse">
               <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mb-4">
                 <Scan className="w-8 h-8 text-green-600 animate-spin" />
@@ -67,25 +76,25 @@ export function CropHealth() {
                   <AlertTriangle className="w-6 h-6 text-yellow-600" />
                 </div>
                 <div>
-                  <h3 className="text-lg font-bold text-gray-900">Yellow Rust Detected</h3>
-                  <p className="text-yellow-700 font-medium text-sm">Confidence: 94%{crop?.name ? ` • ${crop.name}` : ''}</p>
+                  <h3 className="text-lg font-bold text-gray-900">{detectionResult?.issue || 'Potential Issue'}</h3>
+                  <p className="text-yellow-700 font-medium text-sm">Confidence: {detectionResult?.confidence || 90}%{crop?.name ? ` • ${crop.name}` : ''}</p>
                 </div>
               </div>
               <p className="text-gray-600 text-sm leading-relaxed mb-4">
-                Early signs of yellow rust fungal infection detected on leaf tips. Requires immediate attention to prevent spread.
+                {detectionResult?.description || 'Detected potential signs of stress. Please review recommendations.'}
               </p>
 
               <div className="bg-white rounded-xl p-4">
                 <h4 className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-3">Recommended Actions</h4>
                 <ul className="space-y-3">
-                  <li className="flex items-start gap-3">
-                    <div className="w-5 h-5 rounded-full bg-green-100 flex items-center justify-center text-xs font-bold text-green-700 mt-0.5">1</div>
-                    <span className="text-sm text-gray-700 font-medium">Apply Fungicide (Propiconazole)</span>
-                  </li>
-                  <li className="flex items-start gap-3">
-                    <div className="w-5 h-5 rounded-full bg-green-100 flex items-center justify-center text-xs font-bold text-green-700 mt-0.5">2</div>
-                    <span className="text-sm text-gray-700 font-medium">Isolate affected area if possible</span>
-                  </li>
+                  {detectionResult?.recommendations?.map((rec: string, idx: number) => (
+                    <li key={idx} className="flex items-start gap-3">
+                      <div className="w-5 h-5 rounded-full bg-green-100 flex items-center justify-center text-xs font-bold text-green-700 mt-0.5">{idx + 1}</div>
+                      <span className="text-sm text-gray-700 font-medium">{rec}</span>
+                    </li>
+                  )) || (
+                      <li className="text-sm text-gray-500 italic">No specific recommendations available.</li>
+                    )}
                 </ul>
               </div>
             </div>

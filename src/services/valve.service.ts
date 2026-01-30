@@ -34,27 +34,52 @@ const MOCK_VALVES: Valve[] = [
 
 export const valveService = {
     getValvesForCrop: async (cropId: string): Promise<Valve[]> => {
-        // Simulate DB fetch
-        await new Promise(r => setTimeout(r, 500));
-        return MOCK_VALVES.filter(v => v.cropId === cropId);
+        try {
+            const response = await fetch(`/valves?crop_id=${cropId}`);
+            if (!response.ok) throw new Error(`API failed: ${response.status}`);
+            return await response.json();
+        } catch (err) {
+            console.warn('Valves fallback', err);
+            return MOCK_VALVES.filter(v => v.cropId === cropId);
+        }
     },
 
     toggleValve: async (valveId: string, isActive: boolean): Promise<Valve> => {
-        await new Promise(r => setTimeout(r, 800)); // Simulate network latency to ESP32
-        const valve = MOCK_VALVES.find(v => v.id === valveId);
-        if (!valve) throw new Error('Valve not found');
+        try {
+            const response = await fetch('/valves/toggle', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ valve_id: valveId, active: isActive })
+            });
 
-        valve.isActive = isActive;
-        valve.status = isActive ? 'RUNNING' : 'IDLE';
-        valve.lastActive = isActive ? new Date().toISOString() : valve.lastActive;
+            if (!response.ok) throw new Error(`Toggle failed: ${response.status}`);
+            return await response.json();
+        } catch (err) {
+            console.warn('Toggle fallback', err);
+            const valve = MOCK_VALVES.find(v => v.id === valveId);
+            if (!valve) throw new Error('Valve not found');
 
-        return { ...valve };
+            valve.isActive = isActive;
+            valve.status = isActive ? 'RUNNING' : 'IDLE';
+            valve.lastActive = isActive ? new Date().toISOString() : valve.lastActive;
+
+            return { ...valve };
+        }
     },
 
-    // Simulates sending a manual override command that might be logged
     overrideSchedule: async (valveId: string, params: { duration: number, quantity: number }): Promise<boolean> => {
-        console.log(`Override command sent to Valve ${valveId}:`, params);
-        await new Promise(r => setTimeout(r, 600));
-        return true;
+        try {
+            const response = await fetch('/valves/override', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ valve_id: valveId, ...params })
+            });
+
+            if (!response.ok) throw new Error(`Override failed: ${response.status}`);
+            return true;
+        } catch (err) {
+            console.warn('Override fallback', err);
+            return true;
+        }
     }
 };

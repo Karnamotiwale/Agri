@@ -1,5 +1,5 @@
 import { useNavigate, useLocation } from 'react-router-dom';
-import { Home, Sprout, MapPin, User } from 'lucide-react';
+import { Home, Sprout, MapPin, User, BarChart2, Landmark, Activity, Cpu } from 'lucide-react';
 
 export function BottomNav() {
   const navigate = useNavigate();
@@ -7,9 +7,11 @@ export function BottomNav() {
 
   const navItems = [
     { icon: Home, label: 'Home', path: '/dashboard' },
-    { icon: Sprout, label: 'Crops', path: '/dashboard' },
-    { icon: MapPin, label: 'Farms', path: '/dashboard' },
-    { icon: User, label: 'Profile', path: '/dashboard' },
+    { icon: BarChart2, label: 'Analytics', path: '/dashboard' },
+    { icon: Landmark, label: 'Schemes', path: '/dashboard' },
+    { icon: Activity, label: 'Sensors', path: '/sensor-guide' },
+    { icon: MapPin, label: 'Crops', path: '/my-farm' },
+    { icon: Cpu, label: 'AI Engine', path: '/ai-engine' },
   ];
 
   return (
@@ -24,14 +26,12 @@ export function BottomNav() {
               className="flex flex-col items-center gap-1 px-3 py-1.5 rounded-xl transition-all duration-200 hover:bg-green-50/50 active:scale-95"
             >
               <Icon
-                className={`w-6 h-6 transition-colors ${
-                  isActive ? 'text-green-600' : 'text-gray-400'
-                }`}
+                className={`w-6 h-6 transition-colors ${isActive ? 'text-green-600' : 'text-gray-400'
+                  }`}
               />
               <span
-                className={`text-[10px] font-medium transition-colors ${
-                  isActive ? 'text-green-600' : 'text-gray-500'
-                }`}
+                className={`text-[10px] font-medium transition-colors ${isActive ? 'text-green-600' : 'text-gray-500'
+                  }`}
               >
                 {label}
               </span>

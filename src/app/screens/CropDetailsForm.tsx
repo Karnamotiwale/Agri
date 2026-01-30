@@ -1,31 +1,35 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Header } from '@/app/components/Header';
+import { Header } from '../components/Header';
 import { ArrowRight, Calendar, Sprout, Database, Camera, Upload, X, Loader2 } from 'lucide-react';
 import { useRef } from 'react';
 import { useApp } from '../../context/AppContext';
 import type { Crop, CropStage } from '../../context/AppContext';
 import { cropService } from '../../services/crop.service';
 
+const ALLOWED_CROPS = [
+  { id: 'rice', name: 'Rice', icon: '🌾', description: 'Semi-aquatic cereal' },
+  { id: 'wheat', name: 'Wheat', icon: '🍞', description: 'Cereal grass' },
+  { id: 'maize', name: 'Maize', icon: '🌽', description: 'Corn/Cereal' },
+  { id: 'sugarcane', name: 'Sugarcane', icon: '🎋', description: 'Tall perennial grass' },
+  { id: 'pulses', name: 'Pulses', icon: '🫘', description: 'Leguminous crops' },
+];
+
 const CROP_IMAGES: Record<string, string> = {
   wheat: 'https://images.unsplash.com/photo-1625246333195-bf8f85404843?q=80&w=1000&auto=format&fit=crop',
   rice: 'https://images.unsplash.com/photo-1582515073490-dc84fbbf5f84?q=80&w=1000&auto=format&fit=crop',
-  corn: 'https://images.unsplash.com/photo-1625246333195-bf8f85404843?q=80&w=1000&auto=format&fit=crop',
-  cotton: 'https://images.unsplash.com/photo-1625246333195-bf8f85404843?q=80&w=1000&auto=format&fit=crop',
-  soybean: 'https://images.unsplash.com/photo-1625246333195-bf8f85404843?q=80&w=1000&auto=format&fit=crop',
-  vegetables: 'https://images.unsplash.com/photo-1589927986089-35812388d1b4?q=80&w=1000&auto=format&fit=crop',
-  fruits: 'https://images.unsplash.com/photo-1601004890684-d8cbf643f5f2?q=80&w=1000&auto=format&fit=crop',
+  maize: 'https://images.unsplash.com/photo-1625246333195-bf8f85404843?q=80&w=1000&auto=format&fit=crop',
+  sugarcane: 'https://images.unsplash.com/photo-1673200692829-fcdb7e267fc1?q=80&w=1000&auto=format&fit=crop',
+  pulses: 'https://images.unsplash.com/photo-1589927986089-35812388d1b4?q=80&w=1000&auto=format&fit=crop',
   default: 'https://images.unsplash.com/photo-1582515073490-dc84fbbf5f84?q=80&w=1000&auto=format&fit=crop',
 };
 
 const SOWING_PERIODS: Record<string, string> = {
   wheat: 'Oct – Mar',
   rice: 'Jun – Nov',
-  corn: 'May – Sep',
-  cotton: 'Apr – Oct',
-  soybean: 'Jun – Oct',
-  vegetables: 'Jan – Dec',
-  fruits: 'Jan – Dec',
+  maize: 'May – Sep',
+  sugarcane: 'Feb – Apr',
+  pulses: 'Jun – Oct',
 };
 
 export function CropDetailsForm() {
@@ -81,12 +85,12 @@ export function CropDetailsForm() {
 
       const newCrop: Crop = {
         id: 'c' + Date.now(),
-        name: cropName,
+        name: cropType.charAt(0).toUpperCase() + cropType.slice(1),
         image: cropImage,
         location: 'Field',
         landArea: '1 Hectares of land',
         landSize: '1 Hectares of land',
-        sowingDate: sowingDate, // Use raw YYYY-MM-DD for DB compatibility
+        sowingDate: sowingDate,
         sowingPeriod: sowingPeriod,
         currentStage: 'Planting Phase',
         stageDate: shortDate,
@@ -123,7 +127,7 @@ export function CropDetailsForm() {
     }
   };
 
-  const isFormValid = cropName && cropType && sowingDate && seedsPlanted && selectedFarmId;
+  const isFormValid = cropType && sowingDate && seedsPlanted && selectedFarmId;
 
   const handleImageUpload = (file: File) => {
     if (file.size > 5 * 1024 * 1024) {
@@ -226,37 +230,39 @@ export function CropDetailsForm() {
 
           <div className="space-y-6">
             <div>
-              <label className="block text-sm font-semibold text-gray-700 mb-2">
-                Crop Name
+              <label className="block text-sm font-semibold text-gray-700 mb-4">
+                Select Crop Type (Whitelist Only)
               </label>
-              <input
-                type="text"
-                value={cropName}
-                onChange={(e) => setCropName(e.target.value)}
-                placeholder="e.g. Wheat, Rice, Corn"
-                className="w-full px-4 py-4 bg-gradient-to-br from-gray-50 to-gray-50/80 border border-gray-200/50 rounded-2xl focus:bg-white focus:border-green-500 focus:ring-4 focus:ring-green-500/15 focus:shadow-lg focus:shadow-green-500/10 transition-all outline-none text-gray-900 font-medium"
-              />
-            </div>
-
-            <div>
-              <label className="block text-sm font-semibold text-gray-700 mb-2">
-                Crop Type
-              </label>
-              <select
-                value={cropType}
-                onChange={(e) => setCropType(e.target.value)}
-                className="w-full px-4 py-4 bg-gradient-to-br from-gray-50 to-gray-50/80 border border-gray-200/50 rounded-2xl focus:bg-white focus:border-green-500 focus:ring-4 focus:ring-green-500/15 focus:shadow-lg focus:shadow-green-500/10 transition-all outline-none appearance-none text-gray-900 font-medium"
-              >
-                <option value="">Select Crop Type</option>
-                <option value="wheat">Wheat</option>
-                <option value="rice">Rice</option>
-                <option value="corn">Corn</option>
-                <option value="cotton">Cotton</option>
-                <option value="soybean">Soybean</option>
-                <option value="vegetables">Vegetables</option>
-                <option value="fruits">Fruits</option>
-                <option value="other">Other</option>
-              </select>
+              <div className="grid grid-cols-1 gap-3">
+                {ALLOWED_CROPS.map((crop) => (
+                  <button
+                    key={crop.id}
+                    onClick={() => {
+                      setCropType(crop.id);
+                      setCropName(crop.name);
+                    }}
+                    className={`flex items-center gap-4 p-4 rounded-2xl border-2 transition-all duration-200 ${cropType === crop.id
+                      ? 'border-green-500 bg-green-50 shadow-md transform scale-[1.02]'
+                      : 'border-gray-100 bg-gray-50/50 hover:border-gray-200'
+                      }`}
+                  >
+                    <div className="w-12 h-12 rounded-xl bg-white shadow-sm flex items-center justify-center text-2xl">
+                      {crop.icon}
+                    </div>
+                    <div className="text-left flex-1">
+                      <h4 className={`font-bold transition-colors ${cropType === crop.id ? 'text-green-700' : 'text-gray-900'}`}>
+                        {crop.name}
+                      </h4>
+                      <p className="text-[10px] text-gray-500 font-medium uppercase tracking-wider">{crop.description}</p>
+                    </div>
+                    {cropType === crop.id && (
+                      <div className="w-6 h-6 rounded-full bg-green-500 flex items-center justify-center">
+                        <Database className="w-3.5 h-3.5 text-white" />
+                      </div>
+                    )}
+                  </button>
+                ))}
+              </div>
             </div>
 
             <div>

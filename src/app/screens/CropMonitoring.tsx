@@ -1,11 +1,12 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { Header } from '@/app/components/Header';
-import { BottomNav } from '@/app/components/BottomNav';
+import { Header } from '../components/Header';
+import { BottomNav } from '../components/BottomNav';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { Droplets, TestTube, Activity, TrendingUp } from 'lucide-react';
 import { useApp } from '../../context/AppContext';
 import { useCropSensors } from '../../hooks/useCropSensors';
+import { cropService } from '../../services/crop.service';
 
 const DAYS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
 
@@ -17,19 +18,39 @@ export function CropMonitoring() {
   const sensors = useCropSensors(cid);
   const crop = getCrop(cid);
 
-  const [moistureData, setMoistureData] = useState(() =>
-    DAYS.map((day, i) => ({ day, value: 65 + Math.round(Math.random() * 20) }))
-  );
+  const [moistureData, setMoistureData] = useState<any[]>([]);
+  const [loadingHistory, setLoadingHistory] = useState(true);
 
   useEffect(() => {
-    setMoistureData((prev) => {
-      const next = prev.map((p, i) =>
-        i < 6
-          ? { ...p, value: Math.max(20, Math.min(85, p.value + (Math.random() - 0.5) * 3)) }
-          : { ...p, value: Math.round(sensors.moisture) }
-      );
-      return next;
-    });
+    loadHistory();
+  }, [cid]);
+
+  const loadHistory = async () => {
+    try {
+      const data = await cropService.getCropJourney(cid);
+      const formatted = data.map((d: any) => ({
+        day: new Date(d.created_at).toLocaleDateString(undefined, { weekday: 'short' }),
+        value: d.soil_moisture
+      }));
+      setMoistureData(formatted);
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setLoadingHistory(false);
+    }
+  };
+
+  useEffect(() => {
+    if (moistureData.length > 0 && sensors.moisture) {
+      setMoistureData(prev => {
+        const next = [...prev];
+        next[next.length - 1] = {
+          ...next[next.length - 1],
+          value: Math.round(sensors.moisture)
+        };
+        return next;
+      });
+    }
   }, [sensors.moisture]);
 
   const getSoilHealthColor = (score: number) => {
@@ -48,9 +69,9 @@ export function CropMonitoring() {
     100,
     Math.round(
       50 +
-        (sensors.moisture / 85) * 20 +
-        (sensors.ph >= 5.5 && sensors.ph <= 7.5 ? 15 : 0) +
-        (sensors.n >= 80 && sensors.p >= 25 && sensors.k >= 120 ? 15 : 0)
+      (sensors.moisture / 85) * 20 +
+      (sensors.ph >= 5.5 && sensors.ph <= 7.5 ? 15 : 0) +
+      (sensors.n >= 80 && sensors.p >= 25 && sensors.k >= 120 ? 15 : 0)
     )
   );
 
@@ -132,8 +153,8 @@ export function CropMonitoring() {
                 {soilHealthScore >= 80
                   ? 'Your soil conditions are optimal for growth. Continue monitoring regularly.'
                   : soilHealthScore >= 60
-                  ? 'Soil conditions are good. Monitor moisture and nutrients.'
-                  : 'Soil needs attention. Check irrigation and fertilization.'}
+                    ? 'Soil conditions are good. Monitor moisture and nutrients.'
+                    : 'Soil needs attention. Check irrigation and fertilization.'}
               </p>
             </div>
           </div>

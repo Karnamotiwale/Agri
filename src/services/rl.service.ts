@@ -63,41 +63,65 @@ const MOCK_ACTIONS: AIAction[] = [
 
 export const rlService = {
     getPerformanceSummary: async (): Promise<AIPerformance> => {
-        // Simulate calc
-        await new Promise(r => setTimeout(r, 600));
-        return {
-            overallScore: 87,
-            efficiencyTrend: 'UP',
-            totalActions: 142,
-            positiveRewards: 1250,
-            negativeRewards: -120,
-            lastUpdated: new Date().toISOString()
-        };
+        try {
+            const response = await fetch('/ai/rl-performance');
+            if (!response.ok) throw new Error(`API failed: ${response.status}`);
+            return await response.json();
+        } catch (err) {
+            console.warn('RL performance fallback', err);
+            return {
+                overallScore: 87,
+                efficiencyTrend: 'UP',
+                totalActions: 142,
+                positiveRewards: 1250,
+                negativeRewards: -120,
+                lastUpdated: new Date().toISOString()
+            };
+        }
     },
 
     getRecentActions: async (): Promise<AIAction[]> => {
-        await new Promise(r => setTimeout(r, 800));
-        return MOCK_ACTIONS;
+        try {
+            const response = await fetch('/ai/rl-actions');
+            if (!response.ok) throw new Error(`API failed: ${response.status}`);
+            return await response.json();
+        } catch (err) {
+            console.warn('RL actions fallback', err);
+            return MOCK_ACTIONS;
+        }
     },
 
     getRewardHistory: async (): Promise<{ date: string; score: number }[]> => {
-        // Mock 7 day history
-        return [
-            { date: 'Mon', score: 45 },
-            { date: 'Tue', score: 60 },
-            { date: 'Wed', score: 55 },
-            { date: 'Thu', score: 80 },
-            { date: 'Fri', score: 95 },
-            { date: 'Sat', score: 85 },
-            { date: 'Sun', score: 92 }
-        ];
+        try {
+            const response = await fetch('/ai/rl-rewards');
+            if (!response.ok) throw new Error(`API failed: ${response.status}`);
+            return await response.json();
+        } catch (err) {
+            console.warn('RL rewards fallback', err);
+            return [
+                { date: 'Mon', score: 45 },
+                { date: 'Tue', score: 60 },
+                { date: 'Wed', score: 55 },
+                { date: 'Thu', score: 80 },
+                { date: 'Fri', score: 95 },
+                { date: 'Sat', score: 85 },
+                { date: 'Sun', score: 92 }
+            ];
+        }
     },
 
     getInsights: async (): Promise<string[]> => {
-        return [
-            "AI reduced water usage by 18% this week compared to manual cycle.",
-            "Yield prediction accuracy improved by 12% after recent feedback.",
-            "Manual overrides on Irrigation have reduced AI confidence slightly."
-        ];
+        try {
+            const response = await fetch('/ai/rl-insights');
+            if (!response.ok) throw new Error(`API failed: ${response.status}`);
+            return await response.json();
+        } catch (err) {
+            console.warn('RL insights fallback', err);
+            return [
+                "AI reduced water usage by 18% this week compared to manual cycle.",
+                "Yield prediction accuracy improved by 12% after recent feedback.",
+                "Manual overrides on Irrigation have reduced AI confidence slightly."
+            ];
+        }
     }
 };

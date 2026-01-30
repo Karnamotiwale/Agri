@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   Sprout,
@@ -12,7 +12,11 @@ import {
   BarChart2,
   Sun,
   Cpu,
+  ShieldCheck,
+  TrendingUp,
+  AlertCircle
 } from 'lucide-react';
+import { aiService } from '../../services/ai.service';
 
 import { FarmsView } from '../components/FarmsView';
 import { GovernmentSchemes } from '../components/GovernmentSchemes';
@@ -191,14 +195,30 @@ export function Dashboard() {
 
       {/* Analytics View */}
       {activeTab === 'analytics' && (
-        <div className="px-6 pt-6 pb-4 flex items-center justify-center min-h-[50vh]">
-           {/* Content removed as requested */}
+        <div className="p-6 space-y-8 animate-in fade-in duration-500">
+          <div className="flex items-center gap-2 mb-2">
+            <BarChart2 className="w-6 h-6 text-green-600" />
+            <h1 className="text-2xl font-black text-gray-900">Farm Analytics</h1>
+          </div>
+
+          <FarmAnalyticsPanel />
+
+          <div className="pt-4">
+            <h2 className="text-sm font-black text-gray-400 uppercase tracking-widest px-1 mb-4">Historical Performance</h2>
+            <div className="bg-white rounded-[2.5rem] p-8 border border-gray-100 shadow-sm text-center">
+              <div className="p-4 bg-green-50 rounded-full w-16 h-16 flex items-center justify-center mx-auto mb-4">
+                <Activity className="w-8 h-8 text-green-600" />
+              </div>
+              <h3 className="text-lg font-bold text-gray-800">Seasonal Data Syncing</h3>
+              <p className="text-sm text-gray-400 mt-2 leading-relaxed">Cumulative data for the 2026 season is being aggregated. Historical trends will be available after the first harvest.</p>
+            </div>
+          </div>
         </div>
       )}
 
       {/* Bottom Navigation */}
-      <div className="fixed bottom-0 left-0 right-0 bg-white/95 backdrop-blur-sm border-t border-gray-200/80 px-6 py-3 z-[100] shadow-[0_-4px_20px_rgba(0,0,0,0.05)]">
-        <div className="flex justify-between max-w-md mx-auto">
+      <div className="fixed bottom-0 left-0 right-0 bg-white/95 backdrop-blur-sm border-t border-gray-200/80 px-4 py-3 z-[100] shadow-[0_-4px_20px_rgba(0,0,0,0.05)]">
+        <div className="flex justify-around max-w-md mx-auto">
           <button
             onClick={() => setActiveTab('home')}
             className="flex flex-col items-center gap-1 px-3 py-1.5 rounded-xl transition-all duration-200 hover:bg-green-50/50 active:scale-95"
@@ -327,6 +347,90 @@ export function Dashboard() {
           </div>
         </div>
       )}
+    </div>
+  );
+}
+
+function FarmAnalyticsPanel() {
+  const [data, setData] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    loadData();
+  }, []);
+
+  const loadData = async () => {
+    try {
+      const res = await aiService.getFarmAIAnalytics();
+      setData(res);
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  if (loading) return <div className="h-64 bg-gray-100 animate-pulse rounded-[2.5rem]" />;
+  if (!data) return null;
+
+  return (
+    <div className="space-y-6">
+      {/* Distribution Card */}
+      <div className="bg-white rounded-[2.5rem] p-6 border border-gray-100 shadow-sm">
+        <div className="flex items-center justify-between mb-6">
+          <h3 className="text-sm font-black text-gray-400 uppercase tracking-widest">Health Distribution</h3>
+          <ShieldCheck className="w-5 h-5 text-green-500" />
+        </div>
+
+        <div className="flex gap-2 h-4 rounded-full overflow-hidden mb-6">
+          <div className="bg-green-500 h-full" style={{ width: `${data.health_distribution.healthy}%` }} />
+          <div className="bg-amber-400 h-full" style={{ width: `${data.health_distribution.stressed}%` }} />
+          <div className="bg-red-500 h-full" style={{ width: `${data.health_distribution.diseased}%` }} />
+        </div>
+
+        <div className="grid grid-cols-3 gap-4">
+          <LegendItem label="Healthy" value={`${data.health_distribution.healthy}%`} color="bg-green-500" />
+          <LegendItem label="Stressed" value={`${data.health_distribution.stressed}%`} color="bg-amber-400" />
+          <LegendItem label="Diseased" value={`${data.health_distribution.diseased}%`} color="bg-red-500" />
+        </div>
+      </div>
+
+      {/* Resource Efficiency */}
+      <div className="grid grid-cols-2 gap-4">
+        {data.resource_usage.map((res: any, i: number) => (
+          <div key={i} className="bg-white p-5 rounded-3xl border border-gray-100 shadow-sm text-center">
+            <p className="text-[10px] font-black text-gray-400 uppercase tracking-tighter mb-1">{res.name} Saved</p>
+            <p className="text-2xl font-black text-green-600">+{res.optimized}%</p>
+            <div className="flex items-center justify-center gap-1 mt-2">
+              <TrendingUp className="w-3 h-3 text-green-500" />
+              <span className="text-[9px] font-bold text-gray-400">Optimization Active</span>
+            </div>
+          </div>
+        ))}
+      </div>
+
+      {/* Quick Stats */}
+      <div className="flex items-center gap-3 p-5 bg-blue-600 rounded-3xl text-white shadow-xl shadow-blue-100">
+        <div className="p-3 bg-white/20 rounded-2xl">
+          <Cpu className="w-6 h-6" />
+        </div>
+        <div>
+          <p className="text-[10px] font-black uppercase tracking-widest opacity-80">AI Impact Score</p>
+          <p className="text-lg font-black">{data.predicted_yield_gain}% Yield Increase Project</p>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function LegendItem({ label, value, color }: any) {
+  return (
+    <div className="text-center">
+      <div className="flex items-center justify-center gap-1.5 mb-1">
+        <div className={`w-2 h-2 rounded-full ${color}`} />
+        <span className="text-[10px] font-bold text-gray-500 uppercase">{label}</span>
+      </div>
+      <p className="text-sm font-black text-gray-900">{value}</p>
     </div>
   );
 }
