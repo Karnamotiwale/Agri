@@ -16,12 +16,10 @@ import {
 
 import { FarmsView } from '../components/FarmsView';
 import { GovernmentSchemes } from '../components/GovernmentSchemes';
-import { WeatherWidget } from '../../components/analytics/WeatherWidget';
-import { SoilAnalytics } from '../../components/analytics/SoilAnalytics';
-import { YieldPredictor } from '../../components/analytics/YieldPredictor';
+
 import { useApp } from '../../context/AppContext';
 import { useCropSensors } from '../../hooks/useCropSensors';
-import { ResourceUsageAnalytics } from '../../components/analytics/ResourceUsageAnalytics';
+
 import { useTranslation } from 'react-i18next';
 
 export function Dashboard() {
@@ -193,30 +191,8 @@ export function Dashboard() {
 
       {/* Analytics View */}
       {activeTab === 'analytics' && (
-        <div className="px-6 pt-6 pb-4 space-y-6">
-          <div className="mb-4">
-            <h2 className="text-2xl font-bold text-gray-900 mb-1">Advanced Analytics</h2>
-            <p className="text-sm text-gray-500">Real-time insights & predictions</p>
-          </div>
-
-          <div className="h-64">
-            <WeatherWidget />
-          </div>
-
-          <div className="h-96">
-            <SoilAnalytics />
-          </div>
-
-          <div className="h-80">
-            <YieldPredictor />
-          </div>
-
-          <div className="pb-24">
-            <ResourceUsageAnalytics
-              cropId="1"
-              cropName="All Fields Overview"
-            />
-          </div>
+        <div className="px-6 pt-6 pb-4 flex items-center justify-center min-h-[50vh]">
+           {/* Content removed as requested */}
         </div>
       )}
 
