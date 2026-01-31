@@ -1,5 +1,6 @@
 import { supabase, getCurrentUserId } from '../lib/supabase';
 import type { Crop } from '../context/AppContext';
+import { getApiUrl } from './config';
 
 export const cropService = {
     /**
@@ -284,7 +285,8 @@ export const cropService = {
         try {
             // Using fetch to call the backend API as requested
             // POST /crop/journey { "crop": "<selected_crop>" }
-            const response = await fetch('/crop/journey', {
+            const url = getApiUrl('/crop/journey');
+            const response = await fetch(url, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'
@@ -304,12 +306,10 @@ export const cropService = {
         }
     },
 
-    /**
-     * Get real-time growth stages from Crop Stage Engine
-     */
     getGrowthStages: async (cropId: string, daysSinceSowing: number = 0): Promise<any> => {
         try {
-            const response = await fetch('/crop/growth-stages', {
+            const url = getApiUrl('/crop/growth-stages');
+            const response = await fetch(url, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ crop: cropId, days_since_sowing: daysSinceSowing })
@@ -319,6 +319,46 @@ export const cropService = {
             return await response.json();
         } catch (err) {
             console.error('Error fetching growth stages:', err);
+            throw err;
+        }
+    },
+
+    /**
+     * Get crop rotation recommendation
+     */
+    getRotationRecommendation: async (cropId: string): Promise<any> => {
+        try {
+            const url = getApiUrl('/crop/rotation');
+            const response = await fetch(url, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ crop: cropId })
+            });
+
+            if (!response.ok) throw new Error(`Rotation API failed: ${response.status}`);
+            return await response.json();
+        } catch (err) {
+            console.error('Error fetching rotation:', err);
+            throw err;
+        }
+    },
+
+    /**
+     * Get yield prediction
+     */
+    getYieldPrediction: async (cropId: string): Promise<any> => {
+        try {
+            const url = getApiUrl('/yield/predict');
+            const response = await fetch(url, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ crop: cropId })
+            });
+
+            if (!response.ok) throw new Error(`Yield API failed: ${response.status}`);
+            return await response.json();
+        } catch (err) {
+            console.error('Error fetching yield:', err);
             throw err;
         }
     }

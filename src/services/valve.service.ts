@@ -1,3 +1,4 @@
+import { getApiUrl } from './config';
 
 export interface Valve {
     id: string;
@@ -24,13 +25,15 @@ export interface ValveSchedule {
 
 export const valveService = {
     getValvesForCrop: async (cropId: string): Promise<Valve[]> => {
-        const response = await fetch(`/valves?crop_id=${cropId}`);
+        const url = getApiUrl(`/valves?crop_id=${cropId}`);
+        const response = await fetch(url);
         if (!response.ok) throw new Error(`Valves API failed: ${response.status}`);
         return await response.json();
     },
 
     toggleValve: async (valveId: string, isActive: boolean): Promise<Valve> => {
-        const response = await fetch('/valves/toggle', {
+        const url = getApiUrl('/valves/toggle');
+        const response = await fetch(url, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ valve_id: valveId, active: isActive })
@@ -41,7 +44,8 @@ export const valveService = {
     },
 
     overrideSchedule: async (valveId: string, params: { duration: number, quantity: number }): Promise<boolean> => {
-        const response = await fetch('/valves/override', {
+        const url = getApiUrl('/valves/override');
+        const response = await fetch(url, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ valve_id: valveId, ...params })

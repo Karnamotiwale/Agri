@@ -1,3 +1,5 @@
+import { getApiUrl } from './config';
+
 export interface CropSensorReading {
     moisture: number;
     ph: number;
@@ -9,7 +11,8 @@ export interface CropSensorReading {
 
 export const getCropSensors = async (cropId: string): Promise<CropSensorReading> => {
     try {
-        const response = await fetch(`/sensors?crop_id=${cropId}`);
+        const url = getApiUrl(`/sensors?crop_id=${cropId}`);
+        const response = await fetch(url);
         if (!response.ok) throw new Error(`API failed: ${response.status}`);
         return await response.json();
     } catch (err) {
@@ -20,7 +23,8 @@ export const getCropSensors = async (cropId: string): Promise<CropSensorReading>
 
 export const tickCropSensors = async (cropId: string): Promise<CropSensorReading> => {
     try {
-        const response = await fetch(`/sensors/tick?crop_id=${cropId}`);
+        const url = getApiUrl(`/sensors/tick?crop_id=${cropId}`);
+        const response = await fetch(url);
         if (!response.ok) throw new Error(`API failed: ${response.status}`);
         return await response.json();
     } catch (err) {
