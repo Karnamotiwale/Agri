@@ -25,18 +25,8 @@ export function CropTraceGraphs({ cropId }: Props) {
     }, [cropId]);
 
     const loadData = async () => {
-        // 1. Try to load from cache first for fast rendering (<500ms)
-        const cacheKey = `crop_journey_${cropId}`;
-        const cachedData = localStorage.getItem(cacheKey);
-        if (cachedData) {
-            try {
-                setData(JSON.parse(cachedData));
-                setLoading(false);
-                // We still fetch in background to refresh cache (stale-while-revalidate)
-            } catch (e) {
-                console.warn("Failed to parse cached data", e);
-            }
-        }
+        setLoading(true);
+        setError(null);
 
         try {
             const journeyData = await cropService.getCropJourney(cropId);
@@ -46,15 +36,13 @@ export function CropTraceGraphs({ cropId }: Props) {
                 displayDate: new Date(d.created_at).toLocaleDateString([], { day: '2-digit', month: 'short' })
             })).reverse(); // Reverse to show chronological order if backend returns newest first
 
-            // 2. Limit to 10-14 records as requested
+            // Limit to 10-14 records as requested
             const limitedData = formattedData.slice(-14);
 
             setData(limitedData);
-            // 3. Update cache
-            localStorage.setItem(cacheKey, JSON.stringify(limitedData));
-        } catch (err) {
-            console.error(err);
-            if (!data.length) setError('Failed to load field trends');
+        } catch (err: any) {
+            console.error('Failed to load crop journey:', err);
+            setError(err.message || 'Failed to load field trends');
         } finally {
             setLoading(false);
         }

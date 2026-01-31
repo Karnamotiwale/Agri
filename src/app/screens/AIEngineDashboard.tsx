@@ -16,6 +16,7 @@ export function AIEngineDashboard() {
     const [status, setStatus] = useState<any>(null);
     const [analytics, setAnalytics] = useState<any>(null);
     const [loading, setLoading] = useState(true);
+    const [error, setError] = useState<string | null>(null);
 
     useEffect(() => {
         loadGlobalData();
@@ -24,6 +25,9 @@ export function AIEngineDashboard() {
     }, []);
 
     const loadGlobalData = async () => {
+        setLoading(true);
+        setError(null);
+
         try {
             const [s, a] = await Promise.all([
                 aiService.getGlobalAIStatus(),
@@ -31,8 +35,9 @@ export function AIEngineDashboard() {
             ]);
             setStatus(s);
             setAnalytics(a);
-        } catch (err) {
-            console.error(err);
+        } catch (err: any) {
+            console.error('Failed to load AI dashboard data:', err);
+            setError(err.message || 'Failed to connect to AI backend');
         } finally {
             setLoading(false);
         }
@@ -43,6 +48,23 @@ export function AIEngineDashboard() {
             <div className="min-h-screen bg-gray-50 flex flex-col items-center justify-center p-6 text-center">
                 <BrainCircuit className="w-12 h-12 text-purple-600 animate-pulse mb-4" />
                 <p className="text-gray-500 font-bold uppercase tracking-widest text-xs">Syncing Neural Networks...</p>
+            </div>
+        );
+    }
+
+    if (error) {
+        return (
+            <div className="min-h-screen bg-gray-50 flex flex-col items-center justify-center p-6 text-center">
+                <AlertTriangle className="w-16 h-16 text-red-500 mb-4" />
+                <h2 className="text-xl font-bold text-gray-900 mb-2">Backend Disconnected</h2>
+                <p className="text-sm text-gray-600 mb-1">{error}</p>
+                <p className="text-xs text-gray-500 mb-6">Make sure the AI backend is running</p>
+                <button
+                    onClick={loadGlobalData}
+                    className="px-6 py-3 bg-purple-600 text-white rounded-xl font-bold hover:bg-purple-700 active:scale-95 transition-all"
+                >
+                    Retry Connection
+                </button>
             </div>
         );
     }

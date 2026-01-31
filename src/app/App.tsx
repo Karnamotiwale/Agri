@@ -76,9 +76,9 @@ export default function App() {
           <Route path="/action-selection" element={<ActionSelection />} />
           <Route path="/farm-details" element={<FarmDetailsForm />} />
           <Route path="/crop-details" element={<CropDetailsForm />} />
-
-          <Route path="/crop-details" element={<CropDetailsForm />} />
           <Route path="/ai-engine" element={<AIEngineDashboard />} />
+          <Route path="/ai-dashboard" element={<Navigate to="/ai-engine" replace />} />
+          <Route path="/api-engine" element={<Navigate to="/ai-engine" replace />} />
 
           {/* Crop Flow Routes */}
           <Route path="/crop/:id/overview" element={<CropOverview />} />

@@ -32,6 +32,35 @@ export const cropService = {
     },
 
     /**
+     * Upload disease detection image to storage
+     */
+    uploadDiseaseDetectionImage: async (file: File): Promise<string | null> => {
+        try {
+            const userId = await getCurrentUserId();
+            if (!userId) throw new Error('User not authenticated');
+
+            const fileExt = file.name.split('.').pop();
+            const fileName = `${userId}/${Date.now()}.${fileExt}`;
+            const filePath = fileName;
+
+            const { error: uploadError } = await supabase.storage
+                .from('disease-detection-images')
+                .upload(filePath, file);
+
+            if (uploadError) {
+                console.error('Error uploading disease detection image:', uploadError);
+                return null;
+            }
+
+            const { data } = supabase.storage.from('disease-detection-images').getPublicUrl(filePath);
+            return data.publicUrl;
+        } catch (err) {
+            console.error('Exception uploading disease detection image:', err);
+            return null;
+        }
+    },
+
+    /**
      * Get all crops for the authenticated user
      */
     getAllCrops: async (): Promise<Crop[]> => {
@@ -264,23 +293,14 @@ export const cropService = {
             });
 
             if (!response.ok) {
-                // Fallback for demo if API endpoint doesn't exist locally
-                console.warn(`API call failed: ${response.status}. Using mock data for demo.`);
-                throw new Error(`API call failed: ${response.status}`);
+                throw new Error(`Crop journey API failed: ${response.status}`);
             }
 
             const data = await response.json();
             return data;
         } catch (err) {
-            console.warn('Error fetching crop journey, returning mock data for demo resilience:', err);
-            // Return mock data strictly for demo resilience if API fails
-            // This ensures graphs are shown even if backend is not running locally
-            return Array.from({ length: 14 }).map((_, i) => ({
-                created_at: new Date(Date.now() - (13 - i) * 24 * 60 * 60 * 1000).toISOString(),
-                soil_moisture: 30 + Math.random() * 20,
-                temperature: 25 + Math.random() * 10,
-                rainfall: Math.random() > 0.7 ? Math.random() * 15 : 0
-            }));
+            console.error('Error fetching crop journey:', err);
+            throw err;
         }
     },
 
@@ -289,26 +309,17 @@ export const cropService = {
      */
     getGrowthStages: async (cropId: string, daysSinceSowing: number = 0): Promise<any> => {
         try {
-            const response = await fetch('/crop/stages', {
+            const response = await fetch('/crop/growth-stages', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ crop: cropId, days_since_sowing: daysSinceSowing })
             });
 
-            if (!response.ok) throw new Error(`API failed: ${response.status}`);
+            if (!response.ok) throw new Error(`Growth stages API failed: ${response.status}`);
             return await response.json();
         } catch (err) {
-            console.warn('Falling back to mock stages', err);
-            return {
-                currentStage: 'Vegetative',
-                stages: [
-                    { name: 'Sowing', status: 'completed', icon: '🌱' },
-                    { name: 'Germination', status: 'completed', icon: '🌿' },
-                    { name: 'Vegetative', status: 'active', icon: '🌲' },
-                    { name: 'Flowering', status: 'upcoming', icon: '🌸' },
-                    { name: 'Maturity', status: 'upcoming', icon: '🌾' }
-                ]
-            };
+            console.error('Error fetching growth stages:', err);
+            throw err;
         }
     }
 };

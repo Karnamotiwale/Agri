@@ -11,20 +11,15 @@ export function TodayTasks({ cropId, farmId }: Props) {
     const [decision, setDecision] = useState<any>(null);
     const [recommendations, setRecommendations] = useState<AIRecommendation[]>([]);
     const [loading, setLoading] = useState(true);
+    const [error, setError] = useState<string | null>(null);
 
     useEffect(() => {
         loadData();
     }, [cropId, farmId]);
 
     const loadData = async () => {
-        const cacheKey = `today_tasks_${cropId}`;
-        const cached = localStorage.getItem(cacheKey);
-        if (cached) {
-            const { dec, recs } = JSON.parse(cached);
-            setDecision(dec);
-            setRecommendations(recs);
-            setLoading(false);
-        }
+        setLoading(true);
+        setError(null);
 
         try {
             const [dec, recs] = await Promise.all([
@@ -34,15 +29,27 @@ export function TodayTasks({ cropId, farmId }: Props) {
             const filteredRecs = recs.filter(r => r.crop_id === cropId || r.crop_id === 'demo');
             setDecision(dec);
             setRecommendations(filteredRecs);
-            localStorage.setItem(cacheKey, JSON.stringify({ dec, recs: filteredRecs }));
-        } catch (err) {
-            console.error(err);
+        } catch (err: any) {
+            console.error('Failed to load tasks:', err);
+            setError(err.message || 'Failed to load tasks');
         } finally {
             setLoading(false);
         }
     };
 
     if (loading) return <div className="h-32 bg-gray-100 animate-pulse rounded-xl"></div>;
+
+    if (error) {
+        return (
+            <div className="p-6 bg-red-50 border border-red-200 rounded-xl">
+                <p className="text-red-800 font-bold">Failed to load tasks</p>
+                <p className="text-sm text-red-600 mt-1">{error}</p>
+                <button onClick={loadData} className="mt-3 px-4 py-2 bg-red-600 text-white rounded-lg text-sm font-bold hover:bg-red-700">
+                    Retry
+                </button>
+            </div>
+        );
+    }
 
     const tasks = [];
 

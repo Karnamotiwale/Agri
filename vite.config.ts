@@ -42,6 +42,24 @@ export default defineConfig({
       }
     }),
   ],
+  server: {
+    proxy: {
+      '/decide': 'http://localhost:5000',
+      '/feedback': 'http://localhost:5000',
+      '/recommendations': 'http://localhost:5000',
+      '/valves': 'http://localhost:5000',
+      '/crop': 'http://localhost:5000',
+      '/yield': 'http://localhost:5000',
+      '/ai/health-detect': 'http://localhost:5000',
+      '/ai/rl-performance': 'http://localhost:5000',
+      '/ai/rl-actions': 'http://localhost:5000',
+      '/ai/rl-rewards': 'http://localhost:5000',
+      '/ai/rl-insights': 'http://localhost:5000',
+      '/ai/detailed-advisory': 'http://localhost:5000',
+      '/ai/valves': 'http://localhost:5000',
+      '/sensors': 'http://localhost:5000',
+    }
+  },
   resolve: {
     alias: {
       // Alias @ to the src directory

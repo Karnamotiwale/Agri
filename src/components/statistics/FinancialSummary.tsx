@@ -9,31 +9,41 @@ interface Props {
 export function FinancialSummary({ cropId }: Props) {
     const [resourceData, setResourceData] = useState<ResourceAnalytics | null>(null);
     const [loading, setLoading] = useState(true);
+    const [error, setError] = useState<string | null>(null);
 
     useEffect(() => {
         loadData();
     }, [cropId]);
 
     const loadData = async () => {
-        const cacheKey = `resource_${cropId}`;
-        const cached = localStorage.getItem(cacheKey);
-        if (cached) {
-            setResourceData(JSON.parse(cached));
-            setLoading(false);
-        }
+        setLoading(true);
+        setError(null);
 
         try {
             const data = await aiAdvisoryService.getResourceAnalytics(cropId);
             setResourceData(data);
-            localStorage.setItem(cacheKey, JSON.stringify(data));
-        } catch (err) {
-            console.error(err);
+        } catch (err: any) {
+            console.error('Failed to load resource data:', err);
+            setError(err.message || 'Failed to load resource analytics');
         } finally {
             setLoading(false);
         }
     };
 
     if (loading) return <div className="h-32 bg-gray-100 animate-pulse rounded-xl"></div>;
+
+    if (error) {
+        return (
+            <div className="p-6 bg-red-50 border border-red-200 rounded-xl">
+                <p className="text-red-800 font-bold">Failed to load financial data</p>
+                <p className="text-sm text-red-600 mt-1">{error}</p>
+                <button onClick={loadData} className="mt-3 px-4 py-2 bg-red-600 text-white rounded-lg text-sm font-bold hover:bg-red-700">
+                    Retry
+                </button>
+            </div>
+        );
+    }
+
     if (!resourceData) return null;
 
     return (
