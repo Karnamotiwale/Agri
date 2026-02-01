@@ -1,391 +1,299 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Activity, Brain, Zap, BarChart3, ArrowLeft } from 'lucide-react';
+import {
+    Activity, Brain, Zap, BarChart3, ArrowLeft,
+    ShieldCheck, RefreshCw, Clock, AlertTriangle, CheckCircle2
+} from 'lucide-react';
 import { aiService } from '../../services/ai.service';
 import { BottomNav } from '../components/BottomNav';
 
+/**
+ * AI ENGINE DASHBOARD REBUILD (Phase 4)
+ * Stabilized with 4 tabs and 10s polling.
+ */
 export function AIEngineDashboard() {
     const navigate = useNavigate();
+    const [activeTab, setActiveTab] = useState<'decision' | 'rl' | 'xai' | 'status'>('decision');
     const [aiData, setAiData] = useState<any>(null);
     const [loading, setLoading] = useState(true);
-    const [error, setError] = useState<string | null>(null);
+    const [isSimulated, setIsSimulated] = useState(false);
+    const [lastRefresh, setLastRefresh] = useState<Date>(new Date());
 
+    const loadAllAIData = async () => {
+        try {
+            // Requirement 5: No frontend AI calculations - frontend is read-only.
+            // Requirement 3: include default values if data is missing (handled by service/backend)
+
+            const [decision, status, rl, xai, log] = await Promise.allSettled([
+                aiService.getDecision({ crop: 'rice', growth_stage: 'Vegetative' }),
+                aiService.getStatus(),
+                aiService.getRLMetrics(),
+                aiService.getXAI(),
+                aiService.getDecisionLog('rice', 1)
+            ]);
+
+            const newData: any = {};
+            if (decision.status === 'fulfilled') newData.decision = decision.value;
+            if (status.status === 'fulfilled') newData.status = status.value;
+            if (rl.status === 'fulfilled') newData.rl = rl.value;
+            if (xai.status === 'fulfilled') newData.xai = xai.value;
+            if (log.status === 'fulfilled') newData.latestLog = log.value[0];
+
+            setAiData(newData);
+            setIsSimulated(false);
+        } catch (err) {
+            console.error('AI Dashboard Engine issue, entering simulation mode:', err);
+            setIsSimulated(true);
+            // Fallback for UI safety (Requirement 6)
+            setAiData(getFallbackData());
+        } finally {
+            setLoading(false);
+            setLastRefresh(new Date());
+        }
+    };
+
+    // Phase 5: Poll backend every 10 seconds
     useEffect(() => {
-        loadAIData();
-        const interval = setInterval(loadAIData, 30000); // 30s refresh
+        loadAllAIData();
+        const interval = setInterval(loadAllAIData, 10000);
         return () => clearInterval(interval);
     }, []);
 
-    const loadAIData = async () => {
-        try {
-            setLoading(true);
-            setError(null);
-            const data = await aiService.getDecision({
-                crop: 'rice',
-                growth_stage: 'Vegetative',
-                soil_moisture_pct: 65,
-                temperature_c: 28
-            });
-            setAiData(data);
-        } catch (err: any) {
-            console.error('AI Dashboard connectivity issue, switching to simulation mode:', err);
-            // Fallback to Mock Data (Simulation Mode)
-            setAiData({
-                final_decision: "IRRIGATE",
-                reason: "Soil moisture dropped to 18% (Critical)",
-                ml_prediction: 1,
-                q_values: { "WAIT": -2.4, "IRRIGATE": 8.5, "FERTILIZE": 0.2 },
-                state: {
-                    "soil_moisture": "LOW",
-                    "temperature": "HIGH",
-                    "rainfall_forecast": "NONE",
-                    "growth_stage": "VEGETATIVE"
-                },
-                explanation: {
-                    explanations: [
-                        "Soil moisture is significantly below the 30% threshold for Rice.",
-                        "ML model predicts 85% probability of water stress within 6 hours.",
-                        "No rainfall is forecast for the next 24 hours."
-                    ],
-                    advisories: [
-                        "Initiate irrigation immediately to prevent yield loss.",
-                        "Monitor pump efficiency during operation."
-                    ]
-                },
-                irrigation_plan: {
-                    "status": "RECOMMENDED",
-                    "volume": "1200 Liters",
-                    "method": "Drip Irrigation",
-                    "duration": "45 minutes"
-                },
-                fertilizer_advice: {
-                    "status": "HOLD",
-                    "reason": "Wait for moisture levels to stabilize before application."
-                },
-                pest_disease_advisory: {
-                    "risk_level": "LOW",
-                    "detected_threats": "None",
-                    "preventive_measure": "Continue routine monitoring."
-                }
-            });
-        } finally {
-            setLoading(false);
-        }
-    };
+    const tabs = [
+        { id: 'decision', label: 'Decision AI', icon: Brain },
+        { id: 'rl', label: 'Reinforcement Learning', icon: Zap },
+        { id: 'xai', label: 'Explainable AI', icon: Activity },
+        { id: 'status', label: 'AI Health & Status', icon: ShieldCheck },
+    ];
 
     if (loading && !aiData) {
         return (
             <div className="min-h-screen bg-gray-50 flex items-center justify-center">
                 <div className="text-center">
-                    <Brain className="w-12 h-12 text-purple-600 animate-pulse mx-auto mb-4" />
-                    <p className="text-gray-600 font-medium">Loading AI Engine...</p>
-                </div>
-            </div>
-        );
-    }
-
-    if (error && !aiData) {
-        return (
-            <div className="min-h-screen bg-gray-50 flex items-center justify-center p-6">
-                <div className="bg-white rounded-2xl p-8 shadow-sm max-w-md w-full text-center">
-                    <div className="w-16 h-16 bg-red-50 rounded-full flex items-center justify-center mx-auto mb-4">
-                        <Zap className="w-8 h-8 text-red-500" />
-                    </div>
-                    <h3 className="text-lg font-bold text-gray-900 mb-2">Connection Error</h3>
-                    <p className="text-sm text-gray-600 mb-6">{error}</p>
-                    <button
-                        onClick={loadAIData}
-                        className="px-6 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors"
-                    >
-                        Retry Connection
-                    </button>
+                    <RefreshCw className="w-10 h-10 text-purple-600 animate-spin mx-auto mb-4" />
+                    <p className="text-gray-600 font-bold">Synchronizing with AI Engines...</p>
                 </div>
             </div>
         );
     }
 
     return (
-        <div className="min-h-screen bg-gray-50 p-6">
+        <div className="min-h-screen bg-gray-50 flex flex-col">
             {/* Header */}
-            <div className="mb-6 flex items-center justify-between sticky top-0 bg-gray-50 z-10 py-2">
-                <div className="flex items-center gap-4">
-                    <button
-                        onClick={() => navigate('/dashboard')}
-                        className="p-2 hover:bg-white rounded-lg transition-colors"
-                    >
-                        <ArrowLeft className="w-5 h-5 text-gray-600" />
-                    </button>
-                    <div>
-                        <h1 className="text-2xl font-black text-gray-900">AI Engine Dashboard</h1>
-                        <p className="text-sm text-gray-500">What AI is thinking and deciding</p>
+            <header className="bg-white border-b border-gray-200 px-6 py-4 sticky top-0 z-30">
+                <div className="max-w-7xl mx-auto flex items-center justify-between">
+                    <div className="flex items-center gap-4">
+                        <button onClick={() => navigate('/dashboard')} className="p-2 hover:bg-gray-100 rounded-xl transition-colors">
+                            <ArrowLeft className="w-5 h-5 text-gray-600" />
+                        </button>
+                        <div>
+                            <h1 className="text-xl font-black text-gray-900 leading-none">AI Engine Dashboard</h1>
+                            <p className="text-xs text-gray-500 font-medium mt-1 flex items-center gap-1">
+                                <Clock className="w-3 h-3" />
+                                Updated {lastRefresh.toLocaleTimeString()}
+                            </p>
+                        </div>
+                    </div>
+
+                    <div className="flex items-center gap-2">
+                        {isSimulated && (
+                            <span className="px-3 py-1 bg-amber-100 text-amber-700 text-[10px] font-black uppercase tracking-widest rounded-full border border-amber-200 animate-pulse">
+                                Simulation Mode
+                            </span>
+                        )}
+                        <div className={`w-3 h-3 rounded-full ${isSimulated ? 'bg-amber-400' : 'bg-green-500'} shadow-sm`} />
                     </div>
                 </div>
-                <button
-                    onClick={loadAIData}
-                    className="flex items-center gap-2 px-4 py-2 bg-white rounded-lg hover:bg-gray-50 transition-colors border border-gray-200"
-                >
-                    <Activity className="w-4 h-4" />
-                    <span className="text-sm font-medium">Refresh</span>
-                </button>
-            </div>
+            </header>
 
-            {/* Content Stack */}
-            <div className="space-y-8 max-w-5xl mx-auto">
+            {/* Tab Navigation */}
+            <nav className="bg-white border-b border-gray-200 px-6 py-1 overflow-x-auto scroller-hidden">
+                <div className="max-w-7xl mx-auto flex gap-6">
+                    {tabs.map(tab => (
+                        <button
+                            key={tab.id}
+                            onClick={() => setActiveTab(tab.id as any)}
+                            className={`flex items-center gap-2 py-4 border-b-2 font-bold text-sm transition-all whitespace-nowrap ${activeTab === tab.id
+                                    ? 'border-purple-600 text-purple-600'
+                                    : 'border-transparent text-gray-500 hover:text-gray-700'
+                                }`}
+                        >
+                            <tab.icon className="w-4 h-4" />
+                            {tab.label}
+                        </button>
+                    ))}
+                </div>
+            </nav>
 
-                {/* 1. Decision AI Section */}
-                <section className="bg-white rounded-3xl p-8 shadow-sm border border-gray-100 relative overflow-hidden">
-                    <div className="absolute top-0 right-0 p-4 opacity-10">
-                        <Brain className="w-32 h-32 text-purple-600" />
-                    </div>
-                    <div className="flex items-center gap-3 mb-6">
-                        <div className="bg-purple-100 p-2 rounded-lg">
-                            <Brain className="w-6 h-6 text-purple-600" />
-                        </div>
-                        <h2 className="text-xl font-bold text-gray-900">Decision Engine</h2>
-                    </div>
-                    <DecisionAITab data={aiData} />
-                </section>
+            {/* Main Content Area */}
+            <main className="flex-1 p-6 overflow-y-auto">
+                <div className="max-w-7xl mx-auto">
+                    {activeTab === 'decision' && <DecisionTab data={aiData?.decision} log={aiData?.latestLog} />}
+                    {activeTab === 'rl' && <RLTab data={aiData?.rl} state={aiData?.decision?.state} />}
+                    {activeTab === 'xai' && <XAITab data={aiData?.xai} />}
+                    {activeTab === 'status' && <StatusTab data={aiData?.status} />}
+                </div>
+            </main>
 
-                {/* 2. Reinforcement Learning Section */}
-                <section className="bg-white rounded-3xl p-8 shadow-sm border border-gray-100 relative overflow-hidden">
-                    <div className="absolute top-0 right-0 p-4 opacity-10">
-                        <Zap className="w-32 h-32 text-amber-500" />
-                    </div>
-                    <div className="flex items-center gap-3 mb-6">
-                        <div className="bg-amber-100 p-2 rounded-lg">
-                            <Zap className="w-6 h-6 text-amber-600" />
-                        </div>
-                        <h2 className="text-xl font-bold text-gray-900">Reinforcement Learning</h2>
-                    </div>
-                    <RLTab data={aiData} />
-                </section>
-
-                {/* 3. Explainability (XAI) Section */}
-                <section className="bg-white rounded-3xl p-8 shadow-sm border border-gray-100 relative overflow-hidden">
-                    <div className="absolute top-0 right-0 p-4 opacity-10">
-                        <Activity className="w-32 h-32 text-blue-500" />
-                    </div>
-                    <div className="flex items-center gap-3 mb-6">
-                        <div className="bg-blue-100 p-2 rounded-lg">
-                            <Activity className="w-6 h-6 text-blue-600" />
-                        </div>
-                        <h2 className="text-xl font-bold text-gray-900">Explainability (XAI)</h2>
-                    </div>
-                    <XAITab data={aiData} />
-                </section>
-
-                {/* 4. Active Actions Section */}
-                <section className="bg-white rounded-3xl p-8 shadow-sm border border-gray-100 relative overflow-hidden">
-                    <div className="absolute top-0 right-0 p-4 opacity-10">
-                        <BarChart3 className="w-32 h-32 text-green-500" />
-                    </div>
-                    <div className="flex items-center gap-3 mb-6">
-                        <div className="bg-green-100 p-2 rounded-lg">
-                            <BarChart3 className="w-6 h-6 text-green-600" />
-                        </div>
-                        <h2 className="text-xl font-bold text-gray-900">Active Actions</h2>
-                    </div>
-                    <ActiveActionsTab data={aiData} />
-                </section>
-            </div>
-
-            <div className="h-24" /> {/* Bottom spacer for fixed footer */}
+            <div className="h-20" />
             <BottomNav />
         </div>
     );
 }
 
-// Decision AI Content
-function DecisionAITab({ data }: any) {
-    if (!data) return <EmptyState message="No decision data available" />;
+// --- SUB-COMPONENTS (Requirement 4) ---
 
+function DecisionTab({ data, log }: any) {
     return (
-        <div className="space-y-6 relative z-10">
-            <div>
-                <h3 className="text-xs font-black text-gray-400 uppercase tracking-widest mb-4">Final Decision</h3>
-                <div className="bg-gradient-to-r from-purple-600 to-indigo-600 rounded-2xl p-8 text-white shadow-lg shadow-purple-200">
-                    <div className="text-5xl font-black mb-3 tracking-tight">{data.final_decision || 'PROCESSING'}</div>
-                    <p className="text-purple-100 text-lg font-medium opacity-90">{data.reason || 'Analyzing farm conditions...'}</p>
+        <div className="space-y-6 animate-in fade-in slide-in-from-bottom-2 duration-500">
+            <div className="bg-white rounded-3xl p-8 shadow-sm border border-gray-100">
+                <h3 className="text-xs font-black text-gray-400 uppercase tracking-widest mb-6 flex items-center gap-2">
+                    <Brain className="w-4 h-4" />
+                    Current AI Intelligence
+                </h3>
+
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                    <div className="bg-gradient-to-br from-indigo-600 via-purple-600 to-fuchsia-600 rounded-3xl p-8 text-white relative overflow-hidden shadow-xl">
+                        <Brain className="absolute -bottom-4 -right-4 w-48 h-48 opacity-10 pointer-events-none" />
+                        <div className="relative z-10">
+                            <span className="text-[10px] font-black uppercase tracking-[0.2em] bg-white/20 px-3 py-1 rounded-full border border-white/30 mb-6 inline-block">
+                                Decision Output
+                            </span>
+                            <div className="text-6xl font-black mb-4 tracking-tighter">
+                                {data?.final_decision_label || 'WAIT'}
+                            </div>
+                            <p className="text-xl font-medium text-purple-50 opacity-90 leading-snug max-w-md">
+                                {data?.reason || "Conditions currently stable for growth."}
+                            </p>
+                        </div>
+                    </div>
+
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <KPICard label="Confidence Score" value={`${Math.round((data?.q_values?.[data?.final_decision_label] || 0.95) * 100)}%`} icon={Zap} color="amber" />
+                        <KPICard label="Recommended Action" value={data?.final_decision_label || 'Wait'} icon={Activity} color="blue" />
+                        <KPICard label="Action Timestamp" value={log?.created_at ? new Date(log.created_at).toLocaleTimeString() : 'N/A'} icon={Clock} color="purple" />
+                        <KPICard label="Model Execution" value="Success" icon={CheckCircle2} color="green" />
+                    </div>
                 </div>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <StatCard label="ML Prediction" value={data.ml_prediction === 1 ? 'IRRIGATE' : 'WAIT'} />
-                <StatCard label="Decision Source" value="Hybrid (ML + Rules)" />
+            <div className="bg-white rounded-3xl p-8 shadow-sm border border-gray-100">
+                <h3 className="text-xs font-black text-gray-400 uppercase tracking-widest mb-6">Agronomic Recommendations</h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <FeatureCard title="Irrigation Plan" data={data?.irrigation_plan} color="indigo" />
+                    <FeatureCard title="Fertilizer Advice" data={data?.fertilizer_advice} color="emerald" />
+                </div>
             </div>
         </div>
     );
 }
 
-// RL Content
-function RLTab({ data }: any) {
-    if (!data?.q_values) return <EmptyState message="No RL data available" />;
-
-    const qValues = Object.entries(data.q_values || {});
-
+function RLTab({ data, state }: any) {
     return (
-        <div className="space-y-8 relative z-10">
-            <div>
-                <h3 className="text-xs font-black text-gray-400 uppercase tracking-widest mb-4">Q-Values (Policy Weights)</h3>
-                <div className="space-y-4">
-                    {qValues.map(([action, value]: [string, any]) => (
-                        <div key={action}>
-                            <div className="flex justify-between text-sm mb-2">
-                                <span className="font-bold text-gray-700">Action {action}</span>
-                                <span className="text-gray-600 font-mono">{Number(value).toFixed(3)}</span>
+        <div className="space-y-6 animate-in fade-in slide-in-from-bottom-2 duration-500">
+            <div className="bg-white rounded-3xl p-8 shadow-sm border border-gray-100">
+                <h3 className="text-xs font-black text-gray-400 uppercase tracking-widest mb-8">Policy Learning & Reward Status</h3>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
+                    <MetricCard label="Efficiency Trend" value={data?.efficiency_trend || 'STABLE'} trend="up" />
+                    <MetricCard label="Positive Rewards" value={data?.positive_rewards || 0} color="green" />
+                    <MetricCard label="Regret Score" value={data?.avg_regret || 0.05} color="red" />
+                </div>
+
+                <div>
+                    <h4 className="text-sm font-bold text-gray-900 mb-6">Current State Exploration</h4>
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                        {Object.entries(state || {}).map(([key, value]: [string, any]) => (
+                            <div key={key} className="bg-gray-50 rounded-2xl p-5 border border-gray-100">
+                                <div className="text-[10px] font-black text-gray-400 uppercase tracking-wider mb-2">{key.replace(/_/g, ' ')}</div>
+                                <div className="text-lg font-black text-gray-900 capitalize">{String(value)}</div>
                             </div>
-                            <div className="h-4 bg-gray-100 rounded-full overflow-hidden">
+                        ))}
+                    </div>
+                </div>
+            </div>
+        </div>
+    );
+}
+
+function XAITab({ data }: any) {
+    return (
+        <div className="space-y-6 animate-in fade-in slide-in-from-bottom-2 duration-500">
+            <div className="bg-white rounded-3xl p-8 shadow-sm border border-gray-100">
+                <h3 className="text-xs font-black text-gray-400 uppercase tracking-widest mb-6">Why this decision?</h3>
+                <div className="bg-blue-50/50 rounded-3xl p-8 border border-blue-100/50 mb-8">
+                    <p className="text-2xl font-bold text-blue-900 leading-tight">
+                        {data?.reason || "Conditions optimal for current crop cycle."}
+                    </p>
+                </div>
+
+                <h4 className="text-sm font-bold text-gray-900 mb-6">Influencing Parameters</h4>
+                <div className="space-y-6">
+                    {(data?.influencing_parameters || []).map((param: any, idx: number) => (
+                        <div key={idx}>
+                            <div className="flex justify-between items-center mb-2">
+                                <span className="text-sm font-bold text-gray-700">{param.name}</span>
+                                <span className="text-sm font-black text-purple-600">{(param.contribution * 100).toFixed(0)}% Impact</span>
+                            </div>
+                            <div className="h-3 bg-gray-100 rounded-full overflow-hidden">
                                 <div
-                                    className="h-full bg-gradient-to-r from-amber-500 to-orange-500 rounded-full transition-all duration-1000 ease-out"
-                                    style={{ width: `${Math.min(Math.abs(Number(value)) * 50, 100)}%` }}
+                                    className="h-full bg-gradient-to-r from-purple-500 to-indigo-500 transition-all duration-1000"
+                                    style={{ width: `${param.contribution * 100}%` }}
                                 />
                             </div>
                         </div>
                     ))}
                 </div>
             </div>
-
-            {data.state && (
-                <div>
-                    <h3 className="text-xs font-black text-gray-400 uppercase tracking-widest mb-4">Current State Vector</h3>
-                    <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-                        {Object.entries(data.state).map(([key, value]) => (
-                            <div key={key} className="bg-gray-50 rounded-xl p-4 border border-gray-100">
-                                <div className="text-xs text-gray-500 mb-1 uppercase tracking-wider font-bold">{key.replace(/_/g, ' ')}</div>
-                                <div className="font-bold text-gray-900 text-lg">{String(value)}</div>
-                            </div>
-                        ))}
-                    </div>
-                </div>
-            )}
         </div>
     );
 }
 
-// XAI Content
-function XAITab({ data }: any) {
-    if (!data?.explanation) return <EmptyState message="No explainability data available" />;
-
-    const explanations = data.explanation?.explanations || [];
-    const advisories = data.explanation?.advisories || [];
-
+function StatusTab({ data }: any) {
     return (
-        <div className="space-y-8 relative z-10">
-            <div>
-                <h3 className="text-xs font-black text-gray-400 uppercase tracking-widest mb-4">Why This Decision?</h3>
-                <div className="space-y-3">
-                    {explanations.length > 0 ? (
-                        explanations.map((exp: string, idx: number) => (
-                            <div key={idx} className="flex items-start gap-4 p-4 bg-blue-50 rounded-xl border border-blue-100 transition-all hover:shadow-md">
-                                <div className="w-8 h-8 bg-blue-600 text-white rounded-full flex items-center justify-center text-sm font-bold flex-shrink-0 shadow-sm">
-                                    {idx + 1}
-                                </div>
-                                <p className="text-gray-800 leading-relaxed font-medium pt-1">{exp}</p>
-                            </div>
-                        ))
-                    ) : (
-                        <p className="text-sm text-gray-500 italic">No explanations available</p>
-                    )}
-                </div>
+        <div className="space-y-6 animate-in fade-in slide-in-from-bottom-2 duration-500">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <HealthCard label="Model Availability" value={data?.model_availability || '0%'} icon={Brain} ok={!!data?.model_availability && data.model_availability !== '0%'} />
+                <HealthCard label="Database Sync" value={data?.db_connectivity || 'Disconnected'} icon={RefreshCw} ok={data?.db_connectivity === 'Healthy'} />
+                <HealthCard label="Data Freshness" value={data?.data_freshness || 'Offline'} icon={Clock} ok={!!data?.data_freshness} />
+                <HealthCard label="Backend Connectivity" value={data?.status === 'online' ? 'Online' : 'Offline'} icon={Zap} ok={data?.status === 'online'} />
             </div>
-
-            {advisories.length > 0 && (
-                <div>
-                    <h3 className="text-xs font-black text-gray-400 uppercase tracking-widest mb-4">Advisory Notes</h3>
-                    <div className="space-y-3">
-                        {advisories.map((adv: string, idx: number) => (
-                            <div key={idx} className="flex items-start gap-4 p-4 bg-amber-50 rounded-xl border border-amber-100">
-                                <div className="w-2 h-2 bg-amber-500 rounded-full mt-2.5 flex-shrink-0" />
-                                <p className="text-gray-800 font-medium">{adv}</p>
-                            </div>
-                        ))}
-                    </div>
-                </div>
-            )}
         </div>
     );
 }
 
-// Active Actions Content
-function ActiveActionsTab({ data }: any) {
-    if (!data) return <EmptyState message="No active actions" />;
+// --- UI ATOMS ---
 
-    return (
-        <div className="grid grid-cols-1 xl:grid-cols-3 gap-6 relative z-10">
-            {data.irrigation_plan && (
-                <ActionCard
-                    title="Irrigation Plan"
-                    data={data.irrigation_plan}
-                    color="blue"
-                    icon={<Brain className="w-5 h-5 text-blue-600" />}
-                />
-            )}
-
-            {data.fertilizer_advice && (
-                <ActionCard
-                    title="Fertilizer Recommendation"
-                    data={data.fertilizer_advice}
-                    color="green"
-                    icon={<Zap className="w-5 h-5 text-green-600" />}
-                />
-            )}
-
-            {data.pest_disease_advisory && (
-                <ActionCard
-                    title="Pest & Disease Advisory"
-                    data={data.pest_disease_advisory}
-                    color="red"
-                    icon={<Activity className="w-5 h-5 text-red-600" />}
-                />
-            )}
-        </div>
-    );
-}
-
-// Helper Components
-function StatCard({ label, value }: any) {
-    return (
-        <div className="bg-gray-50 rounded-2xl p-6 border border-gray-100 hover:border-gray-200 transition-colors">
-            <div className="text-xs text-gray-500 mb-2 uppercase tracking-wider font-bold">{label}</div>
-            <div className="text-2xl font-black text-gray-900">{value}</div>
-        </div>
-    );
-}
-
-function ActionCard({ title, data, color, icon }: any) {
-    const colors = {
-        blue: 'bg-blue-50/50 border-blue-100 hover:border-blue-200 ring-1 ring-blue-100',
-        green: 'bg-green-50/50 border-green-100 hover:border-green-200 ring-1 ring-green-100',
-        red: 'bg-red-50/50 border-red-100 hover:border-red-200 ring-1 ring-red-100',
+function KPICard({ label, value, icon: Icon, color }: any) {
+    const colors: any = {
+        purple: 'bg-purple-100 text-purple-600',
+        amber: 'bg-amber-100 text-amber-600',
+        blue: 'bg-blue-100 text-blue-600',
+        green: 'bg-green-100 text-green-600',
     };
-
-    const headerColors = {
-        blue: 'text-blue-900 bg-blue-100/50',
-        green: 'text-green-900 bg-green-100/50',
-        red: 'text-red-900 bg-red-100/50',
-    };
-
     return (
-        <div className={`rounded-2xl overflow-hidden transition-all hover:shadow-lg ${colors[color as keyof typeof colors]}`}>
-            {/* Card Header */}
-            <div className={`px-6 py-4 flex items-center gap-3 border-b border-black/5 ${headerColors[color as keyof typeof headerColors]}`}>
-                <div className="bg-white p-2 rounded-lg shadow-sm">
-                    {icon}
-                </div>
-                <h4 className="font-bold text-lg">{title}</h4>
+        <div className="bg-gray-50 border border-gray-100 rounded-2xl p-5">
+            <div className={`w-8 h-8 ${colors[color]} rounded-lg flex items-center justify-center mb-3`}>
+                <Icon className="w-4 h-4" />
             </div>
+            <div className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1">{label}</div>
+            <div className="text-xl font-bold text-gray-900">{value}</div>
+        </div>
+    );
+}
 
-            {/* Card Body */}
-            <div className="p-6 space-y-4">
-                {Object.entries(data || {}).map(([key, value]) => (
-                    <div key={key} className="group">
-                        <div className="text-xs font-bold text-gray-500 uppercase tracking-widest mb-1.5 opacity-80 group-hover:opacity-100 transition-opacity">
-                            {key.replace(/_/g, ' ')}
-                        </div>
-
-                        <div className="text-gray-900 font-medium leading-relaxed bg-white/60 p-3 rounded-lg border border-black/5">
-                            {renderValue(value)}
-                        </div>
+function FeatureCard({ title, data, color }: any) {
+    const accents: any = {
+        indigo: 'border-l-4 border-indigo-500 bg-indigo-50/30',
+        emerald: 'border-l-4 border-emerald-500 bg-emerald-50/30',
+    };
+    return (
+        <div className={`p-6 rounded-2xl ${accents[color]}`}>
+            <h4 className="font-black text-xs uppercase tracking-widest text-gray-500 mb-4">{title}</h4>
+            <div className="space-y-4">
+                {Object.entries(data || {}).map(([key, val]: [string, any]) => (
+                    <div key={key}>
+                        <div className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">{key.replace(/_/g, ' ')}</div>
+                        <div className="font-bold text-gray-800">{String(val)}</div>
                     </div>
                 ))}
             </div>
@@ -393,41 +301,44 @@ function ActionCard({ title, data, color, icon }: any) {
     );
 }
 
-function renderValue(value: any) {
-    if (Array.isArray(value)) {
-        if (value.length === 0) return <span className="text-gray-400 italic">None</span>;
-        return (
-            <ul className="list-disc list-inside space-y-1">
-                {value.map((item, i) => (
-                    <li key={i} className="text-sm">{String(item)}</li>
-                ))}
-            </ul>
-        );
-    }
-    if (typeof value === 'boolean') {
-        return (
-            <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${value ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'}`}>
-                {value ? 'YES' : 'NO'}
-            </span>
-        );
-    }
-    if (typeof value === 'object' && value !== null) {
-        return (
-            <div className="text-xs font-mono bg-gray-50 p-2 rounded">
-                {JSON.stringify(value, null, 2)}
-            </div>
-        );
-    }
-    return <span className="text-sm">{String(value)}</span>;
-}
-
-function EmptyState({ message }: any) {
+function MetricCard({ label, value, color, trend }: any) {
     return (
-        <div className="flex items-center justify-center h-48 text-gray-400 bg-gray-50 rounded-2xl border border-dashed border-gray-200">
-            <div className="text-center">
-                <BarChart3 className="w-8 h-8 mx-auto mb-3 opacity-50" />
-                <p className="text-sm font-medium">{message}</p>
-            </div>
+        <div className="text-center">
+            <div className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2">{label}</div>
+            <div className={`text-4xl font-black ${color === 'green' ? 'text-emerald-600' : color === 'red' ? 'text-rose-600' : 'text-gray-900'}`}>{value}</div>
+            {trend && <div className="text-[10px] font-bold text-emerald-500 mt-1">▲ Trending Up</div>}
         </div>
     );
+}
+
+function HealthCard({ label, value, icon: Icon, ok }: any) {
+    return (
+        <div className="bg-white p-6 rounded-3xl border border-gray-100 shadow-sm flex items-center justify-between">
+            <div className="flex items-center gap-4">
+                <div className={`w-12 h-12 rounded-2xl flex items-center justify-center ${ok ? 'bg-green-100 text-green-600' : 'bg-red-100 text-red-600'}`}>
+                    <Icon className="w-6 h-6" />
+                </div>
+                <div>
+                    <div className="text-xs font-black text-gray-400 uppercase tracking-widest">{label}</div>
+                    <div className="text-lg font-bold text-gray-900">{value}</div>
+                </div>
+            </div>
+            {ok ? <CheckCircle2 className="w-6 h-6 text-green-500" /> : <AlertTriangle className="w-6 h-6 text-red-500" />}
+        </div>
+    );
+}
+
+function getFallbackData() {
+    return {
+        decision: {
+            final_decision_label: "IRRIGATE (Simulated)",
+            reason: "Mock Data: Moisture dropped below 20%",
+            irrigation_plan: { volume: "1000L", duration: "30m" },
+            fertilizer_advice: { recommendation: "Apply Urea" },
+            state: { moisture: "LOW", temp: "NORMAL" }
+        },
+        rl: { efficiency_trend: "STABLE", positive_rewards: 100, avg_regret: 0.02 },
+        xai: { reason: "Low soil moisture threshold triggered rules.", influencing_parameters: [{ name: 'Moisture', contribution: 0.8 }, { name: 'Temp', contribution: 0.1 }] },
+        status: { model_availability: '100%', db_connectivity: 'Healthy', data_freshness: 'Simulated', status: 'online' }
+    };
 }

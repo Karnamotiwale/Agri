@@ -3,6 +3,7 @@ import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContai
 import { Activity, Sprout, BarChart3, RotateCw, Droplets, Thermometer, Wind, AlertCircle, CheckCircle2, Calendar } from 'lucide-react';
 import { cropService } from '../../../services/crop.service';
 import { getCropSensors } from '../../../services/cropSensors';
+import { analyticsService } from '../../../services/analytics.service';
 
 interface AnalyticsViewProps {
     selectedCrop: { id: string; name: string; sowingDate?: string } | null;
@@ -34,19 +35,49 @@ export function AnalyticsView({ selectedCrop }: AnalyticsViewProps) {
             // normalize crop name
             const cName = cropName.toLowerCase();
 
-            // 1. Fetch History & Sensors
+            // 1. Fetch from NEW Analytics Service (Real Backend Integration)
+            const analyticsPromise = analyticsService.getOverview();
+            const forecastPromise = analyticsService.getForecast(7);
+
+            // 2. Fetch existing crop-specific data
             const promises = [
                 cropService.getCropJourney(cName),
                 getCropSensors(cropName),
-                // Calculate days since sowing
                 cropService.getGrowthStages(cName, calculateDaysSinceSowing(sowingDate)),
                 cropService.getYieldPrediction(cName),
-                cropService.getRotationRecommendation(cName)
+                cropService.getRotationRecommendation(cName),
+                analyticsPromise,
+                forecastPromise
             ];
 
             const results = await Promise.allSettled(promises);
 
-            // Handle History
+            // Handle Analytics Overview (NEW - Real Backend)
+            if (results[5].status === 'fulfilled') {
+                const overview = results[5].value;
+                console.log('✅ Real Analytics Data:', overview);
+
+                // Update sensors from real analytics if available
+                if (overview.summary && overview.data_points > 0) {
+                    setCurrentSensors({
+                        moisture: overview.summary.soil_moisture_value || 0,
+                        temperature: overview.summary.temperature_value || 0,
+                        humidity: overview.summary.humidity_value || 0,
+                        n: overview.summary.nitrogen_value || 0,
+                        p: overview.summary.phosphorus_value || 0,
+                        k: overview.summary.potassium_value || 0,
+                    });
+                }
+            }
+
+            // Handle Forecast (NEW - Real Backend)
+            if (results[6].status === 'fulfilled') {
+                const forecast = results[6].value;
+                console.log('✅ Real Forecast Data:', forecast);
+                // You can use this forecast data in yield prediction tab
+            }
+
+            // Handle History (Existing Logic)
             if (results[0].status === 'fulfilled') {
                 const journey = results[0].value.journey || [];
                 if (journey.length > 0) {
@@ -64,11 +95,11 @@ export function AnalyticsView({ selectedCrop }: AnalyticsViewProps) {
                 setHistoryData(generateMockHistory());
             }
 
-            // Handle Sensors
-            if (results[1].status === 'fulfilled') {
+            // Handle Sensors (Fallback if analytics didn't provide)
+            if (results[1].status === 'fulfilled' && !currentSensors) {
                 setCurrentSensors(results[1].value);
-            } else {
-                // Mock sensors if fetch fails
+            } else if (!currentSensors) {
+                // Mock sensors if both fetch methods fail
                 setCurrentSensors({ moisture: 64.2, temperature: 28.5, humidity: 65, n: 120 });
             }
 

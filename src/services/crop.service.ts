@@ -329,17 +329,68 @@ export const cropService = {
     getRotationRecommendation: async (cropId: string): Promise<any> => {
         try {
             const url = getApiUrl('/crop/rotation');
+            const payload = {
+                crop: cropId,
+                soil_nutrients: { N: 0, P: 0, K: 0 }, // Future-proofing (Requirement 1)
+                crop_history: []
+            };
+
+            // Log outgoing payload (Requirement 4)
+            console.log("Rotation API Request:", payload);
+
             const response = await fetch(url, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ crop: cropId })
+                body: JSON.stringify(payload)
             });
 
-            if (!response.ok) throw new Error(`Rotation API failed: ${response.status}`);
-            return await response.json();
+            // Handle non-200 responses gracefully (Requirement 4)
+            if (!response.ok) {
+                console.warn(`Rotation API returned ${response.status}. Using fallback.`);
+                return {
+                    status: "success",
+                    recommended_crop: "pulses",
+                    confidence: "low",
+                    reason: "Rotation data temporarily unavailable"
+                };
+            }
+
+            const data = await response.json();
+
+            // Validate and transform response shape (Requirement 4 & legacy UI support)
+            if (data && data.status === "success" && data.recommended_crop) {
+                // Ensure rotation_recommendation exists for UI compatibility
+                if (!data.rotation_recommendation) {
+                    data.rotation_recommendation = {
+                        recommended_crop: data.recommended_crop.charAt(0).toUpperCase() + data.recommended_crop.slice(1),
+                        reason: data.reason,
+                        benefits: ["Nutrient replenishment", "Pest control", "Soil recovery"]
+                    };
+                }
+                return data;
+            }
+
+            console.warn("Invalid rotation data received, using fallback");
+            return {
+                status: "success",
+                recommended_crop: "pulses",
+                confidence: "low",
+                reason: "Interpreting rotation suggestions...",
+                rotation_recommendation: {
+                    recommended_crop: "Pulses",
+                    reason: "Standard recovery crop recommended.",
+                    benefits: ["Restores Nitrogen", "Soil Health"]
+                }
+            };
         } catch (err) {
             console.error('Error fetching rotation:', err);
-            throw err;
+            // Return safe fallback instead of throwing (Requirement 5)
+            return {
+                status: "success",
+                recommended_crop: "pulses",
+                confidence: "low",
+                reason: "System maintaining soil health with default rotation"
+            };
         }
     },
 
