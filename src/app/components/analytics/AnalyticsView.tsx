@@ -1,16 +1,17 @@
 import React, { useState, useEffect } from 'react';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, AreaChart, Area, BarChart, Bar } from 'recharts';
-import { Activity, Sprout, BarChart3, RotateCw, Droplets, Thermometer, Wind, AlertCircle, CheckCircle2, Calendar, Leaf } from 'lucide-react';
+import { Activity, Sprout, BarChart3, RotateCw, Droplets, Thermometer, Wind, AlertCircle, CheckCircle2, Calendar, Leaf, BrainCircuit } from 'lucide-react';
 import { cropService } from '../../../services/crop.service';
 import { getCropSensors } from '../../../services/cropSensors';
 import { analyticsService } from '../../../services/analytics.service';
+import { fetchAnalytics } from '../../../services/analyticsService';
 
 interface AnalyticsViewProps {
     selectedCrop: { id: string; name: string; sowingDate?: string } | null;
 }
 
 export function AnalyticsView({ selectedCrop }: AnalyticsViewProps) {
-    const [activeTab, setActiveTab] = useState<'sensors' | 'timeline' | 'yield' | 'rotation' | 'carbon'>('sensors');
+    const [activeTab, setActiveTab] = useState<'sensors' | 'timeline' | 'yield' | 'rotation' | 'carbon' | 'ai'>('sensors');
     const [loading, setLoading] = useState(true);
     const [historyData, setHistoryData] = useState<any[]>([]);
     const [currentSensors, setCurrentSensors] = useState<any>(null);
@@ -18,6 +19,12 @@ export function AnalyticsView({ selectedCrop }: AnalyticsViewProps) {
     const [yieldData, setYieldData] = useState<any>(null);
     const [rotationData, setRotationData] = useState<any>(null);
     const [carbonData, setCarbonData] = useState<any>(null);
+
+    // AI Analytics State
+    const [policyState, setPolicyState] = useState<any>(null);
+    const [qTable, setQTable] = useState<any[]>([]);
+    const [analyticsLoading, setAnalyticsLoading] = useState(false);
+    const [analyticsError, setAnalyticsError] = useState<string | null>(null);
 
     // Default crop if none selected
     const cropName = selectedCrop?.name || 'rice';
@@ -39,6 +46,16 @@ export function AnalyticsView({ selectedCrop }: AnalyticsViewProps) {
             // 1. Fetch from NEW Analytics Service (Real Backend Integration)
             const analyticsPromise = analyticsService.getOverview();
             const forecastPromise = analyticsService.getForecast(7);
+
+            // Fetch AI Analytics
+            try {
+                const aiData = await fetchAnalytics();
+                setPolicyState(aiData.policy_state);
+                setQTable(aiData.q_table);
+            } catch (err) {
+                console.error("AI Analytics fetch failed", err);
+                // Non-blocking error
+            }
 
             // 2. Fetch existing crop-specific data
             const promises = [
@@ -190,6 +207,13 @@ export function AnalyticsView({ selectedCrop }: AnalyticsViewProps) {
                     label="Carbon Footprint"
                     color="emerald"
                 />
+                <TabButton
+                    active={activeTab === 'ai'}
+                    onClick={() => setActiveTab('ai')}
+                    icon={BrainCircuit}
+                    label="AI Analytics"
+                    color="rose"
+                />
             </div>
 
             {/* Content Area */}
@@ -221,6 +245,9 @@ export function AnalyticsView({ selectedCrop }: AnalyticsViewProps) {
                         )}
                         {activeTab === 'carbon' && (
                             <CarbonFootprintTab data={carbonData} />
+                        )}
+                        {activeTab === 'ai' && (
+                            <AIAnalyticsTab policyState={policyState} qTable={qTable} />
                         )}
                     </>
                 )}
@@ -798,18 +825,19 @@ function CarbonFootprintTab({ data }: any) {
 
                     <div className="flex items-baseline gap-2">
                         <span className="text-5xl font-black text-emerald-600">{carbonMetrics.carbonSequestered}</span>
-                        <span className="text-lg font-bold text-gray-400">kg CO₂</span>
+                        <span className="text-2xl font-bold text-gray-400 mb-1">kg</span>
                     </div>
+
                     <div className="mt-4 flex items-center gap-2 text-sm">
                         <span className="bg-green-100 text-green-700 px-3 py-1 rounded-lg font-bold">
                             {((carbonMetrics.carbonSequestered / carbonMetrics.totalEmissions) * 100).toFixed(1)}% Offset
                         </span>
                     </div>
-                </div>
-            </div>
+                </div >
+            </div >
 
             {/* Emissions Trend Chart */}
-            <div className="bg-white p-8 rounded-[2.5rem] shadow-sm border border-gray-100 hover:shadow-md transition-shadow duration-300">
+            < div className="bg-white p-8 rounded-[2.5rem] shadow-sm border border-gray-100 hover:shadow-md transition-shadow duration-300" >
                 <div className="flex justify-between items-center mb-8">
                     <h3 className="font-bold text-gray-800 flex items-center gap-3 text-lg">
                         <div className="w-3 h-3 rounded-full bg-emerald-500 ring-4 ring-emerald-100" />
@@ -847,12 +875,63 @@ function CarbonFootprintTab({ data }: any) {
                         </BarChart>
                     </ResponsiveContainer>
                 </div>
-            </div>
-        </div>
+            </div >
+        </div >
     );
 }
 
 
+
+
+function AIAnalyticsTab({ policyState, qTable }: any) {
+    return (
+        <div className="space-y-6 animate-in fade-in slide-in-from-bottom-8 duration-700">
+            <div className="bg-white rounded-[2.5rem] p-8 border border-gray-100 shadow-sm">
+                <div className="flex items-center gap-3 mb-6">
+                    <div className="bg-rose-100 p-3 rounded-2xl text-rose-600">
+                        <BrainCircuit className="w-8 h-8" />
+                    </div>
+                    <div>
+                        <h3 className="text-2xl font-black text-gray-900">AI Intelligence Core</h3>
+                        <p className="text-gray-500 font-medium text-sm">Real-time Policy & Q-Learning State</p>
+                    </div>
+                </div>
+
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                    {/* Policy State */}
+                    <div className="bg-gray-50 rounded-3xl p-6 border border-gray-200">
+                        <h4 className="text-sm font-black text-gray-400 uppercase tracking-widest mb-4">Policy Penalties & Hyperparameters</h4>
+                        {policyState ? (
+                            <pre className="text-xs font-mono text-gray-700 overflow-x-auto bg-white p-4 rounded-xl border border-gray-100 shadow-sm">
+                                {JSON.stringify(policyState, null, 2)}
+                            </pre>
+                        ) : (
+                            <div className="bg-white p-6 rounded-xl text-center text-gray-400 text-sm font-medium">
+                                No policy state data available
+                            </div>
+                        )}
+                    </div>
+
+                    {/* Q-Table */}
+                    <div className="bg-gray-50 rounded-3xl p-6 border border-gray-200">
+                        <h4 className="text-sm font-black text-gray-400 uppercase tracking-widest mb-4">Reinforcement Learning Q-Table</h4>
+                        {qTable && qTable.length > 0 ? (
+                            <div className="bg-white p-4 rounded-xl border border-gray-100 shadow-sm overflow-x-auto max-h-[300px] overflow-y-auto">
+                                <pre className="text-xs font-mono text-gray-700">
+                                    {JSON.stringify(qTable, null, 2)}
+                                </pre>
+                            </div>
+                        ) : (
+                            <div className="bg-white p-6 rounded-xl text-center text-gray-400 text-sm font-medium">
+                                Q-Table is empty or initializing
+                            </div>
+                        )}
+                    </div>
+                </div>
+            </div>
+        </div>
+    );
+}
 
 // --------------------------------------------------
 // HELPERS
@@ -865,6 +944,7 @@ function TabButton({ active, onClick, icon: Icon, label, color }: any) {
         amber: active ? 'bg-amber-500 text-white shadow-lg shadow-amber-200' : 'text-gray-500 hover:bg-gray-100',
         purple: active ? 'bg-purple-600 text-white shadow-lg shadow-purple-200' : 'text-gray-500 hover:bg-gray-100',
         emerald: active ? 'bg-emerald-600 text-white shadow-lg shadow-emerald-200' : 'text-gray-500 hover:bg-gray-100',
+        rose: active ? 'bg-rose-600 text-white shadow-lg shadow-rose-200' : 'text-gray-500 hover:bg-gray-100',
     };
 
     return (
