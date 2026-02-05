@@ -260,6 +260,7 @@ interface AppContextValue extends AppState {
   getCrop: (id: string) => Crop | undefined;
   getCropControl: (cropId: string) => CropControls;
   getAllCrops: () => Crop[];
+  getAllFarms: () => Farm[];
   getFarm: (id: string) => Farm | undefined;
   addHealthDetection: (result: HealthDetectionResult) => void;
   addCropHistory: (entry: CropHistoryEntry) => void;
@@ -489,6 +490,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
   );
 
   const getAllCrops = useCallback(() => state.crops, [state.crops]);
+  const getAllFarms = useCallback(() => state.farms, [state.farms]);
 
   const addHealthDetection = useCallback((result: HealthDetectionResult) => {
     dispatch({ type: 'ADD_HEALTH_DETECTION', result });
@@ -522,6 +524,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
     getCrop,
     getCropControl,
     getAllCrops,
+    getAllFarms,
     getFarm,
     addHealthDetection,
     addCropHistory,

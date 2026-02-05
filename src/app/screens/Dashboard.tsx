@@ -16,7 +16,9 @@ import {
   TrendingUp,
   AlertCircle,
   Zap,
-  BrainCircuit
+  BrainCircuit,
+  Thermometer,
+  CloudRain
 } from 'lucide-react';
 import { aiService } from '../../services/ai.service';
 import { predictIrrigation } from '../../services/aiService';
@@ -24,6 +26,8 @@ import { predictIrrigation } from '../../services/aiService';
 import { FarmsView } from '../components/FarmsView';
 import { GovernmentSchemes } from '../components/GovernmentSchemes';
 import { AnalyticsView } from '../components/analytics/AnalyticsView';
+import { AddFarmModal } from '../components/AddFarmModal';
+import { AddCropModal } from '../components/AddCropModal';
 
 import { useApp } from '../../context/AppContext';
 import { useCropSensors } from '../../hooks/useCropSensors';
@@ -31,10 +35,14 @@ import { useCropSensors } from '../../hooks/useCropSensors';
 import { useTranslation } from 'react-i18next';
 
 export function Dashboard() {
-  const { getAllCrops, dashboardActiveTab, setDashboardTab, auth } = useApp();
+  const { getAllCrops, getAllFarms, dashboardActiveTab, setDashboardTab, auth } = useApp();
   const navigate = useNavigate();
   const { t } = useTranslation();
   const [selectedPlant, setSelectedPlant] = useState<{ id: string; name: string; location: string; image: string; farmId: string; sowingDate?: string } | null>(null);
+
+  // Modal State
+  const [showAddFarmModal, setShowAddFarmModal] = useState(false);
+  const [showAddCropModal, setShowAddCropModal] = useState(false);
 
   const plants = getAllCrops().map((c) => ({
     id: c.id,
@@ -42,8 +50,13 @@ export function Dashboard() {
     location: c.location,
     image: c.image,
     farmId: c.farmId,
-    sowingDate: c.sowingDate
+    sowingDate: c.sowingDate,
+    healthStatus: 'healthy' as const,
+    soilMoisture: 45,
+    temperature: 28,
   }));
+
+  const farms = getAllFarms();
 
   const activeTab = dashboardActiveTab;
   const setActiveTab = setDashboardTab;
@@ -85,7 +98,7 @@ export function Dashboard() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 pb-24">
+    <div className="min-h-screen bg-[#F4F7F6] pb-24">
       {activeTab === 'home' && (
         <div className="relative">
           {/* Green Gradient Header Section */}
@@ -165,9 +178,13 @@ export function Dashboard() {
           <div className="px-6 pt-6 pb-4">
             <div className="bg-white rounded-3xl shadow-lg p-6">
               <div className="flex justify-between items-center mb-6">
-                <h2 className="text-xl font-bold text-gray-900">Your farm</h2>
-                <button className="text-green-600 text-sm font-semibold hover:text-green-700">
-                  View All
+                <h2 className="text-xl font-bold text-gray-900">Your Crops</h2>
+                <button
+                  onClick={() => setShowAddCropModal(true)}
+                  className="text-green-600 text-sm font-semibold hover:text-green-700 flex items-center gap-1"
+                >
+                  <Plus className="w-4 h-4" />
+                  Add Crop
                 </button>
               </div>
 
@@ -212,11 +229,65 @@ export function Dashboard() {
               {plants.length === 0 && (
                 <div className="text-center py-12">
                   <Sprout className="w-16 h-16 text-gray-300 mx-auto mb-4" />
-                  <p className="text-gray-500 text-sm">No plants yet</p>
-                  <p className="text-gray-400 text-xs mt-1">Add your first crop to get started</p>
+                  <p className="text-gray-500 text-sm font-semibold mb-2">No crops yet</p>
+                  <p className="text-gray-400 text-xs mb-4">Add your first crop to get started</p>
+                  <button
+                    onClick={() => setShowAddCropModal(true)}
+                    className="bg-green-600 text-white px-6 py-2.5 rounded-xl font-semibold text-sm hover:bg-green-700 transition-colors inline-flex items-center gap-2"
+                  >
+                    <Plus className="w-4 h-4" />
+                    Add Crop
+                  </button>
                 </div>
               )}
             </div>
+
+            {/* Farms Quick Access */}
+            {farms.length > 0 && (
+              <div className="mt-4 bg-white rounded-2xl shadow-md p-4">
+                <div className="flex items-center justify-between mb-3">
+                  <h3 className="text-sm font-bold text-gray-900">Your Farms</h3>
+                  <button
+                    onClick={() => setShowAddFarmModal(true)}
+                    className="text-green-600 text-xs font-semibold hover:text-green-700 flex items-center gap-1"
+                  >
+                    <Plus className="w-3 h-3" />
+                    Add
+                  </button>
+                </div>
+                <div className="flex gap-2 overflow-x-auto pb-2">
+                  {farms.map((farm) => (
+                    <div
+                      key={farm.id}
+                      className="flex-shrink-0 bg-green-50 rounded-xl px-4 py-2 border border-green-100"
+                    >
+                      <div className="flex items-center gap-2">
+                        <Landmark className="w-4 h-4 text-green-600" />
+                        <span className="text-sm font-medium text-gray-900">{farm.name}</span>
+                      </div>
+                      <p className="text-xs text-gray-500 mt-0.5">{farm.area}</p>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {farms.length === 0 && (
+              <div className="mt-4 bg-gradient-to-br from-green-50 to-emerald-50 rounded-2xl shadow-md p-6 border border-green-100">
+                <div className="text-center">
+                  <Landmark className="w-12 h-12 text-green-600 mx-auto mb-3" />
+                  <h3 className="text-sm font-bold text-gray-900 mb-1">No farms registered</h3>
+                  <p className="text-xs text-gray-500 mb-4">Create your first farm to start managing crops</p>
+                  <button
+                    onClick={() => setShowAddFarmModal(true)}
+                    className="bg-green-600 text-white px-6 py-2.5 rounded-xl font-semibold text-sm hover:bg-green-700 transition-colors inline-flex items-center gap-2"
+                  >
+                    <Plus className="w-4 h-4" />
+                    Create Farm
+                  </button>
+                </div>
+              </div>
+            )}
           </div>
 
           {/* AI Irrigation Advisor Section */}
@@ -496,6 +567,24 @@ export function Dashboard() {
           </div>
         </div>
       )}
+
+      {/* Add Farm Modal */}
+      <AddFarmModal
+        isOpen={showAddFarmModal}
+        onClose={() => setShowAddFarmModal(false)}
+        onSuccess={() => {
+          setShowAddFarmModal(false);
+        }}
+      />
+
+      {/* Add Crop Modal */}
+      <AddCropModal
+        isOpen={showAddCropModal}
+        onClose={() => setShowAddCropModal(false)}
+        onSuccess={() => {
+          setShowAddCropModal(false);
+        }}
+      />
     </div>
   );
 }
