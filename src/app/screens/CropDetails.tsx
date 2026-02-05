@@ -11,6 +11,7 @@ import { FieldMetaSummary } from '../../components/crop/FieldMetaSummary';
 import { GrowthStageTimeline } from '../../components/crop/GrowthStageTimeline';
 import { LiveFieldStatus } from '../../components/crop/LiveFieldStatus';
 import { HealthDetectionHub } from '../../components/crop/HealthDetectionHub';
+import { StressDetectionSystem } from '../../components/crop/StressDetectionSystem';
 import { CropHistoryLearning } from '../../components/crop/CropHistoryLearning';
 
 export function CropDetails() {
@@ -89,6 +90,11 @@ export function CropDetails() {
 
         {/* 5, 6. CROP HEALTH DETECTION & RECOMMENDED SOLUTIONS */}
         <HealthDetectionHub cropId={cropId} />
+
+        <div className="h-4 bg-gray-50" />
+
+        {/* NEW: CROP STRESS DETECTION */}
+        <StressDetectionSystem cropId={cropId} />
 
         <div className="h-4 bg-gray-50" />
 

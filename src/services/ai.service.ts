@@ -45,6 +45,14 @@ export interface CropAdvisory {
     };
 }
 
+export interface StressAnalysisResult {
+    stressLevel: 'LOW' | 'MEDIUM' | 'HIGH';
+    primaryStressor: string;
+    confidence: number;
+    recommendations: string[];
+    factors: { name: string; value: number }[];
+}
+
 /**
  * SAFE FETCH WRAPPER (Requirement 1)
  * Ensures every API call is guarded and returns JSON.
@@ -130,6 +138,31 @@ export const aiService = {
      */
     getXAI: async (): Promise<any> => {
         return await safeFetch('/ai/xai');
+    },
+
+    /**
+     * MOCK: Detect Crop Stress
+     */
+    detectCropStress: async (cropId: string, image: File): Promise<StressAnalysisResult> => {
+        // Simulate API delay
+        await new Promise(resolve => setTimeout(resolve, 2000));
+
+        // Mock Logic: Return random or fixed result
+        return {
+            stressLevel: 'HIGH',
+            primaryStressor: 'Water Stress (Drought)',
+            confidence: 0.89,
+            recommendations: [
+                'Increase irrigation frequency by 20%',
+                'Apply mulch to retain soil moisture',
+                'Monitor soil moisture levels daily'
+            ],
+            factors: [
+                { name: 'Leaf Temperature', value: 0.8 },
+                { name: 'Chlorophyll Content', value: 0.4 },
+                { name: 'Soil Moisture', value: 0.2 }
+            ]
+        };
     },
 
     /**
