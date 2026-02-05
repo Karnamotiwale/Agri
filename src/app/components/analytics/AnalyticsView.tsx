@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, AreaChart, Area, BarChart, Bar } from 'recharts';
-import { Activity, Sprout, BarChart3, RotateCw, Droplets, Thermometer, Wind, AlertCircle, CheckCircle2, Calendar } from 'lucide-react';
+import { Activity, Sprout, BarChart3, RotateCw, Droplets, Thermometer, Wind, AlertCircle, CheckCircle2, Calendar, Leaf } from 'lucide-react';
 import { cropService } from '../../../services/crop.service';
 import { getCropSensors } from '../../../services/cropSensors';
 import { analyticsService } from '../../../services/analytics.service';
@@ -10,13 +10,14 @@ interface AnalyticsViewProps {
 }
 
 export function AnalyticsView({ selectedCrop }: AnalyticsViewProps) {
-    const [activeTab, setActiveTab] = useState<'sensors' | 'timeline' | 'yield' | 'rotation'>('sensors');
+    const [activeTab, setActiveTab] = useState<'sensors' | 'timeline' | 'yield' | 'rotation' | 'carbon'>('sensors');
     const [loading, setLoading] = useState(true);
     const [historyData, setHistoryData] = useState<any[]>([]);
     const [currentSensors, setCurrentSensors] = useState<any>(null);
     const [growthStages, setGrowthStages] = useState<any>(null);
     const [yieldData, setYieldData] = useState<any>(null);
     const [rotationData, setRotationData] = useState<any>(null);
+    const [carbonData, setCarbonData] = useState<any>(null);
 
     // Default crop if none selected
     const cropName = selectedCrop?.name || 'rice';
@@ -77,16 +78,19 @@ export function AnalyticsView({ selectedCrop }: AnalyticsViewProps) {
                 // You can use this forecast data in yield prediction tab
             }
 
-            // Handle History (Existing Logic)
+            // Handle History (Existing Logic) - Enhanced with NPK data
             if (results[0].status === 'fulfilled') {
-                const journey = results[0].value.journey || [];
+                const journey = results[0].value || [];
                 if (journey.length > 0) {
                     const processedHistory = journey.map((record: any) => ({
-                        time: new Date(record.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-                        moisture: record.soil_moisture_pct || record.data?.soil_moisture_pct || 0,
-                        temperature: record.temperature_c || record.data?.temperature_c || 0,
-                        humidity: record.humidity_pct || record.data?.humidity_pct || 0,
-                    })).slice(-20);
+                        time: new Date(record.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
+                        moisture: record.soil_moisture_pct || record.soil_moisture || record.data?.soil_moisture_pct || 0,
+                        temperature: record.temperature_c || record.temperature || record.data?.temperature_c || 0,
+                        humidity: record.humidity_pct || record.humidity || record.data?.humidity_pct || 0,
+                        nitrogen: record.nitrogen || 0,
+                        phosphorus: record.phosphorus || 0,
+                        potassium: record.potassium || 0,
+                    })).slice(-30); // Show last 30 days for smoother graphs
                     setHistoryData(processedHistory);
                 } else {
                     setHistoryData([]);
@@ -179,6 +183,13 @@ export function AnalyticsView({ selectedCrop }: AnalyticsViewProps) {
                     label="Crop Rotation"
                     color="purple"
                 />
+                <TabButton
+                    active={activeTab === 'carbon'}
+                    onClick={() => setActiveTab('carbon')}
+                    icon={Leaf}
+                    label="Carbon Footprint"
+                    color="emerald"
+                />
             </div>
 
             {/* Content Area */}
@@ -207,6 +218,9 @@ export function AnalyticsView({ selectedCrop }: AnalyticsViewProps) {
                         )}
                         {activeTab === 'rotation' && (
                             <CropRotationTab data={rotationData} currentCrop={cropName} />
+                        )}
+                        {activeTab === 'carbon' && (
+                            <CarbonFootprintTab data={carbonData} />
                         )}
                     </>
                 )}
@@ -341,6 +355,117 @@ function LiveSensorsTab({ current, history }: any) {
                                     strokeWidth={4}
                                     dot={{ r: 4, strokeWidth: 2, fill: '#fff' }}
                                     activeDot={{ r: 6, strokeWidth: 0, fill: '#f59e0b' }}
+                                />
+                            </LineChart>
+                        </ResponsiveContainer>
+                    </div>
+                </div>
+            </div>
+
+            {/* Additional Sensor Graphs - Humidity and NPK */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                {/* Humidity Trend */}
+                <div className="bg-white p-8 rounded-[2rem] shadow-sm border border-gray-100 hover:shadow-md transition-shadow duration-300">
+                    <div className="flex justify-between items-center mb-8">
+                        <h3 className="font-bold text-gray-800 flex items-center gap-3 text-lg">
+                            <div className="w-3 h-3 rounded-full bg-cyan-500 ring-4 ring-cyan-100" />
+                            Humidity Levels
+                        </h3>
+                        <span className="text-xs font-bold text-cyan-600 bg-cyan-50 px-3 py-1.5 rounded-full">Live</span>
+                    </div>
+                    <div className="h-72">
+                        <ResponsiveContainer width="100%" height="100%">
+                            <AreaChart data={history}>
+                                <defs>
+                                    <linearGradient id="colorHumidity" x1="0" y1="0" x2="0" y2="1">
+                                        <stop offset="5%" stopColor="#06b6d4" stopOpacity={0.3} />
+                                        <stop offset="95%" stopColor="#06b6d4" stopOpacity={0} />
+                                    </linearGradient>
+                                </defs>
+                                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f3f4f6" />
+                                <XAxis
+                                    dataKey="time"
+                                    tick={{ fontSize: 11, fill: '#9ca3af' }}
+                                    tickLine={false}
+                                    axisLine={false}
+                                    tickMargin={10}
+                                />
+                                <YAxis
+                                    tick={{ fontSize: 11, fill: '#9ca3af' }}
+                                    tickLine={false}
+                                    axisLine={false}
+                                    tickFormatter={(val) => `${val}%`}
+                                />
+                                <Tooltip
+                                    contentStyle={{ borderRadius: '16px', border: 'none', boxShadow: '0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1)' }}
+                                    cursor={{ stroke: '#06b6d4', strokeWidth: 1, strokeDasharray: '4 4' }}
+                                />
+                                <Area
+                                    type="monotone"
+                                    dataKey="humidity"
+                                    stroke="#06b6d4"
+                                    strokeWidth={4}
+                                    fillOpacity={1}
+                                    fill="url(#colorHumidity)"
+                                />
+                            </AreaChart>
+                        </ResponsiveContainer>
+                    </div>
+                </div>
+
+                {/* NPK Trends */}
+                <div className="bg-white p-8 rounded-[2rem] shadow-sm border border-gray-100 hover:shadow-md transition-shadow duration-300">
+                    <div className="flex justify-between items-center mb-8">
+                        <h3 className="font-bold text-gray-800 flex items-center gap-3 text-lg">
+                            <div className="w-3 h-3 rounded-full bg-purple-500 ring-4 ring-purple-100" />
+                            NPK Nutrient Trends
+                        </h3>
+                        <span className="text-xs font-bold text-purple-600 bg-purple-50 px-3 py-1.5 rounded-full">Tracked</span>
+                    </div>
+                    <div className="h-72">
+                        <ResponsiveContainer width="100%" height="100%">
+                            <LineChart data={history}>
+                                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f3f4f6" />
+                                <XAxis
+                                    dataKey="time"
+                                    tick={{ fontSize: 11, fill: '#9ca3af' }}
+                                    tickLine={false}
+                                    axisLine={false}
+                                    tickMargin={10}
+                                />
+                                <YAxis
+                                    tick={{ fontSize: 11, fill: '#9ca3af' }}
+                                    tickLine={false}
+                                    axisLine={false}
+                                    tickFormatter={(val) => `${val}`}
+                                />
+                                <Tooltip
+                                    contentStyle={{ borderRadius: '16px', border: 'none', boxShadow: '0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1)' }}
+                                    cursor={{ stroke: '#a855f7', strokeWidth: 1, strokeDasharray: '4 4' }}
+                                />
+                                <Line
+                                    type="monotone"
+                                    dataKey="nitrogen"
+                                    stroke="#8b5cf6"
+                                    strokeWidth={3}
+                                    dot={{ r: 3, strokeWidth: 2, fill: '#fff' }}
+                                    name="Nitrogen"
+                                />
+                                <Line
+                                    type="monotone"
+                                    dataKey="phosphorus"
+                                    stroke="#06b6d4"
+                                    strokeWidth={3}
+                                    dot={{ r: 3, strokeWidth: 2, fill: '#fff' }}
+                                    name="Phosphorus"
+                                />
+                                <Line
+                                    type="monotone"
+                                    dataKey="potassium"
+                                    stroke="#10b981"
+                                    strokeWidth={3}
+                                    dot={{ r: 3, strokeWidth: 2, fill: '#fff' }}
+                                    name="Potassium"
                                 />
                             </LineChart>
                         </ResponsiveContainer>
@@ -551,6 +676,184 @@ function CropRotationTab({ data, currentCrop }: any) {
     );
 }
 
+function CarbonFootprintTab({ data }: any) {
+    // Mock data for carbon footprint
+    const carbonMetrics = data || {
+        totalEmissions: 2340, // kg CO2e
+        breakdown: [
+            { category: 'Fertilizers', emissions: 890, percentage: 38, color: 'emerald' },
+            { category: 'Machinery & Fuel', emissions: 620, percentage: 26, color: 'blue' },
+            { category: 'Irrigation', emissions: 450, percentage: 19, color: 'cyan' },
+            { category: 'Pesticides', emissions: 380, percentage: 17, color: 'amber' },
+        ],
+        sustainabilityScore: 72,
+        carbonSequestered: 450, // kg CO2 absorbed by crops
+        netEmissions: 1890, // total - sequestered
+        trend: '-8.5%', // reduction compared to last season
+    };
+
+    const chartData = [
+        { month: 'Jan', emissions: 320 },
+        { month: 'Feb', emissions: 280 },
+        { month: 'Mar', emissions: 350 },
+        { month: 'Apr', emissions: 410 },
+        { month: 'May', emissions: 380 },
+        { month: 'Jun', emissions: 330 },
+    ];
+
+    return (
+        <div className="space-y-6 animate-in fade-in slide-in-from-bottom-8 duration-700">
+            {/* Hero Card - Total Emissions */}
+            <div className="bg-gradient-to-br from-emerald-600 via-green-600 to-teal-700 rounded-[2.5rem] p-10 text-white shadow-2xl shadow-emerald-200 relative overflow-hidden group">
+                <div className="relative z-10">
+                    <div className="inline-flex items-center gap-2 bg-white/10 backdrop-blur-md px-3 py-1 rounded-full text-xs font-bold uppercase tracking-widest mb-4 border border-white/20">
+                        <Leaf className="w-3 h-3" /> Carbon Impact
+                    </div>
+                    <p className="text-emerald-100 font-medium mb-1 text-lg">Total Carbon Footprint</p>
+                    <div className="flex items-baseline gap-4 mt-2">
+                        <h2 className="text-6xl font-black tracking-tight">{carbonMetrics.totalEmissions.toLocaleString()}</h2>
+                        <span className="text-2xl font-bold text-emerald-200">kg CO₂e</span>
+                    </div>
+                    <div className="mt-8 flex gap-3 text-sm font-medium text-emerald-100">
+                        <div className="bg-white/20 px-4 py-2 rounded-xl backdrop-blur-sm flex items-center gap-2">
+                            <CheckCircle2 className="w-4 h-4" />
+                            Net: {carbonMetrics.netEmissions.toLocaleString()} kg CO₂e
+                        </div>
+                        <div className="bg-white/20 px-4 py-2 rounded-xl backdrop-blur-sm">
+                            {carbonMetrics.trend} vs Last Season
+                        </div>
+                    </div>
+                </div>
+                {/* Decorative background */}
+                <div className="absolute -right-10 -bottom-20 opacity-20 transform rotate-12 group-hover:rotate-0 transition-transform duration-1000">
+                    <Leaf className="w-96 h-96" />
+                </div>
+                <div className="absolute top-0 right-0 w-64 h-64 bg-teal-500/30 rounded-full blur-3xl -mr-16 -mt-16"></div>
+            </div>
+
+            {/* Emissions Breakdown */}
+            <div className="bg-white rounded-[2.5rem] p-8 border border-gray-100 shadow-sm">
+                <h3 className="text-2xl font-black text-gray-900 mb-6 flex items-center gap-3">
+                    <div className="w-3 h-3 rounded-full bg-emerald-500 ring-4 ring-emerald-100" />
+                    Emissions Breakdown
+                </h3>
+                <div className="space-y-4">
+                    {carbonMetrics.breakdown.map((item: any, idx: number) => {
+                        const colorClasses = {
+                            emerald: 'bg-emerald-500',
+                            blue: 'bg-blue-500',
+                            cyan: 'bg-cyan-500',
+                            amber: 'bg-amber-500',
+                        };
+                        return (
+                            <div key={idx} className="group hover:bg-gray-50 p-4 rounded-2xl transition-all">
+                                <div className="flex justify-between items-center mb-2">
+                                    <span className="font-bold text-gray-900">{item.category}</span>
+                                    <div className="flex items-center gap-3">
+                                        <span className="text-sm text-gray-500 font-medium">{item.emissions} kg CO₂e</span>
+                                        <span className="text-xs font-bold bg-gray-100 text-gray-600 px-2 py-1 rounded-lg">{item.percentage}%</span>
+                                    </div>
+                                </div>
+                                <div className="h-3 bg-gray-100 rounded-full overflow-hidden">
+                                    <div
+                                        className={`h-full ${colorClasses[item.color as keyof typeof colorClasses]} rounded-full transition-all duration-1000 group-hover:opacity-80`}
+                                        style={{ width: `${item.percentage}%` }}
+                                    ></div>
+                                </div>
+                            </div>
+                        );
+                    })}
+                </div>
+            </div>
+
+            {/* Stats Grid */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {/* Sustainability Score */}
+                <div className="bg-white p-8 rounded-[2.5rem] border border-gray-100 shadow-sm hover:shadow-lg transition-all">
+                    <div className="w-12 h-12 rounded-2xl bg-green-50 flex items-center justify-center mb-6 text-green-600">
+                        <CheckCircle2 className="w-7 h-7" />
+                    </div>
+                    <h4 className="font-bold text-gray-900 text-xl mb-1">Sustainability Score</h4>
+                    <p className="text-gray-400 text-sm mb-6">Based on eco-friendly practices</p>
+
+                    <div className="flex items-end gap-3">
+                        <span className="text-5xl font-black text-gray-900">{carbonMetrics.sustainabilityScore}</span>
+                        <span className="text-2xl font-bold text-gray-400 mb-1">/100</span>
+                    </div>
+                    <div className="mt-4 h-3 bg-gray-100 rounded-full overflow-hidden">
+                        <div
+                            className="h-full bg-gradient-to-r from-green-400 to-emerald-600 rounded-full"
+                            style={{ width: `${carbonMetrics.sustainabilityScore}%` }}
+                        ></div>
+                    </div>
+                </div>
+
+                {/* Carbon Sequestered */}
+                <div className="bg-white p-8 rounded-[2.5rem] border border-gray-100 shadow-sm hover:shadow-lg transition-all">
+                    <div className="w-12 h-12 rounded-2xl bg-emerald-50 flex items-center justify-center mb-6 text-emerald-600">
+                        <Leaf className="w-7 h-7" />
+                    </div>
+                    <h4 className="font-bold text-gray-900 text-xl mb-1">Carbon Sequestered</h4>
+                    <p className="text-gray-400 text-sm mb-6">CO₂ absorbed by crops</p>
+
+                    <div className="flex items-baseline gap-2">
+                        <span className="text-5xl font-black text-emerald-600">{carbonMetrics.carbonSequestered}</span>
+                        <span className="text-lg font-bold text-gray-400">kg CO₂</span>
+                    </div>
+                    <div className="mt-4 flex items-center gap-2 text-sm">
+                        <span className="bg-green-100 text-green-700 px-3 py-1 rounded-lg font-bold">
+                            {((carbonMetrics.carbonSequestered / carbonMetrics.totalEmissions) * 100).toFixed(1)}% Offset
+                        </span>
+                    </div>
+                </div>
+            </div>
+
+            {/* Emissions Trend Chart */}
+            <div className="bg-white p-8 rounded-[2.5rem] shadow-sm border border-gray-100 hover:shadow-md transition-shadow duration-300">
+                <div className="flex justify-between items-center mb-8">
+                    <h3 className="font-bold text-gray-800 flex items-center gap-3 text-lg">
+                        <div className="w-3 h-3 rounded-full bg-emerald-500 ring-4 ring-emerald-100" />
+                        Emissions Trend
+                    </h3>
+                    <span className="text-xs font-bold text-emerald-600 bg-emerald-50 px-3 py-1.5 rounded-full">Last 6 Months</span>
+                </div>
+                <div className="h-72">
+                    <ResponsiveContainer width="100%" height="100%">
+                        <BarChart data={chartData}>
+                            <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f3f4f6" />
+                            <XAxis
+                                dataKey="month"
+                                tick={{ fontSize: 11, fill: '#9ca3af' }}
+                                tickLine={false}
+                                axisLine={false}
+                                tickMargin={10}
+                            />
+                            <YAxis
+                                tick={{ fontSize: 11, fill: '#9ca3af' }}
+                                tickLine={false}
+                                axisLine={false}
+                                tickFormatter={(val) => `${val}`}
+                            />
+                            <Tooltip
+                                contentStyle={{ borderRadius: '16px', border: 'none', boxShadow: '0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1)' }}
+                                cursor={{ fill: 'rgba(16, 185, 129, 0.1)' }}
+                            />
+                            <Bar
+                                dataKey="emissions"
+                                fill="#10b981"
+                                radius={[12, 12, 0, 0]}
+                                maxBarSize={60}
+                            />
+                        </BarChart>
+                    </ResponsiveContainer>
+                </div>
+            </div>
+        </div>
+    );
+}
+
+
+
 // --------------------------------------------------
 // HELPERS
 // --------------------------------------------------
@@ -561,6 +864,7 @@ function TabButton({ active, onClick, icon: Icon, label, color }: any) {
         green: active ? 'bg-green-600 text-white shadow-lg shadow-green-200' : 'text-gray-500 hover:bg-gray-100',
         amber: active ? 'bg-amber-500 text-white shadow-lg shadow-amber-200' : 'text-gray-500 hover:bg-gray-100',
         purple: active ? 'bg-purple-600 text-white shadow-lg shadow-purple-200' : 'text-gray-500 hover:bg-gray-100',
+        emerald: active ? 'bg-emerald-600 text-white shadow-lg shadow-emerald-200' : 'text-gray-500 hover:bg-gray-100',
     };
 
     return (
