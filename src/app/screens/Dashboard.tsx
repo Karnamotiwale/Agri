@@ -19,6 +19,7 @@ import {
   BrainCircuit
 } from 'lucide-react';
 import { aiService } from '../../services/ai.service';
+import { predictIrrigation } from '../../services/aiService';
 
 import { FarmsView } from '../components/FarmsView';
 import { GovernmentSchemes } from '../components/GovernmentSchemes';
@@ -47,6 +48,41 @@ export function Dashboard() {
   const activeTab = dashboardActiveTab;
   const setActiveTab = setDashboardTab;
   const popupSensors = useCropSensors(selectedPlant?.id);
+
+  // AI Advisor State
+  const [aiFormData, setAiFormData] = useState({
+    soil_moisture: 30,
+    temperature: 28,
+    humidity: 60,
+    rain_forecast: 0,
+  });
+
+  const [aiResult, setAiResult] = useState<any>(null);
+  const [aiLoading, setAiLoading] = useState(false);
+  const [aiError, setAiError] = useState<string | null>(null);
+
+  function handleAiChange(e: React.ChangeEvent<HTMLInputElement>) {
+    const { name, value } = e.target;
+    setAiFormData((prev) => ({
+      ...prev,
+      [name]: Number(value),
+    }));
+  }
+
+  async function handleAiPredict() {
+    setAiLoading(true);
+    setAiError(null);
+
+    try {
+      const response = await predictIrrigation(aiFormData);
+      setAiResult(response);
+    } catch (err) {
+      console.error(err);
+      setAiError("Failed to get AI prediction");
+    } finally {
+      setAiLoading(false);
+    }
+  }
 
   return (
     <div className="min-h-screen bg-gray-50 pb-24">
@@ -180,6 +216,131 @@ export function Dashboard() {
                   <p className="text-gray-400 text-xs mt-1">Add your first crop to get started</p>
                 </div>
               )}
+            </div>
+          </div>
+
+          {/* AI Irrigation Advisor Section */}
+          <div className="px-6 pb-6">
+            <div className="bg-white rounded-3xl shadow-lg p-6 border border-green-100">
+              <div className="flex items-center gap-2 mb-4">
+                <div className="bg-green-100 p-2 rounded-xl">
+                  <BrainCircuit className="w-6 h-6 text-green-700" />
+                </div>
+                <h2 className="text-xl font-bold text-gray-900">AI Irrigation Advisor</h2>
+              </div>
+
+              <div className="space-y-4">
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-1">
+                    <label className="text-xs font-semibold text-gray-500 ml-1">Soil Moisture (%)</label>
+                    <input
+                      type="number"
+                      name="soil_moisture"
+                      value={aiFormData.soil_moisture}
+                      onChange={handleAiChange}
+                      className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-2.5 text-gray-900 focus:outline-none focus:ring-2 focus:ring-green-500/20 focus:border-green-500 transition-all font-medium"
+                    />
+                  </div>
+                  <div className="space-y-1">
+                    <label className="text-xs font-semibold text-gray-500 ml-1">Temperature (°C)</label>
+                    <input
+                      type="number"
+                      name="temperature"
+                      value={aiFormData.temperature}
+                      onChange={handleAiChange}
+                      className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-2.5 text-gray-900 focus:outline-none focus:ring-2 focus:ring-green-500/20 focus:border-green-500 transition-all font-medium"
+                    />
+                  </div>
+                  <div className="space-y-1">
+                    <label className="text-xs font-semibold text-gray-500 ml-1">Humidity (%)</label>
+                    <input
+                      type="number"
+                      name="humidity"
+                      value={aiFormData.humidity}
+                      onChange={handleAiChange}
+                      className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-2.5 text-gray-900 focus:outline-none focus:ring-2 focus:ring-green-500/20 focus:border-green-500 transition-all font-medium"
+                    />
+                  </div>
+                  <div className="space-y-1">
+                    <label className="text-xs font-semibold text-gray-500 ml-1">Rain Forecast (0/1)</label>
+                    <input
+                      type="number"
+                      name="rain_forecast"
+                      value={aiFormData.rain_forecast}
+                      onChange={handleAiChange}
+                      min="0"
+                      max="1"
+                      className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-2.5 text-gray-900 focus:outline-none focus:ring-2 focus:ring-green-500/20 focus:border-green-500 transition-all font-medium"
+                    />
+                  </div>
+                </div>
+
+                <button
+                  onClick={handleAiPredict}
+                  disabled={aiLoading}
+                  className="w-full bg-gradient-to-r from-green-600 to-green-700 text-white py-3.5 rounded-xl font-bold shadow-lg shadow-green-600/20 active:scale-[0.98] transition-all disabled:opacity-70 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                >
+                  {aiLoading ? (
+                    <>
+                      <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                      <span>Analyzing...</span>
+                    </>
+                  ) : (
+                    <>
+                      <Zap className="w-5 h-5" />
+                      <span>Get AI Decision</span>
+                    </>
+                  )}
+                </button>
+
+                {aiError && (
+                  <div className="p-3 bg-red-50 text-red-600 text-sm rounded-xl border border-red-100 flex items-center gap-2">
+                    <AlertCircle className="w-4 h-4 shrink-0" />
+                    {aiError}
+                  </div>
+                )}
+
+                {aiResult && (
+                  <div className="mt-4 animate-in fade-in slide-in-from-top-2 duration-300">
+                    <div className={`p-5 rounded-2xl border-2 ${aiResult.final_decision === 1 ? 'bg-blue-50 border-blue-200' : 'bg-green-50 border-green-200'}`}>
+                      <div className="flex items-center justify-between mb-3">
+                        <h3 className="text-sm font-bold text-gray-500 uppercase tracking-wider">Recommendation</h3>
+                        {aiResult.final_decision === 1 ? (
+                          <span className="px-3 py-1 bg-blue-100 text-blue-700 text-xs font-bold rounded-full">ACTION REQUIRED</span>
+                        ) : (
+                          <span className="px-3 py-1 bg-green-100 text-green-700 text-xs font-bold rounded-full">OPTIMAL</span>
+                        )}
+                      </div>
+
+                      <div className="flex items-center gap-3 mb-4">
+                        {aiResult.final_decision === 1 ? (
+                          <div className="p-3 bg-blue-500 text-white rounded-xl shadow-sm">
+                            <Droplets className="w-8 h-8" />
+                          </div>
+                        ) : (
+                          <div className="p-3 bg-green-500 text-white rounded-xl shadow-sm">
+                            <ShieldCheck className="w-8 h-8" />
+                          </div>
+                        )}
+                        <div>
+                          <p className="text-2xl font-black text-gray-900">
+                            {aiResult.final_decision === 1 ? "Start Irrigation" : "Do Not Irrigate"}
+                          </p>
+                          <p className="text-sm font-medium text-gray-600">
+                            {aiResult.final_decision === 1 ? "Water levels low" : "Soil moisture sufficient"}
+                          </p>
+                        </div>
+                      </div>
+
+                      {aiResult.explanation && (
+                        <div className="bg-white/60 rounded-xl p-3 text-xs text-gray-600 font-mono border border-black/5 overflow-x-auto">
+                          <pre>{JSON.stringify(aiResult.explanation, null, 2)}</pre>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                )}
+              </div>
             </div>
           </div>
 
