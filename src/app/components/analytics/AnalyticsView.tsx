@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, AreaChart, Area, BarChart, Bar } from 'recharts';
-import { Activity, Sprout, BarChart3, RotateCw, Droplets, Thermometer, Wind, AlertCircle, CheckCircle2, Calendar, Leaf, BrainCircuit } from 'lucide-react';
+import { Activity, Sprout, BarChart3, RotateCw, Droplets, Thermometer, Wind, AlertCircle, CheckCircle2, Calendar, Leaf, BrainCircuit, Compass, Zap, Target, AlertTriangle } from 'lucide-react';
 import { cropService } from '../../../services/crop.service';
 import { getCropSensors } from '../../../services/cropSensors';
 import { analyticsService } from '../../../services/analytics.service';
@@ -884,52 +884,179 @@ function CarbonFootprintTab({ data }: any) {
 
 
 function AIAnalyticsTab({ policyState, qTable }: any) {
+    if (!policyState) {
+        return (
+            <div className="flex flex-col items-center justify-center py-20 bg-white rounded-[2.5rem] border border-gray-100 shadow-sm animate-in fade-in">
+                <div className="bg-rose-50 p-6 rounded-full mb-4 animate-pulse">
+                    <BrainCircuit className="w-12 h-12 text-rose-300" />
+                </div>
+                <p className="text-gray-400 font-bold">Initializing AI Engine...</p>
+            </div>
+        );
+    }
+
     return (
         <div className="space-y-6 animate-in fade-in slide-in-from-bottom-8 duration-700">
-            <div className="bg-white rounded-[2.5rem] p-8 border border-gray-100 shadow-sm">
-                <div className="flex items-center gap-3 mb-6">
-                    <div className="bg-rose-100 p-3 rounded-2xl text-rose-600">
-                        <BrainCircuit className="w-8 h-8" />
+            {/* Header */}
+            <div className="bg-white rounded-[2.5rem] p-8 border border-gray-100 shadow-sm relative overflow-hidden">
+                <div className="absolute top-0 right-0 w-64 h-64 bg-rose-50 rounded-full blur-3xl -mr-16 -mt-16 pointer-events-none"></div>
+
+                <div className="relative z-10">
+                    <div className="flex items-center gap-3 mb-8">
+                        <div className="bg-rose-100 p-3 rounded-2xl text-rose-600 shadow-sm">
+                            <BrainCircuit className="w-8 h-8" />
+                        </div>
+                        <div>
+                            <h3 className="text-2xl font-black text-gray-900">RL Policy Status</h3>
+                            <p className="text-gray-500 font-medium text-sm">Deep Q-Network Configuration</p>
+                        </div>
                     </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
+                        <PolicyParamCard
+                            label="Exploration (Epsilon)"
+                            value={policyState.epsilon}
+                            icon={Compass}
+                            desc="Random action probability"
+                            color="blue"
+                        />
+                        <PolicyParamCard
+                            label="Learning Rate (Alpha)"
+                            value={policyState.learning_rate}
+                            icon={Zap}
+                            desc="New knowledge adaptation"
+                            color="amber"
+                        />
+                        <PolicyParamCard
+                            label="Discount (Gamma)"
+                            value={policyState.discount_factor}
+                            icon={Target}
+                            desc="Future reward weight"
+                            color="purple"
+                        />
+                    </div>
+
                     <div>
-                        <h3 className="text-2xl font-black text-gray-900">AI Intelligence Core</h3>
-                        <p className="text-gray-500 font-medium text-sm">Real-time Policy & Q-Learning State</p>
-                    </div>
-                </div>
-
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-                    {/* Policy State */}
-                    <div className="bg-gray-50 rounded-3xl p-6 border border-gray-200">
-                        <h4 className="text-sm font-black text-gray-400 uppercase tracking-widest mb-4">Policy Penalties & Hyperparameters</h4>
-                        {policyState ? (
-                            <pre className="text-xs font-mono text-gray-700 overflow-x-auto bg-white p-4 rounded-xl border border-gray-100 shadow-sm">
-                                {JSON.stringify(policyState, null, 2)}
-                            </pre>
-                        ) : (
-                            <div className="bg-white p-6 rounded-xl text-center text-gray-400 text-sm font-medium">
-                                No policy state data available
-                            </div>
-                        )}
-                    </div>
-
-                    {/* Q-Table */}
-                    <div className="bg-gray-50 rounded-3xl p-6 border border-gray-200">
-                        <h4 className="text-sm font-black text-gray-400 uppercase tracking-widest mb-4">Reinforcement Learning Q-Table</h4>
-                        {qTable && qTable.length > 0 ? (
-                            <div className="bg-white p-4 rounded-xl border border-gray-100 shadow-sm overflow-x-auto max-h-[300px] overflow-y-auto">
-                                <pre className="text-xs font-mono text-gray-700">
-                                    {JSON.stringify(qTable, null, 2)}
-                                </pre>
-                            </div>
-                        ) : (
-                            <div className="bg-white p-6 rounded-xl text-center text-gray-400 text-sm font-medium">
-                                Q-Table is empty or initializing
-                            </div>
-                        )}
+                        <h4 className="text-sm font-black text-gray-400 uppercase tracking-widest mb-4 flex items-center gap-2">
+                            <AlertTriangle className="w-4 h-4" /> Penalty Configuration
+                        </h4>
+                        <div className="flex flex-wrap gap-3">
+                            {Object.entries(policyState.penalties || {}).map(([key, val]: any) => (
+                                <div key={key} className="flex items-center gap-3 bg-rose-50 px-4 py-2.5 rounded-xl border border-rose-100">
+                                    <span className="text-rose-900 font-bold text-sm capitalize">{key.replace(/_/g, ' ')}</span>
+                                    <span className="bg-white text-rose-600 font-black text-xs px-2 py-1 rounded-lg shadow-sm">
+                                        -{val}
+                                    </span>
+                                </div>
+                            ))}
+                        </div>
                     </div>
                 </div>
             </div>
+
+            {/* Q-Table Visualization */}
+            <div className="bg-white rounded-[2.5rem] p-8 border border-gray-100 shadow-sm overflow-hidden">
+                <div className="flex justify-between items-center mb-6">
+                    <h3 className="text-xl font-black text-gray-900">Knowledge Base (Q-Table)</h3>
+                    <span className="bg-gray-100 text-gray-500 font-bold text-xs px-3 py-1.5 rounded-full">
+                        {qTable?.length || 0} States Learned
+                    </span>
+                </div>
+
+                <div className="overflow-x-auto">
+                    <table className="w-full text-left border-collapse">
+                        <thead>
+                            <tr className="border-b border-gray-100">
+                                <th className="py-4 px-4 text-xs font-black text-gray-400 uppercase tracking-wider">Context Situation</th>
+                                <th className="py-4 px-4 text-xs font-black text-gray-400 uppercase tracking-wider">Optimal Action</th>
+                                <th className="py-4 px-4 text-xs font-black text-gray-400 uppercase tracking-wider text-right">Confidence (Q)</th>
+                            </tr>
+                        </thead>
+                        <tbody className="divide-y divide-gray-50">
+                            {qTable && qTable.length > 0 ? (
+                                qTable.slice(0, 10).map((row: any, idx: number) => {
+                                    const bestAction = row.q_value > 0 ? (row.action === 1 ? 'Irrigate' : 'Wait') : 'Exploring...';
+                                    const confidence = Math.abs(row.q_value).toFixed(2);
+
+                                    return (
+                                        <tr key={idx} className="group hover:bg-gray-50 transition-colors">
+                                            <td className="py-4 px-4">
+                                                <div className="flex flex-wrap gap-2">
+                                                    <Badge label={row.crop} color="green" />
+                                                    <Badge label={row.soil_moisture_level} color="blue" />
+                                                    <Badge label={row.rainfall_level} color="cyan" />
+                                                    {row.disease_risk !== 'low' && <Badge label={`Risk: ${row.disease_risk}`} color="rose" />}
+                                                </div>
+                                            </td>
+                                            <td className="py-4 px-4">
+                                                <div className={`inline-flex items-center gap-2 font-bold px-3 py-1.5 rounded-lg text-sm ${row.action === 1 ? 'bg-blue-100 text-blue-700' : 'bg-gray-100 text-gray-600'}`}>
+                                                    {row.action === 1 ? <Droplets className="w-4 h-4" /> : <Activity className="w-4 h-4" />}
+                                                    {row.action === 1 ? 'Irrigate' : 'Wait'}
+                                                </div>
+                                            </td>
+                                            <td className="py-4 px-4 text-right">
+                                                <span className="font-mono font-bold text-gray-700">{confidence}</span>
+                                            </td>
+                                        </tr>
+                                    );
+                                })
+                            ) : (
+                                <tr>
+                                    <td colSpan={3} className="py-8 text-center text-gray-400 font-medium">
+                                        No knowledge acquired yet. AI is observing...
+                                    </td>
+                                </tr>
+                            )}
+                        </tbody>
+                    </table>
+                    {qTable && qTable.length > 10 && (
+                        <div className="text-center mt-4 text-xs text-gray-400 font-bold uppercase tracking-wider">
+                            Showing top 10 recent learnings
+                        </div>
+                    )}
+                </div>
+            </div>
         </div>
+    );
+}
+
+function PolicyParamCard({ label, value, icon: Icon, desc, color }: any) {
+    const colors: any = {
+        blue: 'bg-blue-50 text-blue-600',
+        amber: 'bg-amber-50 text-amber-600',
+        purple: 'bg-purple-50 text-purple-600',
+    };
+
+    return (
+        <div className="bg-gray-50 p-4 rounded-3xl border border-gray-100 relative group overflow-hidden hover:bg-white hover:shadow-md transition-all">
+            <div className="flex items-center gap-4 mb-2 relative z-10">
+                <div className={`p-2.5 rounded-2xl ${colors[color]}`}>
+                    <Icon className="w-5 h-5" />
+                </div>
+                <div>
+                    <p className="text-xs font-bold text-gray-400 uppercase tracking-wider">{label}</p>
+                    <p className="text-2xl font-black text-gray-900">{value}</p>
+                </div>
+            </div>
+            <p className="text-xs font-medium text-gray-500 pl-1 relative z-10">{desc}</p>
+        </div>
+    );
+}
+
+function Badge({ label, color }: any) {
+    const colors: any = {
+        green: 'bg-green-100 text-green-700 border-green-200',
+        blue: 'bg-blue-100 text-blue-700 border-blue-200',
+        cyan: 'bg-cyan-100 text-cyan-700 border-cyan-200',
+        rose: 'bg-rose-100 text-rose-700 border-rose-200',
+    };
+    // Default to gray if color not found
+    const style = colors[color] || 'bg-gray-100 text-gray-600 border-gray-200';
+
+    return (
+        <span className={`text-[10px] uppercase font-bold px-2 py-1 rounded-md border ${style}`}>
+            {label}
+        </span>
     );
 }
 
