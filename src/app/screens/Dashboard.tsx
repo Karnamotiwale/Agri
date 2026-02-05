@@ -74,6 +74,14 @@ export function Dashboard() {
   const [aiLoading, setAiLoading] = useState(false);
   const [aiError, setAiError] = useState<string | null>(null);
 
+  // AI Metrics State
+  const [metrics, setMetrics] = useState<{ accuracy: number, precision: number } | null>(null);
+  useEffect(() => {
+    import('../../services/metricsService').then(({ fetchModelMetrics }) => {
+      fetchModelMetrics().then(setMetrics).catch(console.error);
+    });
+  }, []);
+
   function handleAiChange(e: React.ChangeEvent<HTMLInputElement>) {
     const { name, value } = e.target;
     setAiFormData((prev) => ({
@@ -408,6 +416,29 @@ export function Dashboard() {
                           <pre>{JSON.stringify(aiResult.explanation, null, 2)}</pre>
                         </div>
                       )}
+                    </div>
+                  </div>
+                )}
+
+                {/* XGBoost Performance Card */}
+                {metrics && (
+                  <div className="mt-6 border-t border-green-100 pt-4">
+                    <div className="flex items-center gap-2 mb-3">
+                      <Activity className="w-4 h-4 text-green-600" />
+                      <h3 className="text-xs font-bold text-gray-500 uppercase tracking-widest">Model Performance</h3>
+                    </div>
+                    <div className="grid grid-cols-2 gap-3">
+                      <div className="bg-green-50 rounded-xl p-3 border border-green-100">
+                        <div className="text-2xl font-black text-green-700">{(metrics.accuracy * 100).toFixed(1)}%</div>
+                        <div className="text-[10px] font-bold text-green-600 uppercase tracking-wider">Accuracy</div>
+                      </div>
+                      <div className="bg-blue-50 rounded-xl p-3 border border-blue-100">
+                        <div className="text-2xl font-black text-blue-700">{(metrics.precision * 100).toFixed(1)}%</div>
+                        <div className="text-[10px] font-bold text-blue-600 uppercase tracking-wider">Precision</div>
+                      </div>
+                    </div>
+                    <div className="mt-2 text-[10px] text-gray-400 text-center font-medium">
+                      Powered by XGBoost Engine v2.0
                     </div>
                   </div>
                 )}
