@@ -4,23 +4,28 @@ import { Calendar, TrendingUp, Info, Package } from 'lucide-react';
 
 interface Props {
     cropId: string;
+    cropName?: string;
 }
 
-export function MarketInsights({ cropId }: Props) {
+export function MarketInsights({ cropId, cropName }: Props) {
     const [yieldData, setYieldData] = useState<YieldPrediction | null>(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
 
     useEffect(() => {
         loadData();
-    }, [cropId]);
+    }, [cropId, cropName]);
 
     const loadData = async () => {
         setLoading(true);
         setError(null);
 
+        // If no crop name, don't call API or use explicit fallback
+        // The parent usually passes generic "Crop" if undefined, but we should be safe.
+        const nameToUse = cropName || 'rice';
+
         try {
-            const data = await aiAdvisoryService.getYieldPrediction(cropId);
+            const data = await aiAdvisoryService.getYieldPrediction(nameToUse);
             setYieldData(data);
         } catch (err: any) {
             console.warn('Backend market API unreachable, using simulation data.');

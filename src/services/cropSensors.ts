@@ -16,8 +16,8 @@ export const getCropSensors = async (cropId: string): Promise<CropSensorReading>
         if (!response.ok) throw new Error(`API failed: ${response.status}`);
         return await response.json();
     } catch (err) {
-        console.warn('Sensors fallback', err);
-        return { moisture: 60, ph: 6.5, n: 120, p: 40, k: 60, npk: '120-40-60' };
+        console.warn('Sensors fetch failed', err);
+        return { moisture: 0, ph: 0, n: 0, p: 0, k: 0, npk: '0-0-0' };
     }
 };
 
@@ -29,12 +29,12 @@ export const tickCropSensors = async (cropId: string): Promise<CropSensorReading
         return await response.json();
     } catch (err) {
         return {
-            moisture: 60 + Math.random() * 5,
-            ph: 6.5 + Math.random() * 0.2,
-            n: 120,
-            p: 40,
-            k: 60,
-            npk: '120-40-60'
+            moisture: 0,
+            ph: 0,
+            n: 0,
+            p: 0,
+            k: 0,
+            npk: '0-0-0'
         };
     }
 };

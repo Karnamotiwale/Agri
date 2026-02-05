@@ -89,18 +89,18 @@ export function AnalyticsView({ selectedCrop }: AnalyticsViewProps) {
                     })).slice(-20);
                     setHistoryData(processedHistory);
                 } else {
-                    setHistoryData(generateMockHistory());
+                    setHistoryData([]);
                 }
             } else {
-                setHistoryData(generateMockHistory());
+                setHistoryData([]);
             }
 
             // Handle Sensors (Fallback if analytics didn't provide)
             if (results[1].status === 'fulfilled' && !currentSensors) {
                 setCurrentSensors(results[1].value);
             } else if (!currentSensors) {
-                // Mock sensors if both fetch methods fail
-                setCurrentSensors({ moisture: 64.2, temperature: 28.5, humidity: 65, n: 120 });
+                // Return empty if both fetch methods fail
+                setCurrentSensors({ moisture: 0, temperature: 0, humidity: 0, n: 0 });
             }
 
             // Handle Growth Stages
@@ -120,8 +120,8 @@ export function AnalyticsView({ selectedCrop }: AnalyticsViewProps) {
 
         } catch (err) {
             console.error("Analytics load failed", err);
-            // Fallback to full mock on error
-            setHistoryData(generateMockHistory());
+            // Fallback to empty on error
+            setHistoryData([]);
         } finally {
             setLoading(false);
         }
@@ -135,18 +135,7 @@ export function AnalyticsView({ selectedCrop }: AnalyticsViewProps) {
         return Math.max(0, Math.floor(diff / (1000 * 60 * 60 * 24)));
     };
 
-    const generateMockHistory = () => {
-        const now = new Date();
-        return Array.from({ length: 20 }, (_, i) => {
-            const time = new Date(now.getTime() - (20 - i) * 30 * 60000); // 30 min intervals
-            return {
-                time: time.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-                moisture: 60 + Math.random() * 10 - 5,
-                temperature: 28 + Math.random() * 4 - 2,
-                humidity: 65 + Math.random() * 10 - 5,
-            };
-        });
-    };
+
 
     return (
         <div className="space-y-6">

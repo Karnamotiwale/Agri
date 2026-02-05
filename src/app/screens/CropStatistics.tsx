@@ -80,7 +80,7 @@ export function CropStatistics() {
                 <TodayTasks key={`tasks-${refreshKey}`} cropId={cropId} farmId={crop.farmId} />
 
                 {/* 2. AI ADVISORY PANEL */}
-                <AdvisoryCards key={`adv-${refreshKey}`} cropId={cropId} />
+                <AdvisoryCards key={`adv-${refreshKey}`} cropId={cropId} cropName={crop.name} />
 
                 {/* 3. ACTION BUTTONS */}
                 <ActionButtons key={`btns-${refreshKey}`} cropId={cropId} />
@@ -94,7 +94,7 @@ export function CropStatistics() {
                 <CropIntelligence key={`intl-${refreshKey}`} crop={crop} journeyData={journeyData} />
 
                 {/* 8. HARVEST & POST-HARVEST INSIGHTS */}
-                <MarketInsights key={`market-${refreshKey}`} cropId={cropId} />
+                <MarketInsights key={`market-${refreshKey}`} cropId={cropId} cropName={crop.name} />
 
                 {/* 9. FINANCIAL & RECORD KEEPING */}
                 <FinancialSummary key={`fin-${refreshKey}`} cropId={cropId} />

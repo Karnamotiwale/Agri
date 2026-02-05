@@ -136,27 +136,23 @@ export const aiService = {
      * Legacy support for Recommendations (derived from /decide)
      */
     getRecommendations: async (farmId: string): Promise<AIRecommendation[]> => {
-        try {
-            const data = await aiService.getDecision({ crop: 'rice', growth_stage: 'Vegetative' });
-            const recommendations: AIRecommendation[] = [];
+        const data = await aiService.getDecision({ crop: 'rice', growth_stage: 'Vegetative' });
+        const recommendations: AIRecommendation[] = [];
 
-            if (data && data.final_decision_label) {
-                recommendations.push({
-                    id: `rec-${Date.now()}`,
-                    farm_id: farmId,
-                    crop_id: 'active',
-                    action: data.final_decision_label,
-                    confidence: data.explanation?.confidence || 0.9,
-                    risk_level: 'Low',
-                    reasoning: data.reason || "AI processed conditions",
-                    status: 'PENDING',
-                    created_at: new Date().toISOString()
-                });
-            }
-            return recommendations;
-        } catch (err) {
-            return [];
+        if (data && data.final_decision_label) {
+            recommendations.push({
+                id: `rec-${Date.now()}`,
+                farm_id: farmId,
+                crop_id: 'active',
+                action: data.final_decision_label,
+                confidence: data.explanation?.confidence || 0.9,
+                risk_level: 'Low',
+                reasoning: data.reason || "AI processed conditions",
+                status: 'PENDING',
+                created_at: new Date().toISOString()
+            });
         }
+        return recommendations;
     }
 };
 
@@ -199,5 +195,36 @@ export const aiAdvisoryService = {
             method: 'POST',
             body: JSON.stringify({ crop: crop.toLowerCase() })
         });
+    },
+
+    getResourceAnalytics: async (cropId: string): Promise<ResourceAnalytics> => {
+        return await safeFetch(`/api/analytics/resources?crop_id=${cropId}`);
     }
 };
+
+export interface ResourceAnalytics {
+    water: {
+        efficiencyScore: number;
+        usage: string;
+    };
+    fertilizer: {
+        efficiencyScore: number;
+        usage: string;
+    };
+    cost: {
+        estimated: number;
+        currency: string;
+    };
+}
+
+export interface YieldPrediction {
+    summary: {
+        yieldRange: string;
+        trend: string;
+        vsAverage: string;
+        predictions: any[];
+        stability: string;
+        confidence: number;
+    };
+    predictions: any[];
+}

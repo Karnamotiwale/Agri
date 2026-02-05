@@ -308,7 +308,7 @@ export const cropService = {
 
     getGrowthStages: async (cropId: string, daysSinceSowing: number = 0): Promise<any> => {
         try {
-            const url = getApiUrl('/crop/growth-stages');
+            const url = getApiUrl('/crop/stages');
             const response = await fetch(url, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },

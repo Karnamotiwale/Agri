@@ -4,24 +4,28 @@ import { Info, AlertCircle, Droplets, FlaskConical, Bug, ChevronRight } from 'lu
 
 interface Props {
     cropId: string;
+    cropName?: string;
 }
 
-export function AdvisoryCards({ cropId }: Props) {
+export function AdvisoryCards({ cropId, cropName }: Props) {
     const [advisory, setAdvisory] = useState<CropAdvisory | null>(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
 
     useEffect(() => {
         loadData();
-    }, [cropId]);
+    }, [cropId, cropName]);
 
     const loadData = async () => {
         setLoading(true);
         setError(null);
 
+        // If no crop name, use generic default to prevent 400 error
+        const nameToUse = cropName || 'rice';
+
         try {
             // Attempt to fetch real data
-            const data = await aiAdvisoryService.getDetailedAdvisory(cropId);
+            const data = await aiAdvisoryService.getDetailedAdvisory(nameToUse);
             setAdvisory(data);
         } catch (err: any) {
             console.warn('Backend advisory API unreachable, using simulation data.');

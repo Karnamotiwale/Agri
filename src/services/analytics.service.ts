@@ -90,18 +90,7 @@ export const analyticsService = {
             return data;
         } catch (err) {
             console.error('Failed to fetch analytics overview:', err);
-            // Return fallback structure
-            return {
-                summary: {
-                    soil_moisture: 'stable',
-                    soil_moisture_value: 0,
-                    temperature: 'stable',
-                    temperature_value: 0,
-                },
-                data_points: 0,
-                period: '24h',
-                source: 'fallback',
-            };
+            throw err;
         }
     },
 
@@ -114,23 +103,7 @@ export const analyticsService = {
             return data;
         } catch (err) {
             console.error('Failed to fetch forecast:', err);
-            // Return fallback forecast
-            const today = new Date();
-            const fallbackForecast: ForecastDay[] = Array.from({ length: days }, (_, i) => {
-                const date = new Date(today);
-                date.setDate(date.getDate() + i + 1);
-                return {
-                    date: date.toISOString().split('T')[0],
-                    soil_moisture: 60 + Math.random() * 10 - 5,
-                    temperature: 28 + Math.random() * 4 - 2,
-                };
-            });
-
-            return {
-                forecast: fallbackForecast,
-                horizon_days: days,
-                status: 'fallback',
-            };
+            throw err;
         }
     },
 
