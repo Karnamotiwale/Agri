@@ -80,7 +80,7 @@ export function AdvisoryCards({ cropId, cropName }: Props) {
     const cards = [];
 
     // 1. Fertilizer Advisory
-    if (advisory.fertilizer.recommended) {
+    if (advisory.fertilizer?.recommended) {
         cards.push({
             title: 'Fertilizer Advisory',
             icon: <FlaskConical className="w-5 h-5 text-purple-600" />,
@@ -99,7 +99,7 @@ export function AdvisoryCards({ cropId, cropName }: Props) {
     }
 
     // 2. Pest Advisory
-    if (advisory.pesticide.detected) {
+    if (advisory.pesticide?.detected) {
         cards.push({
             title: 'Pest & Disease Advisory',
             icon: <Bug className="w-5 h-5 text-red-600" />,
@@ -107,9 +107,9 @@ export function AdvisoryCards({ cropId, cropName }: Props) {
             borderColor: 'border-red-100',
             content: (
                 <div className="space-y-2">
-                    <p className="text-sm font-bold text-gray-800">Risk: {advisory.pesticide.riskLevel}</p>
-                    <p className="text-xs text-gray-600">Target: {advisory.pesticide.target}</p>
-                    <p className="text-[10px] text-gray-500 italic">Action: {advisory.pesticide.productName}</p>
+                    <p className="text-sm font-bold text-gray-800">Risk: {advisory.pesticide?.riskLevel || 'LOW'}</p>
+                    <p className="text-xs text-gray-600">Target: {advisory.pesticide?.target || 'N/A'}</p>
+                    <p className="text-[10px] text-gray-500 italic">Action: {advisory.pesticide?.productName || 'N/A'}</p>
                 </div>
             )
         });

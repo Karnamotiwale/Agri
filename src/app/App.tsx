@@ -18,6 +18,7 @@ import { ActionSelection } from './screens/ActionSelection';
 import { FarmDetailsForm } from './screens/FarmDetailsForm';
 import { CropDetailsForm } from './screens/CropDetailsForm';
 import { AIEngineDashboard } from './screens/AIEngineDashboard';
+import { AISystemStatistics } from './screens/AISystemStatistics';
 
 // Helper component for protected routes
 function ProtectedRoute() {
@@ -77,6 +78,7 @@ export default function App() {
           <Route path="/farm-details" element={<FarmDetailsForm />} />
           <Route path="/crop-details" element={<CropDetailsForm />} />
           <Route path="/ai-engine" element={<AIEngineDashboard />} />
+          <Route path="/ai-statistics" element={<AISystemStatistics />} />
           <Route path="/ai-dashboard" element={<Navigate to="/ai-engine" replace />} />
           <Route path="/api-engine" element={<Navigate to="/ai-engine" replace />} />
 

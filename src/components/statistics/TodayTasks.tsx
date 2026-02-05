@@ -80,8 +80,8 @@ export function TodayTasks({ cropId, farmId }: Props) {
 
     if (decision) {
         tasks.push({
-            name: `Irrigation: ${decision.decision}`,
-            confidence: decision.confidence * 100,
+            name: `Irrigation: ${decision.decision || 'N/A'}`,
+            confidence: (decision.confidence || 0) * 100,
             relevance: 'Now',
             icon: <Droplets className="w-5 h-5 text-blue-600" />,
             bgColor: 'bg-blue-50'

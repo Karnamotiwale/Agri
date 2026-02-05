@@ -98,8 +98,8 @@ export function MarketInsights({ cropId, cropName }: Props) {
                         <TrendingUp className="w-5 h-5" />
                         <h3 className="text-sm font-bold">Predicted Yield Range</h3>
                     </div>
-                    <p className="text-xl font-bold text-gray-900">{yieldData.summary.yieldRange}</p>
-                    <p className="text-xs text-green-600 font-bold mt-1">Trend: {yieldData.summary.trend} ({yieldData.summary.vsAverage})</p>
+                    <p className="text-xl font-bold text-gray-900">{yieldData.summary?.yieldRange || 'N/A'}</p>
+                    <p className="text-xs text-green-600 font-bold mt-1">Trend: {yieldData.summary?.trend || 'Stable'} ({yieldData.summary?.vsAverage || '+0%'})</p>
                 </div>
             </div>
 
