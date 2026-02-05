@@ -1,8 +1,10 @@
 import { useNavigate, useParams } from 'react-router-dom';
 import { Header } from '@/app/components/Header';
-import { Droplets, FlaskConical, Leaf, Thermometer, Sun, Cloud, Droplet, Package, TrendingUp, Calendar, MapPin, Sprout } from 'lucide-react';
+import { Droplets, FlaskConical, Leaf, Thermometer, Sun, Cloud, Droplet, Package, TrendingUp, Calendar, MapPin, Sprout, BrainCircuit, AlertTriangle, Upload, Camera } from 'lucide-react';
 import { useApp } from '../../context/AppContext';
 import { useCropSensors } from '../../hooks/useCropSensors';
+import { useEffect, useState } from 'react';
+import { fetchCropDetails, detectDisease, type CropDetailsResponse, type DiseaseDetectionResponse } from '../../services/cropAIService';
 
 export function CropFullDetails() {
   const navigate = useNavigate();
@@ -12,6 +14,52 @@ export function CropFullDetails() {
   const crop = getCrop(cropId);
   const farm = crop ? getFarm(crop.farmId || 'f1') : null;
   const sensors = useCropSensors(cropId);
+
+  // AI State
+  const [aiData, setAiData] = useState<CropDetailsResponse | null>(null);
+  const [disease, setDisease] = useState<DiseaseDetectionResponse | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [diseaseLoading, setDiseaseLoading] = useState(false);
+
+  // Fetch AI data on mount
+  useEffect(() => {
+    async function loadAIData() {
+      try {
+        const response = await fetchCropDetails({
+          soil_moisture: sensors.moisture,
+          temperature: sensors.temperature || 28,
+          humidity: sensors.humidity || 65,
+          rain_forecast: 0,
+          crop: crop?.name
+        });
+        setAiData(response);
+      } catch (err) {
+        console.error('Failed to load AI data:', err);
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    if (crop) {
+      loadAIData();
+    }
+  }, [crop, sensors.moisture, sensors.temperature, sensors.humidity]);
+
+  // Disease detection handler
+  async function handleDiseaseUpload(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setDiseaseLoading(true);
+    try {
+      const result = await detectDisease(file);
+      setDisease(result);
+    } catch (err) {
+      console.error('Disease detection failed:', err);
+    } finally {
+      setDiseaseLoading(false);
+    }
+  }
 
   if (!crop) {
     return (
@@ -156,6 +204,115 @@ export function CropFullDetails() {
               <p className="text-lg font-bold text-gray-900">{sensors.npk}</p>
               <p className="text-xs text-gray-600 font-semibold">NPK</p>
             </div>
+          </div>
+        </div>
+
+        {/* AI Irrigation Decision */}
+        <div className="bg-gradient-to-br from-purple-50 to-purple-100/50 rounded-3xl p-6 shadow-xl shadow-purple-900/10 border border-purple-200">
+          <h3 className="text-lg font-bold text-gray-900 mb-5 flex items-center gap-2">
+            <div className="w-10 h-10 bg-purple-600 rounded-2xl flex items-center justify-center">
+              <BrainCircuit className="w-6 h-6 text-white" />
+            </div>
+            AI Irrigation Decision
+          </h3>
+          {loading ? (
+            <p className="text-sm text-gray-500">Loading AI recommendation...</p>
+          ) : aiData ? (
+            <div className="space-y-4">
+              <div className="bg-white rounded-2xl p-5 border border-purple-200">
+                <p className="text-xs text-purple-600 uppercase font-bold mb-2">Decision</p>
+                <p className="text-2xl font-black text-gray-900">
+                  {aiData.final_decision === 1 ? '💧 Irrigate Now' : '⏸️ Do Not Irrigate'}
+                </p>
+                <p className="text-xs text-gray-500 mt-2">Confidence: {(aiData.confidence * 100).toFixed(0)}%</p>
+              </div>
+              <div className="bg-white rounded-2xl p-5 border border-purple-200">
+                <p className="text-xs text-purple-600 uppercase font-bold mb-2">AI Explanation</p>
+                <pre className="text-xs text-gray-700 whitespace-pre-wrap font-mono bg-gray-50 p-3 rounded-lg overflow-auto max-h-40">
+                  {JSON.stringify(aiData.explanation, null, 2)}
+                </pre>
+              </div>
+            </div>
+          ) : (
+            <p className="text-sm text-red-500">Failed to load AI data</p>
+          )}
+        </div>
+
+        {/* Crop Stress Analysis */}
+        <div className="bg-gradient-to-br from-amber-50 to-amber-100/50 rounded-3xl p-6 shadow-xl shadow-amber-900/10 border border-amber-200">
+          <h3 className="text-lg font-bold text-gray-900 mb-5 flex items-center gap-2">
+            <div className="w-10 h-10 bg-amber-600 rounded-2xl flex items-center justify-center">
+              <AlertTriangle className="w-6 h-6 text-white" />
+            </div>
+            Crop Stress Analysis
+          </h3>
+          {loading ? (
+            <p className="text-sm text-gray-500">Analyzing stress levels...</p>
+          ) : aiData ? (
+            <div className="bg-white rounded-2xl p-5 border border-amber-200">
+              <div className="flex items-center justify-between mb-3">
+                <p className="text-xs text-amber-600 uppercase font-bold">Stress Level</p>
+                <span className={`px-3 py-1 rounded-full text-xs font-black ${aiData.crop_stress === 'Low' ? 'bg-green-100 text-green-700' :
+                    aiData.crop_stress === 'Medium' ? 'bg-amber-100 text-amber-700' :
+                      'bg-red-100 text-red-700'
+                  }`}>
+                  {aiData.crop_stress}
+                </span>
+              </div>
+              <p className="text-sm text-gray-700">
+                {aiData.crop_stress === 'Low' && 'Crop is healthy with optimal environmental conditions.'}
+                {aiData.crop_stress === 'Medium' && 'Moderate stress detected. Monitor irrigation and temperature closely.'}
+                {aiData.crop_stress === 'High' && 'High stress! Immediate action required. Check soil moisture and temperature.'}
+              </p>
+            </div>
+          ) : (
+            <p className="text-sm text-red-500">Failed to load stress data</p>
+          )}
+        </div>
+
+        {/* Crop Disease Detection */}
+        <div className="bg-gradient-to-br from-rose-50 to-rose-100/50 rounded-3xl p-6 shadow-xl shadow-rose-900/10 border border-rose-200">
+          <h3 className="text-lg font-bold text-gray-900 mb-5 flex items-center gap-2">
+            <div className="w-10 h-10 bg-rose-600 rounded-2xl flex items-center justify-center">
+              <Camera className="w-6 h-6 text-white" />
+            </div>
+            Crop Disease Detection
+          </h3>
+          <div className="space-y-4">
+            <div className="bg-white rounded-2xl p-5 border border-rose-200">
+              <label className="flex flex-col items-center justify-center cursor-pointer">
+                <div className="w-16 h-16 bg-rose-100 rounded-full flex items-center justify-center mb-3">
+                  <Upload className="w-8 h-8 text-rose-600" />
+                </div>
+                <p className="text-sm font-bold text-gray-900 mb-1">Upload Crop Image</p>
+                <p className="text-xs text-gray-500 mb-3">Click to select a leaf or crop photo</p>
+                <input
+                  type="file"
+                  accept="image/*"
+                  onChange={handleDiseaseUpload}
+                  className="hidden"
+                />
+                <span className="px-4 py-2 bg-rose-600 text-white rounded-xl text-xs font-bold hover:bg-rose-700 transition-all">
+                  Choose Image
+                </span>
+              </label>
+            </div>
+            {diseaseLoading && (
+              <div className="bg-white rounded-2xl p-5 border border-rose-200 text-center">
+                <div className="w-8 h-8 border-4 border-rose-600 border-t-transparent rounded-full animate-spin mx-auto mb-2" />
+                <p className="text-sm text-gray-600">Analyzing image...</p>
+              </div>
+            )}
+            {disease && (
+              <div className="bg-white rounded-2xl p-5 border border-rose-200">
+                <p className="text-xs text-rose-600 uppercase font-bold mb-2">Detection Result</p>
+                <p className="text-xl font-black text-gray-900 mb-2">{disease.disease}</p>
+                <p className="text-xs text-gray-500">Confidence: {(disease.confidence * 100).toFixed(0)}%</p>
+                {disease.note && (
+                  <p className="text-xs text-amber-600 mt-3 bg-amber-50 p-2 rounded">{disease.note}</p>
+                )}
+              </div>
+            )}
           </div>
         </div>
 
