@@ -98,6 +98,47 @@ export function CropDetails() {
 
         <div className="h-4 bg-gray-50" />
 
+        <div className="h-4 bg-gray-50" />
+
+        {/* NEW: DISEASE DETECTION PANEL (CropNet) */}
+        <div className="px-6">
+          <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5">
+            <div className="flex items-center gap-3 mb-4">
+              <div className="bg-red-50 p-2 rounded-xl">
+                <Loader2 className="w-5 h-5 text-red-600" />
+              </div>
+              <div>
+                <h3 className="font-bold text-gray-900">CropNet Disease Check</h3>
+                <p className="text-xs text-gray-500">AI-powered leaf analysis</p>
+              </div>
+            </div>
+
+            <div className="bg-gray-50 rounded-xl p-4 border-2 border-dashed border-gray-200 text-center hover:bg-gray-100 transition-colors cursor-pointer relative">
+              <input
+                type="file"
+                accept="image/*"
+                className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                onChange={async (e) => {
+                  const file = e.target.files?.[0];
+                  if (file) {
+                    try {
+                      const { detectCropDisease } = await import('../../services/cropnetService');
+                      const res = await detectCropDisease(file);
+                      alert(`Result: ${res.disease} (${(res.confidence * 100).toFixed(1)}%)`);
+                    } catch (err) {
+                      alert("Detection failed");
+                    }
+                  }
+                }}
+              />
+              <p className="text-sm font-semibold text-gray-600">Tap to upload leaf photo</p>
+              <p className="text-xs text-gray-400 mt-1">Supports JPG, PNG</p>
+            </div>
+          </div>
+        </div>
+
+        <div className="h-4 bg-gray-50" />
+
         {/* 7. CROP HISTORY & AI LEARNING */}
         <CropHistoryLearning key={`history-${refreshKey}`} cropId={cropId} />
 
