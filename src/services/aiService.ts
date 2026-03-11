@@ -20,7 +20,7 @@ interface FeedbackData {
 }
 
 export async function predictIrrigation(data: PredictionData): Promise<PredictionResponse> {
-    const response = await fetch(`${API_BASE}/predict`, {
+    const response = await fetch(`${API_BASE}/api/irrigationDecision`, {
         method: "POST",
         headers: {
             "Content-Type": "application/json",

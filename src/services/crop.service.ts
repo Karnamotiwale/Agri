@@ -390,7 +390,7 @@ export const cropService = {
      */
     getRotationRecommendation: async (cropId: string): Promise<any> => {
         try {
-            const url = getApiUrl('/crop/rotation');
+            const url = getApiUrl('/api/cropRotation');
             const payload = {
                 crop: cropId,
                 soil_nutrients: { N: 0, P: 0, K: 0 }, // Future-proofing (Requirement 1)
@@ -461,7 +461,7 @@ export const cropService = {
      */
     getYieldPrediction: async (cropId: string): Promise<any> => {
         try {
-            const url = getApiUrl('/yield/predict');
+            const url = getApiUrl('/api/yieldPrediction');
             const response = await fetch(url, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
