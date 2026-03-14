@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { aiAdvisoryService, YieldPrediction } from '../../services/ai.service';
+import { aiAdvisoryService, YieldPrediction } from '../../services/aiService';
 import { Calendar, TrendingUp, Info, Package, IndianRupee } from 'lucide-react';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 

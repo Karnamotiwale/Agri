@@ -2,16 +2,16 @@ import React, { useEffect, useState, useCallback } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useApp, Crop } from '../../context/AppContext';
 import { cropService } from '../../services/crop.service';
-import { Header } from '../components/Header';
+import { Header } from '@/components/layout/Header';
 import { Loader2 } from 'lucide-react';
 
 // Upgraded AI Components
 import { FieldPhotoHeader } from '../../components/crop/FieldPhotoHeader';
 import { FieldMetaSummary } from '../../components/crop/FieldMetaSummary';
 import { GrowthStageTimeline } from '../../components/crop/GrowthStageTimeline';
-import { LiveFieldStatus } from '../../components/crop/LiveFieldStatus';
-import { HealthDetectionHub } from '../../components/crop/HealthDetectionHub';
-import { StressDetectionSystem } from '../../components/crop/StressDetectionSystem';
+import { LiveFieldStatus } from '@/features/crop-health/LiveFieldStatus';
+import { HealthDetectionHub } from '@/features/crop-health/HealthDetectionHub';
+import { StressDetectionSystem } from '@/features/crop-health/StressDetectionSystem';
 import { CropHistoryLearning } from '../../components/crop/CropHistoryLearning';
 
 export function CropDetails() {

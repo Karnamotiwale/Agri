@@ -1,9 +1,9 @@
 import { useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { Upload, Scan, CheckCircle, AlertTriangle, ChevronRight } from 'lucide-react';
-import { Header } from '../components/Header';
+import { Header } from '@/components/layout/Header';
 import { useApp } from '../../context/AppContext';
-import { aiService } from '../../services/ai.service';
+import { aiService } from '../../services/aiService';
 
 export function CropHealth() {
   const navigate = useNavigate();

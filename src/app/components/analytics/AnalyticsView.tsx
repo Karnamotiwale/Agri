@@ -3,7 +3,7 @@ import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContai
 import { Activity, Sprout, BarChart3, RotateCw, Droplets, Thermometer, Wind, AlertCircle, CheckCircle2, Calendar, Leaf, BrainCircuit, Compass, Zap, Target, AlertTriangle } from 'lucide-react';
 import { cropService } from '../../../services/crop.service';
 import { getCropSensors } from '../../../services/cropSensors';
-import { analyticsService } from '../../../services/analytics.service';
+import { analyticsService } from '../../../services/analyticsService';
 import { fetchAnalytics } from '../../../services/analyticsService';
 
 interface AnalyticsViewProps {

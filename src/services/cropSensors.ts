@@ -7,6 +7,8 @@ export interface CropSensorReading {
     p: number;
     k: number;
     npk: string;
+    temperature?: number;
+    humidity?: number;
 }
 
 export const getCropSensors = async (cropId: string): Promise<CropSensorReading> => {

@@ -1,0 +1,50 @@
+﻿src/app/components/FarmsView.tsx(84,72): error TS2551: Property 'crop_type' does not exist on type 'Crop'. Did you mean 'cropType'?
+src/app/router.tsx(5,8): error TS1192: Module '"C:/Users/Karna/Desktop/AGRIAI/Agri/src/pages/Dashboard/DashboardPage"' has no default export.
+src/app/router.tsx(6,8): error TS1192: Module '"C:/Users/Karna/Desktop/AGRIAI/Agri/src/pages/Monitoring/MonitoringPage"' has no default export.
+src/app/router.tsx(7,8): error TS1192: Module '"C:/Users/Karna/Desktop/AGRIAI/Agri/src/pages/Farms/FarmsPage"' has no default export.
+src/app/router.tsx(8,8): error TS1192: Module '"C:/Users/Karna/Desktop/AGRIAI/Agri/src/pages/Farms/FarmDetailsPage"' has no default export.
+src/app/router.tsx(9,8): error TS1192: Module '"C:/Users/Karna/Desktop/AGRIAI/Agri/src/pages/Crops/CropsPage"' has no default export.
+src/app/router.tsx(10,8): error TS1192: Module '"C:/Users/Karna/Desktop/AGRIAI/Agri/src/pages/Crops/CropDetailsPage"' has no default export.
+src/app/screens/CropHealth.tsx(22,35): error TS2339: Property 'detectCropHealth' does not exist on type '{ getDecision: (params: { crop: string; growth_stage?: string; soil_moisture_pct?: number; temperature_c?: number; }) => Promise<any>; getStatus: () => Promise<any>; getDecisionLog: (crop?: string, limit?: number) => Promise<...>; ... 4 more ...; getRecommendations: (farmId: string) => Promise<...>; }'.
+src/components/crop/CropHistoryLearning.tsx(19,41): error TS2339: Property 'getLearningInsights' does not exist on type '{ getDecision: (params: { crop: string; growth_stage?: string; soil_moisture_pct?: number; temperature_c?: number; }) => Promise<any>; getStatus: () => Promise<any>; getDecisionLog: (crop?: string, limit?: number) => Promise<...>; ... 4 more ...; getRecommendations: (farmId: string) => Promise<...>; }'.
+src/components/statistics/ActionButtons.tsx(18,29): error TS2339: Property 'submitDecisionFeedback' does not exist on type '{ getDecision: (params: { crop: string; growth_stage?: string; soil_moisture_pct?: number; temperature_c?: number; }) => Promise<any>; getStatus: () => Promise<any>; getDecisionLog: (crop?: string, limit?: number) => Promise<...>; ... 4 more ...; getRecommendations: (farmId: string) => Promise<...>; }'.
+src/components/statistics/AIDecisionCard.tsx(20,54): error TS2345: Argument of type 'string' is not assignable to parameter of type '{ crop: string; growth_stage?: string; soil_moisture_pct?: number; temperature_c?: number; }'.
+src/features/analytics/ResourceAnalytics.tsx(81,113): error TS2339: Property 'status' does not exist on type '{ efficiencyScore: number; usage: string; }'.
+src/features/analytics/ResourceAnalytics.tsx(82,41): error TS2339: Property 'status' does not exist on type '{ efficiencyScore: number; usage: string; }'.
+src/features/analytics/ResourceAnalytics.tsx(86,80): error TS2339: Property 'totalUsed' does not exist on type '{ efficiencyScore: number; usage: string; }'.
+src/features/analytics/ResourceAnalytics.tsx(98,118): error TS2339: Property 'status' does not exist on type '{ efficiencyScore: number; usage: string; }'.
+src/features/analytics/ResourceAnalytics.tsx(99,46): error TS2339: Property 'status' does not exist on type '{ efficiencyScore: number; usage: string; }'.
+src/features/analytics/ResourceAnalytics.tsx(103,85): error TS2339: Property 'totalUsed' does not exist on type '{ efficiencyScore: number; usage: string; }'.
+src/features/analytics/ResourceAnalytics.tsx(121,47): error TS2339: Property 'breakdown' does not exist on type '{ efficiencyScore: number; usage: string; }'.
+src/features/analytics/ResourceAnalytics.tsx(121,95): error TS2339: Property 'breakdown' does not exist on type '{ efficiencyScore: number; usage: string; }'.
+src/features/analytics/ResourceAnalytics.tsx(124,95): error TS2339: Property 'breakdown' does not exist on type '{ efficiencyScore: number; usage: string; }'.
+src/features/analytics/ResourceAnalytics.tsx(125,95): error TS2339: Property 'breakdown' does not exist on type '{ efficiencyScore: number; usage: string; }'.
+src/features/analytics/ResourceAnalytics.tsx(133,84): error TS2339: Property 'comparison' does not exist on type '{ efficiencyScore: number; usage: string; }'.
+src/features/analytics/ResourceAnalytics.tsx(133,140): error TS2339: Property 'comparison' does not exist on type '{ efficiencyScore: number; usage: string; }'.
+src/features/analytics/ResourceAnalytics.tsx(138,70): error TS2339: Property 'comparison' does not exist on type '{ efficiencyScore: number; usage: string; }'.
+src/features/analytics/ResourceAnalytics.tsx(138,99): error TS2339: Property 'comparison' does not exist on type '{ efficiencyScore: number; usage: string; }'.
+src/features/analytics/ResourceAnalytics.tsx(139,46): error TS2339: Property 'comparison' does not exist on type '{ efficiencyScore: number; usage: string; }'.
+src/features/analytics/ResourceAnalytics.tsx(139,98): error TS2339: Property 'comparison' does not exist on type '{ efficiencyScore: number; usage: string; }'.
+src/features/analytics/ResourceAnalytics.tsx(153,38): error TS2339: Property 'breakdown' does not exist on type '{ efficiencyScore: number; usage: string; }'.
+src/features/analytics/ResourceAnalytics.tsx(187,74): error TS2339: Property 'storage' does not exist on type 'ResourceAnalytics'.
+src/features/analytics/ResourceAnalytics.tsx(196,76): error TS2339: Property 'storage' does not exist on type 'ResourceAnalytics'.
+src/features/analytics/ResourceAnalytics.tsx(197,86): error TS2339: Property 'storage' does not exist on type 'ResourceAnalytics'.
+src/features/analytics/ResourceAnalytics.tsx(201,19): error TS2339: Property 'storage' does not exist on type 'ResourceAnalytics'.
+src/features/analytics/ResourceAnalytics.tsx(204,27): error TS2339: Property 'storage' does not exist on type 'ResourceAnalytics'.
+src/features/analytics/ResourceAnalytics.tsx(217,35): error TS2339: Property 'insights' does not exist on type 'ResourceAnalytics'.
+src/features/analytics/ResourceAnalytics.tsx(222,82): error TS2339: Property 'insights' does not exist on type 'ResourceAnalytics'.
+src/features/analytics/ResourceAnalytics.tsx(227,82): error TS2339: Property 'insights' does not exist on type 'ResourceAnalytics'.
+src/features/crop-health/HealthDetectionHub.tsx(29,41): error TS2339: Property 'detectCropHealth' does not exist on type '{ getDecision: (params: { crop: string; growth_stage?: string; soil_moisture_pct?: number; temperature_c?: number; }) => Promise<any>; getStatus: () => Promise<any>; getDecisionLog: (crop?: string, limit?: number) => Promise<...>; ... 4 more ...; getRecommendations: (farmId: string) => Promise<...>; }'.
+src/features/irrigation/IrrigationCard.tsx(28,50): error TS2339: Property 'getValveSchedule' does not exist on type '{ getDecision: (params: { crop: string; growth_stage?: string; soil_moisture_pct?: number; temperature_c?: number; }) => Promise<any>; getStatus: () => Promise<any>; getDecisionLog: (crop?: string, limit?: number) => Promise<...>; ... 4 more ...; getRecommendations: (farmId: string) => Promise<...>; }'.
+src/features/yield/YieldPredictionCard.tsx(62,22): error TS2339: Property 'risks' does not exist on type 'YieldPrediction'.
+src/features/yield/YieldPredictionCard.tsx(62,29): error TS2339: Property 'factors' does not exist on type 'YieldPrediction'.
+src/features/yield/YieldPredictionCard.tsx(62,38): error TS2339: Property 'explainability' does not exist on type 'YieldPrediction'.
+src/features/yield/YieldPredictionCard.tsx(106,77): error TS2339: Property 'expectedYield' does not exist on type '{ yieldRange: string; trend: string; vsAverage: string; predictions: any[]; stability: string; confidence: number; }'.
+src/pages/Crops/CropDetailsPage.tsx(30,32): error TS2339: Property 'temperature' does not exist on type 'CropSensorReading'.
+src/pages/Crops/CropDetailsPage.tsx(31,29): error TS2339: Property 'humidity' does not exist on type 'CropSensorReading'.
+src/pages/Crops/CropDetailsPage.tsx(46,39): error TS2339: Property 'temperature' does not exist on type 'CropSensorReading'.
+src/pages/Crops/CropDetailsPage.tsx(46,60): error TS2339: Property 'humidity' does not exist on type 'CropSensorReading'.
+src/pages/Dashboard/DashboardPage.tsx(26,27): error TS2307: Cannot find module '../components/FarmsView' or its corresponding type declarations.
+src/pages/Dashboard/DashboardPage.tsx(27,35): error TS2307: Cannot find module '../components/GovernmentSchemes' or its corresponding type declarations.
+src/pages/Dashboard/DashboardPage.tsx(28,31): error TS2307: Cannot find module '../components/analytics/AnalyticsView' or its corresponding type declarations.
+src/services/api.ts(1,19): error TS2307: Cannot find module 'axios' or its corresponding type declarations.

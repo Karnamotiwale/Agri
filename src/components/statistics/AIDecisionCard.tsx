@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { aiService } from '../../services/ai.service';
+import { aiService } from '../../services/aiService';
 import { AlertCircle, CheckCircle, Droplets, ArrowRight } from 'lucide-react';
 
 interface Props {
@@ -17,7 +17,7 @@ export function AIDecisionCard({ cropId }: Props) {
     const loadDecision = async () => {
         setLoading(true);
         try {
-            const data = await aiService.getDecision(cropId);
+            const data = await aiService.getDecision({ crop: cropId });
             setDecision(data);
         } catch (err) {
             console.error(err);

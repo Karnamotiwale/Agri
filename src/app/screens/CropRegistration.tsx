@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { Header } from '@/app/components/Header';
+import { Header } from '@/components/layout/Header';
 import { ArrowRight, Calendar, MapPin, Sprout, Upload } from 'lucide-react';
 import { useApp } from '../../context/AppContext';
 import { toast } from '../../lib/toast';

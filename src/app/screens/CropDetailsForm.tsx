@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Header } from '../components/Header';
+import { Header } from '@/components/layout/Header';
 import { ArrowRight, Calendar, Sprout, Database, Camera, Upload, X, Loader2 } from 'lucide-react';
 import { useRef } from 'react';
 import { useApp } from '../../context/AppContext';

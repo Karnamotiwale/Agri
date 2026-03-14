@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { aiService } from '../../services/ai.service';
+import { aiService } from '../../services/aiService';
 import { Check, Clock, X, Loader2 } from 'lucide-react';
 
 interface Props {

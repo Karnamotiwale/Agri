@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { aiAdvisoryService, ResourceAnalytics } from '../../services/ai.service';
+import { aiAdvisoryService, ResourceAnalytics } from '../../services/aiService';
 import { BarChart3, Wallet, Zap, FileText, TrendingDown } from 'lucide-react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell } from 'recharts';
 

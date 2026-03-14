@@ -1,6 +1,6 @@
 import { useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Header } from '@/app/components/Header';
+import { Header } from '@/components/layout/Header';
 import { MapPin, Plus, Trash2, ArrowRight, X, Check } from 'lucide-react';
 import { useApp } from '../../context/AppContext';
 import type { Farm, LandLocation } from '../../context/AppContext';

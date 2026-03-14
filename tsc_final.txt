@@ -1,0 +1,3 @@
+﻿src/app/components/FarmsView.tsx(84,72): error TS2551: Property 'crop_type' does not exist on type 'Crop'. Did you mean 'cropType'?
+src/components/statistics/ActionButtons.tsx(18,60): error TS2554: Expected 1 arguments, but got 3.
+src/features/irrigation/IrrigationCard.tsx(28,75): error TS2554: Expected 1 arguments, but got 2.

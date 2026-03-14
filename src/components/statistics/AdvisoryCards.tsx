@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { aiAdvisoryService, CropAdvisory } from '../../services/ai.service';
+import { aiAdvisoryService, CropAdvisory } from '../../services/aiService';
 import { Info, AlertCircle, Droplets, FlaskConical, Bug, ChevronRight } from 'lucide-react';
 
 interface Props {

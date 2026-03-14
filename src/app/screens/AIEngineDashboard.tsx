@@ -4,8 +4,8 @@ import {
     Activity, Brain, Zap, BarChart3, ArrowLeft,
     ShieldCheck, RefreshCw, Clock, AlertTriangle, CheckCircle2
 } from 'lucide-react';
-import { aiService } from '../../services/ai.service';
-import { BottomNav } from '../components/BottomNav';
+import { aiService } from '../../services/aiService';
+import { BottomNav } from '@/components/layout/BottomNav';
 
 /**
  * AI ENGINE DASHBOARD REBUILD (Phase 4)

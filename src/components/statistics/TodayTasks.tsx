@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { aiService, AIRecommendation } from '../../services/ai.service';
+import { aiService, AIRecommendation } from '../../services/aiService';
 import { CheckCircle, Clock, AlertTriangle, Droplets, FlaskConical, Bug } from 'lucide-react';
 
 interface Props {

@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { aiService } from '../../services/ai.service';
+import { aiService } from '../../services/aiService';
 import { BookOpen, Lightbulb, Clock, CheckCircle2, History } from 'lucide-react';
 
 interface Props {
