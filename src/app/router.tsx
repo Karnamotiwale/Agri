@@ -53,6 +53,8 @@ export default function Router() {
         <Route path="/dashboard" element={<ProtectedRoute><DashboardPage /></ProtectedRoute>} />
         <Route path="/monitoring" element={<ProtectedRoute><MonitoringPage /></ProtectedRoute>} />
         <Route path="/farms" element={<ProtectedRoute><FarmsPage /></ProtectedRoute>} />
+        {/* Backward compatibility */}
+        <Route path="/my-farm" element={<ProtectedRoute><FarmsPage /></ProtectedRoute>} />
         <Route path="/crops" element={<ProtectedRoute><CropsPage /></ProtectedRoute>} />
         <Route path="/community" element={<ProtectedRoute><CommunityPage /></ProtectedRoute>} />
         <Route path="/market" element={<ProtectedRoute><MarketPage /></ProtectedRoute>} />

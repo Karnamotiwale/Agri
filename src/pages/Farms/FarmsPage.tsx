@@ -129,7 +129,7 @@ export default function MyFarm() {
           </button>
 
           <button
-            onClick={() => navigate('/my-farm')}
+            onClick={() => navigate('/farms')}
             className="flex flex-col items-center gap-1 px-3 py-1.5 rounded-xl transition-all duration-200 hover:bg-green-50/50 active:scale-95"
           >
             <MapPin className="w-6 h-6 text-green-600" />

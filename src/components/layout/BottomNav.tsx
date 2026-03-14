@@ -10,7 +10,7 @@ export function BottomNav() {
     { icon: BarChart2, label: 'Analytics', path: '/dashboard' },
     { icon: Landmark, label: 'Schemes', path: '/dashboard' },
     { icon: Activity, label: 'Sensors', path: '/sensor-guide' },
-    { icon: MapPin, label: 'Crops', path: '/my-farm' },
+    { icon: MapPin, label: 'Crops', path: '/farms' },
     { icon: Cpu, label: 'AI Engine', path: '/ai-engine' },
   ];
 

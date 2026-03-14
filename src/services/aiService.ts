@@ -82,7 +82,7 @@ const safeFetch = async (endpoint: string, options: RequestInit = {}) => {
         return data;
     } catch (err) {
         console.warn(`[AI Service] Connectivity issue at ${endpoint}:`, err);
-        throw err;
+        return null; // Return null gracefully instead of throwing
     }
 };
 
@@ -265,7 +265,7 @@ export const aiAdvisoryService = {
 // LEGACY HELPER FUNCTIONS (merged from old aiService.ts)
 // ============================================
 
-const API_BASE = "http://localhost:5000";
+const API_BASE = import.meta.env.VITE_API_URL || "http://127.0.0.1:5000";
 
 interface PredictionData {
     soil_moisture: number;
@@ -287,33 +287,43 @@ interface FeedbackData {
 }
 
 export async function predictIrrigation(data: PredictionData): Promise<PredictionResponse> {
-    const response = await fetch(`${API_BASE}/api/irrigationDecision`, {
-        method: "POST",
-        headers: {
-            "Content-Type": "application/json",
-        },
-        body: JSON.stringify(data),
-    });
+    try {
+        const response = await fetch(`${API_BASE}/api/irrigationDecision`, {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+            },
+            body: JSON.stringify(data),
+        });
 
-    if (!response.ok) {
-        throw new Error("Prediction request failed");
+        if (!response.ok) {
+            throw new Error("Prediction request failed");
+        }
+
+        return await response.json();
+    } catch (err) {
+        console.warn("[AI Service] Connectivity issue predicting irrigation:", err);
+        return null as any;
     }
-
-    return await response.json();
 }
 
 export async function sendFeedback(data: FeedbackData) {
-    const response = await fetch(`${API_BASE}/feedback`, {
-        method: "POST",
-        headers: {
-            "Content-Type": "application/json",
-        },
-        body: JSON.stringify(data),
-    });
+    try {
+        const response = await fetch(`${API_BASE}/feedback`, {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+            },
+            body: JSON.stringify(data),
+        });
 
-    if (!response.ok) {
-        throw new Error("Feedback request failed");
+        if (!response.ok) {
+            throw new Error("Feedback request failed");
+        }
+
+        return await response.json();
+    } catch (err) {
+        console.warn("[AI Service] Connectivity issue sending feedback:", err);
+        return null;
     }
-
-    return await response.json();
 }

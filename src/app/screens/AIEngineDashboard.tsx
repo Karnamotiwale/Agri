@@ -24,20 +24,29 @@ export function AIEngineDashboard() {
             // Requirement 5: No frontend AI calculations - frontend is read-only.
             // Requirement 3: include default values if data is missing (handled by service/backend)
 
-            const [decision, status, rl, xai, log] = await Promise.allSettled([
-                aiService.getDecision({ crop: 'rice', growth_stage: 'Vegetative' }),
-                aiService.getStatus(),
-                aiService.getRLMetrics(),
-                aiService.getXAI(),
-                aiService.getDecisionLog('rice', 1)
-            ]);
+            let decisionData, statusData, rlData, xaiData, logData;
 
-            const newData: any = {};
-            if (decision.status === 'fulfilled') newData.decision = decision.value;
-            if (status.status === 'fulfilled') newData.status = status.value;
-            if (rl.status === 'fulfilled') newData.rl = rl.value;
-            if (xai.status === 'fulfilled') newData.xai = xai.value;
-            if (log.status === 'fulfilled') newData.latestLog = log.value[0];
+            try { decisionData = await aiService.getDecision({ crop: 'rice', growth_stage: 'Vegetative' }); } catch(e) { console.warn("AI service unavailable"); }
+            try { statusData = await aiService.getStatus(); } catch(e) { console.warn("AI service unavailable"); }
+            try { rlData = await aiService.getRLMetrics(); } catch(e) { console.warn("AI service unavailable"); }
+            try { xaiData = await aiService.getXAI(); } catch(e) { console.warn("AI service unavailable"); }
+            try { 
+                const logs = await aiService.getDecisionLog('rice', 1); 
+                logData = logs?.[0];
+            } catch(e) { console.warn("AI service unavailable"); }
+
+            const newData: any = {
+                decision: decisionData,
+                status: statusData,
+                rl: rlData,
+                xai: xaiData,
+                latestLog: logData
+            };
+
+            // If everything is completely dead, enter simulation mode
+            if (!decisionData && !statusData && !rlData && !xaiData) {
+                throw new Error("All AI endpoints failed");
+            }
 
             setAiData(newData);
             setIsSimulated(false);

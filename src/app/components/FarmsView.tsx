@@ -81,7 +81,7 @@ export function FarmsView() {
                                                 const daysSincePlanting = Math.floor(
                                                     (Date.now() - new Date(sowingDate).getTime()) / (1000 * 60 * 60 * 24)
                                                 );
-                                                const cropType = (crop.crop_type || crop.name || 'Maize')
+                                                const cropType = (crop.cropType || crop.name || 'Maize')
                                                     .replace(/wild /i, '')
                                                     .replace(/onion/i, 'Maize');
                                                 const stages = CROP_GROWTH_STAGES[cropType] || CROP_GROWTH_STAGES.Default;

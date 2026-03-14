@@ -77,7 +77,7 @@ export function MapView() {
                 <div className="w-6 h-6 rounded-lg bg-current opacity-20" />
                 <span className="text-xs">Home</span>
               </button>
-              <button onClick={() => navigate('/my-farm')} className="flex flex-col items-center gap-1 text-gray-400">
+              <button onClick={() => navigate('/farms')} className="flex flex-col items-center gap-1 text-gray-400">
                 <Calendar className="w-6 h-6" />
                 <span className="text-xs">Calendar</span>
               </button>
