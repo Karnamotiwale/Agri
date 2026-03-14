@@ -157,5 +157,16 @@ export const cropService = {
         { id: 3, name: 'Flowering', days: '46-70', status: 'upcoming', description: 'Development of reproductive organs.' },
         { id: 4, name: 'Filling', days: '71-95', status: 'upcoming', description: 'Grain or fruit development.' },
         { id: 5, name: 'Maturity', days: '96-120', status: 'upcoming', description: 'Final ripening and drying.' }
-    ]
+    ],
+
+    getOrganicRecommendations: async (_cropId: string): Promise<any> => ({
+        fertilizer: {
+            name: 'Vermicompost & Seaweed Extract',
+            details: 'Rich in micronutrients and growth hormones. Apply 2-3 kg/sq meter during vegetative phase.'
+        },
+        pestControl: {
+            name: 'Neem Oil & Dashparni Ark',
+            details: 'Effective against aphids, whiteflies, and fungal infections. Mix 5ml in 1L water and spray bi-weekly.'
+        }
+    })
 };
