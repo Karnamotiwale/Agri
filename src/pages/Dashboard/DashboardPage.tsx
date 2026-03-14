@@ -6,7 +6,8 @@ import {
   Sun,
   Droplets,
   Activity,
-  ArrowRight
+  ArrowRight,
+  AlertCircle
 } from 'lucide-react';
 import { FarmsView } from '@/app/components/FarmsView';
 import { AddFarmModal } from '@/components/forms/AddFarmModal';
@@ -15,6 +16,7 @@ import { AddCropModal } from '@/components/forms/AddCropModal';
 // New Dashboard Components
 import { WarningsAlerts } from '../../components/dashboard/WarningsAlerts';
 import { IrrigationReminders } from '../../components/dashboard/IrrigationReminders';
+import { DashboardCarousel } from '../../components/dashboard/DashboardCarousel';
 import { BottomNav } from '../../components/layout/BottomNav';
 
 import { useApp } from '../../context/AppContext';
@@ -54,81 +56,31 @@ export default function Dashboard() {
     <div className="min-h-screen bg-[#F4F7F6] pb-24">
       {activeTab === 'home' && (
         <div className="relative">
-          {/* Green Gradient Header Section */}
-          <div className="bg-gradient-to-br from-green-700 via-green-600 to-green-500 rounded-b-[3rem] px-6 pt-8 pb-12 relative overflow-hidden">
-            {/* Decorative background elements */}
-            <div className="absolute top-0 right-0 w-64 h-64 bg-green-400/20 rounded-full -mr-32 blur-3xl"></div>
-            <div className="absolute bottom-0 left-0 w-48 h-48 bg-green-800/30 rounded-full -ml-24 -mb-24 blur-2xl"></div>
-
-            <div className="relative z-10">
-              {/* Header with icons */}
-              <div className="flex justify-between items-start mb-8">
-                <div>
-                  <h1 className="text-white text-2xl font-bold mb-1">
-                    Hello, Farmer!
-                  </h1>
-                  <p className="text-green-100 text-sm">Check your plants today</p>
-                </div>
-                <button
-                  onClick={() => navigate('/profile')}
-                  className="flex-shrink-0 hover:scale-105 transition-transform duration-200"
-                >
-                  <img
-                    src={auth?.photoURL || "https://images.unsplash.com/photo-1633332755192-727a05c4013d?w=400&auto=format&fit=crop&q=60"}
-                    alt="Profile"
-                    className="w-10 h-10 rounded-full object-cover ring-2 ring-white/30 shadow-sm"
-                  />
-                </button>
-              </div>
-
-              {/* Location and Date */}
-              <div className="flex items-center justify-between mb-6">
-                <div className="flex items-center gap-2 text-green-100">
-                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
-                  </svg>
-                  <span className="text-sm font-medium">Bangalore, India</span>
-                </div>
-                <span className="text-green-100 text-xs font-bold">
-                  Today, {new Date().toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' })}
-                </span>
-              </div>
-
-              {/* Integrated Weather Display */}
-              <div className="bg-white/10 backdrop-blur-md rounded-3xl p-4 border border-white/20">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-4">
-                    <div className="w-16 h-16 bg-white/20 rounded-2xl flex items-center justify-center">
-                      <Sun className="w-10 h-10 text-yellow-300" />
-                    </div>
-                    <div>
-                      <div className="text-white text-4xl font-bold">26°C</div>
-                      <div className="text-green-100 text-sm">Partly cloudy</div>
-                    </div>
-                  </div>
-                  <div className="text-right">
-                    <div className="text-green-100 text-xs mb-1">T:34° • R:22°</div>
-                    <div className="text-green-200 text-xs">1:34°</div>
-                  </div>
-                </div>
-              </div>
+          {/* Top Bar: Title & Profile */}
+          <div className="px-6 pt-12 pb-6 flex justify-between items-center bg-white">
+            <h1 className="text-2xl font-black text-gray-900">KisaanSaathi</h1>
+            <div className="flex items-center gap-4">
+              <button
+                onClick={() => navigate('/profile')}
+                className="flex-shrink-0 hover:scale-105 transition-transform duration-200"
+              >
+                <img
+                  src={auth?.photoURL || "https://images.unsplash.com/photo-1633332755192-727a05c4013d?w=400&auto=format&fit=crop&q=60"}
+                  alt="Profile"
+                  className="w-10 h-10 rounded-full object-cover ring-2 ring-blue-50 shadow-sm"
+                />
+              </button>
             </div>
           </div>
 
-          {/* Farming Illustration Section */}
-          <div className="px-6 -mt-6 relative z-20">
-            <div className="bg-white rounded-3xl p-2 shadow-xl shadow-green-900/10">
-              <img
-                src="/farming_community.png"
-                alt="Farming Community"
-                className="w-full h-auto rounded-2xl"
-              />
-            </div>
+          {/* Main Dashboard Carousel */}
+          <div className="bg-white">
+             <DashboardCarousel />
           </div>
 
-          {/* New Sections: Warnings & Alerts, Irrigation Reminders */}
-          <div className="px-6 mt-8 space-y-6">
+          {/* Existing Sections: Warnings & Alerts, Irrigation Reminders */}
+          <div className="px-6 mt-12 space-y-6">
+            <h3 className="text-lg font-black text-gray-900 px-1">Tools</h3>
             <WarningsAlerts />
             <IrrigationReminders />
           </div>

@@ -15,6 +15,7 @@ import CropMonitoringPage from "../pages/Monitoring/CropMonitoringPage";
 import DataAnalysisPage from "../pages/Analysis/DataAnalysisPage";
 import SoilAnalysisPage from "../pages/Soil/SoilAnalysisPage";
 import ActivityLogsPage from "../pages/Activities/ActivityLogsPage";
+import DiagnosisResultPage from "../pages/Health/DiagnosisResultPage";
 import WeatherSoilPestPage from "../pages/Weather/WeatherSoilPestPage";
 
 // Original Screens (preserving routing structure)
@@ -70,6 +71,7 @@ export default function Router() {
         <Route path="/analysis" element={<ProtectedRoute><DataAnalysisPage /></ProtectedRoute>} />
         <Route path="/soil-analysis" element={<ProtectedRoute><SoilAnalysisPage /></ProtectedRoute>} />
         <Route path="/activity-logs" element={<ProtectedRoute><ActivityLogsPage /></ProtectedRoute>} />
+        <Route path="/diagnosis-result" element={<ProtectedRoute><DiagnosisResultPage /></ProtectedRoute>} />
         <Route path="/activities" element={<ProtectedRoute><DashboardPage /></ProtectedRoute>} />
 
         {/* Protected Detail/Action Routes */}

@@ -9,7 +9,6 @@ export function BottomNav() {
     { icon: Home, label: 'Home', path: '/dashboard' },
     { icon: Diamond, label: 'Services', path: '/services' },
     { icon: LayoutGrid, label: 'Lands', path: '/farms' },
-    { icon: CheckSquare, label: 'Activities', path: '/activities' },
     { icon: UserCircle, label: 'Account', path: '/profile' },
   ];
 

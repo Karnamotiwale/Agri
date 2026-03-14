@@ -17,7 +17,6 @@ const services = [
   { icon: BarChart, label: 'Analysis', color: 'bg-white' },
   { icon: Tractor, label: 'Soil Analysis', color: 'bg-white' },
   { icon: FileText, label: 'Activity Logs', color: 'bg-white' },
-  { icon: Droplets, label: 'Irrigation', color: 'bg-white' },
 ];
 
 import { useNavigate } from 'react-router-dom';

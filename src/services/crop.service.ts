@@ -131,24 +131,31 @@ export const cropService = {
     getCropJourney: async (_cropId: string): Promise<any[]> =>
         generateMockJourneyData(30),
 
-    getGrowthStages: async (_cropId: string, _daysSinceSowing = 0): Promise<any> => ({
-        current_stage: 'Vegetative',
-        days_in_stage: 15,
-        next_stage: 'Reproductive',
-        days_to_next: 20,
+    getYieldPrediction: async (_cropId: string): Promise<any> => ({
+        estimatedYield: '4.2 Tons/Hectare',
+        confidence: 88,
+        harvestWindow: 'Oct 15 - Oct 25',
+        trend: 'up'
     }),
 
     getRotationRecommendation: async (_cropId: string): Promise<any> => ({
-        status: 'success',
-        recommended_crop: 'Pulses',
-        confidence: 'high',
-        reason: 'Legumes replenish nitrogen depleted by cereal crops.',
-        rotation_recommendation: {
-            recommended_crop: 'Pulses (Green Gram)',
-            reason: 'Restores soil nitrogen and breaks pest cycles.',
-            benefits: ['Nitrogen fixation', 'Pest cycle break', 'Soil health restoration'],
-        },
+        recommendedCrop: 'Soybean',
+        reason: 'Restores Nitrogen levels after Rice cultivation.',
+        benefits: ['Natural Nitrogen Fixation', 'Market Demand', 'Pest Cycle Break']
     }),
 
-    getYieldPrediction: async (_cropId: string): Promise<any> => getMockYieldPrediction(),
+    toggleValve: async (valveId: string, status: boolean): Promise<boolean> => {
+        // Simulate ESP32 HTTP Request
+        console.log(`Sending HTTP command to ESP32: Valve ${valveId} -> ${status ? 'ON' : 'OFF'}`);
+        await new Promise(r => setTimeout(r, 800));
+        return true;
+    },
+
+    getGrowthStages: async (_cropId: string): Promise<any[]> => [
+        { id: 1, name: 'Sowing', days: '1-10', status: 'completed', description: 'Seed germination and emergence.' },
+        { id: 2, name: 'Vegetative', days: '11-45', status: 'current', description: 'Active leaf and stem growth.' },
+        { id: 3, name: 'Flowering', days: '46-70', status: 'upcoming', description: 'Development of reproductive organs.' },
+        { id: 4, name: 'Filling', days: '71-95', status: 'upcoming', description: 'Grain or fruit development.' },
+        { id: 5, name: 'Maturity', days: '96-120', status: 'upcoming', description: 'Final ripening and drying.' }
+    ]
 };
