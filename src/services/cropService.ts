@@ -1,14 +1,22 @@
-// ============================================
-// CROP SERVICE — Mock Stub (thin wrapper)
-// Real endpoints (for future integration):
-//   GET  /api/v1/analytics/crop-health   → getCropHealth()
-//   POST /api/v1/crops/detect-disease    → detectDisease()  [Gemini Vision]
-//   POST /api/v1/crops/detect-disease-cnn→ (CropNet CNN pipeline)
-//   POST /api/v1/crops/rotation          → (crop rotation advice)
-// ============================================
-import { getMockCropHealth } from '../mock/mockAnalytics';
-import { getMockDiseaseDetection } from '../mock/mockAI';
+import { api } from './api';
 
-export const getCropHealth = async (_farmId: string) => getMockCropHealth();
+export const cropService = {
+  detectCropDisease: async (imageFile: File) => {
+    try {
+      const formData = new FormData();
+      formData.append('image', imageFile);
 
-export const detectDisease = async (_image: File) => getMockDiseaseDetection();
+      // Pointing to the specific CropNet CNN endpoint found in backend
+      const response = await api.post('/api/v1/crops/detect-disease-cnn', formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
+      });
+
+      return response.data;
+    } catch (error) {
+      console.error('Disease detection failed:', error);
+      throw error;
+    }
+  }
+};

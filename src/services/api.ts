@@ -1,10 +1,11 @@
 // ============================================
-// API CLIENT — Disabled in mock mode
+// API CLIENT
 // ============================================
-// All network calls are replaced by mock services.
-// This module is kept for type-compatibility only.
 
-export const api = {
-    get: async (_url: string) => { console.warn('[Mock] api.get called'); return { data: null }; },
-    post: async (_url: string, _data?: any) => { console.warn('[Mock] api.post called'); return { data: null }; },
-};
+import axios from 'axios';
+
+// Create a real axios instance pointing to the local Flask backend
+export const api = axios.create({
+  baseURL: 'http://localhost:5000',
+  timeout: 60000, 
+});

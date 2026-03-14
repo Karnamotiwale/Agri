@@ -17,6 +17,7 @@ import { AddCropModal } from '@/components/forms/AddCropModal';
 import { WarningsAlerts } from '../../components/dashboard/WarningsAlerts';
 import { IrrigationReminders } from '../../components/dashboard/IrrigationReminders';
 import { DashboardCarousel } from '../../components/dashboard/DashboardCarousel';
+import { WisdomCards } from '../../components/dashboard/WisdomCards';
 import { BottomNav } from '../../components/layout/BottomNav';
 
 import { useApp } from '../../context/AppContext';
@@ -83,6 +84,7 @@ export default function Dashboard() {
             <h3 className="text-lg font-black text-gray-900 px-1">Tools</h3>
             <WarningsAlerts />
             <IrrigationReminders />
+            <WisdomCards />
           </div>
         </div>
       )}
