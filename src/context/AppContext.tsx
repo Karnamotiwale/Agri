@@ -51,6 +51,11 @@ export interface Crop {
   farmId: string;
   seedsPlanted?: string;
   cropType?: string;
+  harvestDate?: string;
+  cropClass?: string;
+  cropVariety?: string;
+  soilType?: string;
+  devices?: string[];
 }
 
 export interface AuthState {

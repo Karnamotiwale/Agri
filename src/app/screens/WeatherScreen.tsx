@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Menu, Calendar, Sun } from 'lucide-react';
+import { BottomNav } from '../../components/layout/BottomNav';
 
 function clamp(v: number, min: number, max: number) {
   return Math.min(Math.max(v, min), max);
@@ -120,48 +121,7 @@ export function WeatherScreen() {
       </div>
 
       {/* Bottom Navigation */}
-      <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-100 z-[100] shadow-lg">
-        <div className="max-w-md mx-auto px-6 py-4">
-          <div className="flex items-center justify-around">
-            <button
-              onClick={() => navigate('/dashboard')}
-              className="flex flex-col items-center gap-1 text-gray-400"
-            >
-              <div className="w-6 h-6 rounded-lg bg-current opacity-20" />
-              <span className="text-xs">Home</span>
-            </button>
-            <button onClick={() => navigate('/farms')} className="flex flex-col items-center gap-1 text-gray-400">
-              <Calendar className="w-6 h-6" />
-              <span className="text-xs">Calendar</span>
-            </button>
-            <button onClick={() => navigate('/action-selection')} className="flex flex-col items-center gap-1 text-gray-400">
-              <div className="w-12 h-12 rounded-full bg-green-500 flex items-center justify-center -mt-6">
-                <svg
-                  className="w-6 h-6 text-white"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M12 4v16m8-8H4"
-                  />
-                </svg>
-              </div>
-            </button>
-            <button className="flex flex-col items-center gap-1 text-green-500">
-              <Sun className="w-6 h-6" />
-              <span className="text-xs">Weather</span>
-            </button>
-            <button onClick={() => navigate('/profile')} className="flex flex-col items-center gap-1 text-gray-400">
-              <div className="w-6 h-6 rounded-full bg-current opacity-20" />
-              <span className="text-xs">Profile</span>
-            </button>
-          </div>
-        </div>
-      </div>
+      <BottomNav />
     </div>
   );
 }

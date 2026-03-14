@@ -10,6 +10,12 @@ import CropsPage from "../pages/Crops/CropsPage";
 import CropDetailsPage from "../pages/Crops/CropDetailsPage";
 import CommunityPage from "../pages/Community/CommunityPage";
 import MarketPage from "../pages/Market/MarketPage";
+import ServicesPage from "../pages/Services/ServicesPage";
+import CropMonitoringPage from "../pages/Monitoring/CropMonitoringPage";
+import DataAnalysisPage from "../pages/Analysis/DataAnalysisPage";
+import SoilAnalysisPage from "../pages/Soil/SoilAnalysisPage";
+import ActivityLogsPage from "../pages/Activities/ActivityLogsPage";
+import WeatherSoilPestPage from "../pages/Weather/WeatherSoilPestPage";
 
 // Original Screens (preserving routing structure)
 import { LoginScreen } from "./screens/LoginScreen";
@@ -58,6 +64,13 @@ export default function Router() {
         <Route path="/crops" element={<ProtectedRoute><CropsPage /></ProtectedRoute>} />
         <Route path="/community" element={<ProtectedRoute><CommunityPage /></ProtectedRoute>} />
         <Route path="/market" element={<ProtectedRoute><MarketPage /></ProtectedRoute>} />
+        <Route path="/services" element={<ProtectedRoute><ServicesPage /></ProtectedRoute>} />
+        <Route path="/crop-monitoring" element={<ProtectedRoute><CropMonitoringPage /></ProtectedRoute>} />
+        <Route path="/weather-soil-pest" element={<ProtectedRoute><WeatherSoilPestPage /></ProtectedRoute>} />
+        <Route path="/analysis" element={<ProtectedRoute><DataAnalysisPage /></ProtectedRoute>} />
+        <Route path="/soil-analysis" element={<ProtectedRoute><SoilAnalysisPage /></ProtectedRoute>} />
+        <Route path="/activity-logs" element={<ProtectedRoute><ActivityLogsPage /></ProtectedRoute>} />
+        <Route path="/activities" element={<ProtectedRoute><DashboardPage /></ProtectedRoute>} />
 
         {/* Protected Detail/Action Routes */}
         <Route path="/farm-registration" element={<Navigate to="/action-selection" replace />} />

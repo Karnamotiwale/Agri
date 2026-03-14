@@ -13,6 +13,7 @@ import {
 import { useApp } from '../../context/AppContext';
 import { useTranslation } from 'react-i18next';
 import { useState } from 'react';
+import { BottomNav } from '../../components/layout/BottomNav';
 
 export function ProfileScreen() {
   const navigate = useNavigate();
@@ -186,6 +187,7 @@ export function ProfileScreen() {
           </div>
         )}
       </div>
+      <BottomNav />
     </div>
   );
 }

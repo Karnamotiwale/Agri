@@ -20,6 +20,11 @@ const _crops: Crop[] = [
         farmId: 'f1',
         seedsPlanted: '15000',
         cropType: 'Rice',
+        harvestDate: '2024-11-20',
+        cropClass: 'Cereal',
+        cropVariety: 'Basmati',
+        soilType: 'Loamy',
+        devices: ['Soil Moisture S1', 'NPK Pro v2']
     },
     {
         id: 'c2',
@@ -36,6 +41,11 @@ const _crops: Crop[] = [
         farmId: 'f1',
         seedsPlanted: '12000',
         cropType: 'Wheat',
+        harvestDate: '2025-04-15',
+        cropClass: 'Cereal',
+        cropVariety: 'Sharbati',
+        soilType: 'Clay',
+        devices: ['Soil Moisture S2', 'Temp Node A1']
     },
     {
         id: 'c3',
@@ -52,6 +62,11 @@ const _crops: Crop[] = [
         farmId: 'f2',
         seedsPlanted: '8000',
         cropType: 'Maize',
+        harvestDate: '2024-10-15',
+        cropClass: 'Cereal',
+        cropVariety: 'Sweet Corn',
+        soilType: 'Sandy Loam',
+        devices: ['Moisture Hub B1']
     },
 ];
 

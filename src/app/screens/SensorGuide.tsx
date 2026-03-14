@@ -1,7 +1,8 @@
 import { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Droplets, Activity, Zap, CheckCircle2, Home, Sprout, Landmark, MapPin, BarChart2, Cpu } from 'lucide-react';
+import { Droplets, Activity, Zap, CheckCircle2 } from 'lucide-react';
 import { useApp } from '../../context/AppContext';
+import { BottomNav } from '../../components/layout/BottomNav';
 
 export function SensorGuide() {
   const navigate = useNavigate();
@@ -113,62 +114,8 @@ export function SensorGuide() {
         </div>
       </div>
 
-      {/* Bottom Navigation - Static */}
-      <div className="fixed bottom-0 left-0 right-0 bg-white/95 backdrop-blur-sm border-t border-gray-200/80 px-6 py-3 z-[100] shadow-[0_-4px_20px_rgba(0,0,0,0.05)]">
-        <div className="flex justify-between max-w-md mx-auto">
-          <button
-            onClick={() => navigate('/dashboard')}
-            className="flex flex-col items-center gap-1 px-3 py-1.5 rounded-xl transition-all duration-200 hover:bg-green-50/50 active:scale-95"
-          >
-            <Home className="w-6 h-6 text-gray-400" />
-            <span className="text-[10px] font-medium text-gray-500">Home</span>
-          </button>
-
-          <button
-            onClick={() => {
-              navigate('/dashboard');
-            }}
-            className="flex flex-col items-center gap-1 px-3 py-1.5 rounded-xl transition-all duration-200 hover:bg-green-50/50 active:scale-95"
-          >
-            <BarChart2 className="w-6 h-6 text-gray-400" />
-            <span className="text-[10px] font-medium text-gray-500">Analytics</span>
-          </button>
-
-
-
-          <button
-            onClick={() => navigate('/dashboard')}
-            className="flex flex-col items-center gap-1 px-3 py-1.5 rounded-xl transition-all duration-200 hover:bg-green-50/50 active:scale-95"
-          >
-            <Landmark className="w-6 h-6 text-gray-400" />
-            <span className="text-[10px] font-medium text-gray-500">Schemes</span>
-          </button>
-
-          <button
-            onClick={() => navigate('/sensor-guide')}
-            className="flex flex-col items-center gap-1 px-3 py-1.5 rounded-xl transition-all duration-200 hover:bg-green-50/50 active:scale-95"
-          >
-            <Activity className="w-6 h-6 text-green-600" />
-            <span className="text-[10px] font-medium text-green-600">Sensors</span>
-          </button>
-
-          <button
-            onClick={() => navigate('/farms')}
-            className="flex flex-col items-center gap-1 px-3 py-1.5 rounded-xl transition-all duration-200 hover:bg-green-50/50 active:scale-95"
-          >
-            <MapPin className="w-6 h-6 text-gray-400" />
-            <span className="text-[10px] font-medium text-gray-500">Crops</span>
-          </button>
-
-          <button
-            onClick={() => navigate('/ai-engine')}
-            className="flex flex-col items-center gap-1 px-3 py-1.5 rounded-xl transition-all duration-200 hover:bg-green-50/50 active:scale-95"
-          >
-            <Cpu className="w-6 h-6 text-gray-400" />
-            <span className="text-[10px] font-medium text-gray-500 whitespace-nowrap">AI Engine</span>
-          </button>
-        </div>
-      </div>
+      {/* Bottom Navigation */}
+      <BottomNav />
     </div>
   );
 }
