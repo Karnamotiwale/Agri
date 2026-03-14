@@ -1,5 +1,8 @@
 // ============================================
 // VALVE SERVICE — Mock only, no backend
+// Real endpoints (for future integration):
+//   POST /api/v1/valves/open  → valveService.toggleValve(id, true)
+//   POST /api/v1/valves/stop  → valveService.toggleValve(id, false)
 // ============================================
 
 export interface Valve {

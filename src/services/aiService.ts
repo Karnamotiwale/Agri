@@ -1,5 +1,15 @@
 // ============================================
 // AI SERVICE — Mock only, no backend
+// Real endpoints (for future integration):
+//   POST /api/v1/ai/irrigation-decision  → aiService.getDecision()
+//   GET  /api/v1/ai/status               → aiService.getStatus()
+//   GET  /api/v1/ai/rl-metrics           → aiService.getRLMetrics()
+//   GET  /api/v1/ai/xai                  → aiService.getXAI()
+//   GET  /api/v1/ai/decision-log         → aiService.getDecisionLog()
+//   GET  /api/v1/ai/regret               → aiService.getRegret()
+//   POST /api/v1/ai/disease-advice       → aiAdvisoryService.getDetailedAdvisory()
+//   POST /api/v1/ai/sustainability-advice→ (not yet wired)
+//   POST /api/v1/crops/yield-prediction  → aiAdvisoryService.getYieldPrediction()
 // ============================================
 import {
     getMockDecision,

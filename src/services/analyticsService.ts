@@ -1,5 +1,9 @@
 // ============================================
 // ANALYTICS SERVICE — Mock only, no backend
+// Real endpoints (for future integration):
+//   GET /api/v1/analytics/overview       → analyticsService.getOverview()
+//   GET /api/v1/analytics/range-forecast → analyticsService.getForecast()
+//   GET /api/v1/analytics/crop-health    → analyticsService.getCropHealth()
 // ============================================
 import {
     getMockAnalytics,

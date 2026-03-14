@@ -1,5 +1,8 @@
 // ============================================
 // SENSOR SERVICE — Mock only, no backend
+// Real endpoints (for future integration):
+//   POST /api/v1/sensors/data           → (push sensor data)
+//   GET  /api/v1/sensors/live/<farm_id> → getCropSensors(farmId)
 // ============================================
 import { getMockSensors, tickMockSensors, type SensorReading } from '../mock/mockSensors';
 
