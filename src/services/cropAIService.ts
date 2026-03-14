@@ -47,15 +47,15 @@ export async function fetchCropDetails(data: CropDetailsRequest): Promise<CropDe
 }
 
 /**
- * Detect disease from crop image
- * Note: Our AI API uses form text (disease_name). We might need to handle image upload differently,
- * but mapping the request here to the AI endpoint for consistency with requirements.
+ * Detect disease from crop image upload using OpenAI Vision
  */
-export async function detectDisease(crop: string, diseaseName: string): Promise<DiseaseDetectionResponse> {
-    const res = await fetch(`${API_BASE}/api/diseaseAdvice`, {
+export async function detectDisease(file: File): Promise<DiseaseDetectionResponse> {
+    const formData = new FormData();
+    formData.append('image', file);
+
+    const res = await fetch(`${API_BASE}/api/detectCropDisease`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ crop, disease_name: diseaseName }),
+        body: formData,
     });
 
     if (!res.ok) {
