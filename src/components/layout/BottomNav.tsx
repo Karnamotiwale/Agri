@@ -1,5 +1,5 @@
 import { useNavigate, useLocation } from 'react-router-dom';
-import { Home, LayoutGrid, UserCircle, CheckSquare, Diamond } from 'lucide-react';
+import { Home, LayoutGrid, CheckSquare, Diamond, Landmark, ShoppingBag } from 'lucide-react';
 
 export function BottomNav() {
   const navigate = useNavigate();
@@ -7,9 +7,10 @@ export function BottomNav() {
 
   const navItems = [
     { icon: Home, label: 'Home', path: '/dashboard' },
+    { icon: Landmark, label: 'Schemes', path: '/schemes' },
+    { icon: ShoppingBag, label: 'Market', path: '/market' },
     { icon: Diamond, label: 'Services', path: '/services' },
     { icon: LayoutGrid, label: 'Lands', path: '/farms' },
-    { icon: UserCircle, label: 'Account', path: '/profile' },
   ];
 
   return (

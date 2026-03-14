@@ -17,6 +17,7 @@ import SoilAnalysisPage from "../pages/Soil/SoilAnalysisPage";
 import ActivityLogsPage from "../pages/Activities/ActivityLogsPage";
 import DiagnosisResultPage from "../pages/Health/DiagnosisResultPage";
 import WeatherSoilPestPage from "../pages/Weather/WeatherSoilPestPage";
+import SchemesPage from "../pages/Schemes/SchemesPage";
 
 // Original Screens (preserving routing structure)
 import { LoginScreen } from "./screens/LoginScreen";
@@ -73,6 +74,7 @@ export default function Router() {
         <Route path="/activity-logs" element={<ProtectedRoute><ActivityLogsPage /></ProtectedRoute>} />
         <Route path="/diagnosis-result" element={<ProtectedRoute><DiagnosisResultPage /></ProtectedRoute>} />
         <Route path="/activities" element={<ProtectedRoute><DashboardPage /></ProtectedRoute>} />
+        <Route path="/schemes" element={<ProtectedRoute><SchemesPage /></ProtectedRoute>} />
 
         {/* Protected Detail/Action Routes */}
         <Route path="/farm-registration" element={<Navigate to="/action-selection" replace />} />
