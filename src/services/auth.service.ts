@@ -1,65 +1,47 @@
-import { supabase } from '../lib/supabase';
-import type { User, Session, AuthError } from '@supabase/supabase-js';
+// ============================================
+// AUTH SERVICE — Mock only, no Supabase
+// ============================================
+import { MOCK_USER, MOCK_SESSION } from '../mock/mockAuth';
+
+// We keep a local "logged in" flag so the app can toggle sign in / out
+let _isLoggedIn = true; // Start as logged-in for demo mode
 
 export const authService = {
-    signUp: async (email: string, password: string, metadata?: Record<string, any>) => {
-        const { data, error } = await supabase.auth.signUp({
-            email,
-            password,
-            options: {
-                data: metadata,
-            },
-        });
-        return { user: data.user, session: data.session, error };
-    },
+    signUp: async (_email: string, _password: string, _metadata?: any) => ({
+        user: MOCK_USER,
+        session: MOCK_SESSION,
+        error: null,
+    }),
 
-    signIn: async (email: string, password: string) => {
-        const { data, error } = await supabase.auth.signInWithPassword({
-            email,
-            password,
-        });
-        return { user: data.user, session: data.session, error };
-    },
+    signIn: async (_email: string, _password: string) => ({
+        user: MOCK_USER,
+        session: MOCK_SESSION,
+        error: null,
+    }),
 
     signInWithGoogle: async () => {
-        console.log("AuthService: signInWithGoogle called");
-        const { error } = await supabase.auth.signInWithOAuth({
-            provider: 'google',
-            options: {
-                redirectTo: `${window.location.origin}/auth/callback`,
-                queryParams: {
-                    prompt: 'select_account'
-                }
-            }
-        });
-        if (error) console.error("AuthService: signInWithGoogle error", error);
-        return { error };
+        _isLoggedIn = true;
+        return { error: null };
     },
 
     signOut: async () => {
-        console.log("AuthService: signOut called");
-        const { error } = await supabase.auth.signOut();
-        return { error };
+        _isLoggedIn = false;
+        return { error: null };
     },
 
-    getCurrentUser: async () => {
-        const { data: { user }, error } = await supabase.auth.getUser();
-        if (error) console.error("AuthService: getUser error", error);
-        return { user, error };
-    },
+    getCurrentUser: async () => ({
+        user: _isLoggedIn ? MOCK_USER : null,
+        error: null,
+    }),
 
-    getSession: async () => {
-        const { data: { session }, error } = await supabase.auth.getSession();
-        console.log("AuthService: getSession result", { hasSession: !!session, error });
-        return { session, error };
-    },
+    getSession: async () => ({
+        session: _isLoggedIn ? MOCK_SESSION : null,
+        error: null,
+    }),
 
-    onAuthStateChange: (callback: (event: string, session: Session | null) => void) => {
-        console.log("AuthService: setting up onAuthStateChange listener");
-        const { data } = supabase.auth.onAuthStateChange((event, session) => {
-            console.log(`AuthService: Auth Event: ${event}`, { userId: session?.user?.id });
-            callback(event, session);
-        });
-        return { data };
+    onAuthStateChange: (callback: (event: string, session: any) => void) => {
+        // Immediately fire INITIAL_SESSION with the mock session
+        setTimeout(() => callback('INITIAL_SESSION', _isLoggedIn ? MOCK_SESSION : null), 0);
+        return { data: { subscription: { unsubscribe: () => {} } } };
     },
 };

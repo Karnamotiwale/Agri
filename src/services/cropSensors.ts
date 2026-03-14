@@ -1,42 +1,23 @@
-import { getApiUrl } from './config';
+// ============================================
+// SENSOR SERVICE — Mock only, no backend
+// ============================================
+import { getMockSensors, tickMockSensors, type SensorReading } from '../mock/mockSensors';
 
-export interface CropSensorReading {
-    moisture: number;
-    ph: number;
-    n: number;
-    p: number;
-    k: number;
-    npk: string;
-    temperature?: number;
-    humidity?: number;
-}
+export type { SensorReading };
+
+export interface CropSensorReading extends SensorReading {}
+
+let _cache: Record<string, SensorReading> = {};
 
 export const getCropSensors = async (cropId: string): Promise<CropSensorReading> => {
-    try {
-        const url = getApiUrl(`/sensors?crop_id=${cropId}`);
-        const response = await fetch(url);
-        if (!response.ok) throw new Error(`API failed: ${response.status}`);
-        return await response.json();
-    } catch (err) {
-        console.warn('Sensors fetch failed', err);
-        return { moisture: 0, ph: 0, n: 0, p: 0, k: 0, npk: '0-0-0' };
-    }
+    const reading = getMockSensors(cropId);
+    _cache[cropId] = reading;
+    return reading;
 };
 
 export const tickCropSensors = async (cropId: string): Promise<CropSensorReading> => {
-    try {
-        const url = getApiUrl(`/sensors/tick?crop_id=${cropId}`);
-        const response = await fetch(url);
-        if (!response.ok) throw new Error(`API failed: ${response.status}`);
-        return await response.json();
-    } catch (err) {
-        return {
-            moisture: 0,
-            ph: 0,
-            n: 0,
-            p: 0,
-            k: 0,
-            npk: '0-0-0'
-        };
-    }
+    const current = _cache[cropId] || getMockSensors(cropId);
+    const next = tickMockSensors(current);
+    _cache[cropId] = next;
+    return next;
 };

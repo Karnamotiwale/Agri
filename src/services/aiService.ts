@@ -1,4 +1,15 @@
-import { getApiUrl } from './config';
+// ============================================
+// AI SERVICE — Mock only, no backend
+// ============================================
+import {
+    getMockDecision,
+    getMockAIStatus,
+    getMockRLMetrics,
+    getMockXAI,
+    getMockDecisionLog,
+    getMockCropAIDetails,
+} from '../mock/mockAI';
+import { getMockResourceAnalytics, getMockYieldPrediction } from '../mock/mockAnalytics';
 
 // ============================================
 // SHARED DATA CONTRACTS
@@ -58,272 +69,163 @@ export type ResourceAnalytics = any;
 export type YieldPrediction = any;
 
 // ============================================
-// SAFE FETCH WRAPPER
-// ============================================
-
-const safeFetch = async (endpoint: string, options: RequestInit = {}) => {
-    const url = getApiUrl(endpoint);
-    try {
-        const res = await fetch(url, {
-            ...options,
-            headers: {
-                'Content-Type': 'application/json',
-                ...options.headers,
-            }
-        });
-
-        if (!res.ok) {
-            const errorText = await res.text();
-            throw new Error(`AI API Error ${res.status}: ${errorText}`);
-        }
-
-        const data = await res.json();
-        if (!data) throw new Error("Empty JSON response from AI engine");
-        return data;
-    } catch (err) {
-        console.warn(`[AI Service] Connectivity issue at ${endpoint}:`, err);
-        return null; // Return null gracefully instead of throwing
-    }
-};
-
-// ============================================
-// STABLE AI SERVICE LAYER
+// MAIN AI SERVICE
 // ============================================
 
 export const aiService = {
-    /**
-     * POST /decide - Unified Decision Engine
-     */
-    getDecision: async (params: {
-        crop: string;
-        growth_stage?: string;
-        soil_moisture_pct?: number;
-        temperature_c?: number;
-    }): Promise<any> => {
-        return await safeFetch('/decide', {
-            method: 'POST',
-            body: JSON.stringify(params)
-        });
+    getDecision: async (params?: any): Promise<any> => {
+        await _delay(300);
+        return getMockDecision(params);
     },
 
-    /**
-     * GET /ai/status - Health & Status
-     */
     getStatus: async (): Promise<any> => {
-        return await safeFetch('/ai/status');
+        await _delay(200);
+        return getMockAIStatus();
     },
 
-    /**
-     * GET /ai/decision-log - History
-     */
     getDecisionLog: async (crop?: string, limit: number = 20): Promise<any[]> => {
-        const endpoint = crop
-            ? `/ai/decision-log?crop=${crop.toLowerCase()}&limit=${limit}`
-            : `/ai/decision-log?limit=${limit}`;
-        return await safeFetch(endpoint);
+        await _delay(200);
+        return getMockDecisionLog(limit);
     },
 
-    /**
-     * GET /ai/rl-metrics - RL Metrics
-     */
     getRLMetrics: async (): Promise<any> => {
-        return await safeFetch('/ai/rl-metrics');
+        await _delay(200);
+        return getMockRLMetrics();
     },
 
-    /**
-     * GET /ai/regret - Regret Analysis
-     */
     getRegret: async (): Promise<any> => {
-        return await safeFetch('/ai/regret');
+        await _delay(200);
+        return { regret: 0.03, episodes: 320 };
     },
 
-    /**
-     * GET /ai/xai - Explainable AI
-     */
     getXAI: async (): Promise<any> => {
-        return await safeFetch('/ai/xai');
+        await _delay(200);
+        return getMockXAI();
     },
 
-    /**
-     * Detect Crop Stress (Mock)
-     */
-    detectCropStress: async (cropId: string, image: File): Promise<StressAnalysisResult> => {
-        await new Promise(resolve => setTimeout(resolve, 2000));
+    detectCropStress: async (_cropId: string, _image: File): Promise<StressAnalysisResult> => {
+        await _delay(1500);
         return {
-            stressLevel: 'HIGH',
-            primaryStressor: 'Water Stress (Drought)',
-            confidence: 0.89,
+            stressLevel: 'MEDIUM',
+            primaryStressor: 'Mild Water Stress',
+            confidence: 0.87,
             recommendations: [
-                'Increase irrigation frequency by 20%',
-                'Apply mulch to retain soil moisture',
-                'Monitor soil moisture levels daily'
+                'Increase irrigation by 15%',
+                'Monitor soil moisture daily',
+                'Apply mulch to retain moisture',
             ],
             factors: [
-                { name: 'Leaf Temperature', value: 0.8 },
-                { name: 'Chlorophyll Content', value: 0.4 },
-                { name: 'Soil Moisture', value: 0.2 }
-            ]
+                { name: 'Leaf Moisture Index', value: 0.65 },
+                { name: 'Temperature', value: 0.28 },
+                { name: 'Soil Moisture', value: 0.35 },
+            ],
         };
     },
 
-    /**
-     * Detect Crop Health (Mock)
-     */
-    detectCropHealth: async (cropId: string, image: File): Promise<any> => {
+    detectCropHealth: async (_cropId: string, _image: File): Promise<any> => {
+        await _delay(1500);
         return {
-            issue: "Leaf Blight",
-            confidence: 92,
-            description: "Fungal infection detected.",
-            recommendations: ["Apply fungicide", "Reduce watering"]
+            status: 'healthy',
+            issue: 'Healthy Crop',
+            confidence: 0.94,
+            solution: 'Continue current irrigation schedule',
+            prevention: 'Maintain regular monitoring and standard care practices.',
         };
     },
 
-    getLearningInsights: async (...args: any[]): Promise<any> => {
+    getLearningInsights: async (..._args: any[]): Promise<any> => {
         return [];
     },
 
-    submitDecisionFeedback: async (...args: any[]): Promise<any> => {
+    submitDecisionFeedback: async (..._args: any[]): Promise<any> => {
         return { success: true };
     },
 
-    getValveSchedule: async (...args: any[]): Promise<any> => {
-        return [];
+    getValveSchedule: async (..._args: any[]): Promise<any> => {
+        return [
+            { valve: 'Valve 1', time: '06:00 AM', duration: '30 min', zone: 'Zone A' },
+            { valve: 'Valve 2', time: '07:00 AM', duration: '25 min', zone: 'Zone B' },
+        ];
     },
 
-    /**
-     * Legacy support for Recommendations
-     */
     getRecommendations: async (farmId: string): Promise<AIRecommendation[]> => {
-        const data = await aiService.getDecision({ crop: 'rice', growth_stage: 'Vegetative' });
-        const recommendations: AIRecommendation[] = [];
-
-        if (data && data.final_decision_label) {
-            recommendations.push({
+        await _delay(300);
+        return [
+            {
                 id: `rec-${Date.now()}`,
                 farm_id: farmId,
                 crop_id: 'active',
-                action: data.final_decision_label,
-                confidence: data.explanation?.confidence || 0.9,
+                action: 'IRRIGATE',
+                confidence: 0.91,
                 risk_level: 'Low',
-                reasoning: data.reason || "AI processed conditions",
+                reasoning: 'Soil moisture below threshold. Irrigation recommended.',
                 status: 'PENDING',
-                created_at: new Date().toISOString()
-            });
-        }
-        return recommendations;
-    }
+                created_at: new Date().toISOString(),
+            },
+        ];
+    },
 };
 
 // ============================================
-// DETAILED ADVISORY AGENT
+// ADVISORY AGENT
 // ============================================
 
 export const aiAdvisoryService = {
     getDetailedAdvisory: async (crop: string): Promise<CropAdvisory> => {
-        const data = await aiService.getDecision({ crop });
+        await _delay(300);
         return {
             fertilizer: {
-                recommended: !!data.fertilizer_advice?.recommended,
-                productName: "Urea (Nitrogen)",
-                type: "Mineral",
-                nutrients: { N: "46%", P: "0%", K: "0%" },
-                dosage: "50kg/ha",
-                timing: "Immediate",
-                method: "Broadcasting",
-                status: data.fertilizer_advice?.recommended ? 'REQUIRED' : 'OPTIONAL'
+                recommended: true,
+                productName: 'Urea (Nitrogen)',
+                type: 'Mineral',
+                nutrients: { N: '46%', P: '0%', K: '0%' },
+                dosage: '50 kg/ha',
+                timing: 'Immediate',
+                method: 'Broadcasting',
+                status: 'REQUIRED',
             },
             pesticide: {
                 detected: false,
                 riskLevel: 'LOW',
-                productName: "N/A",
-                category: "N/A",
-                target: "N/A",
-                dosage: "N/A",
-                safetyInterval: "N/A"
+                productName: 'N/A',
+                category: 'N/A',
+                target: 'N/A',
+                dosage: 'N/A',
+                safetyInterval: 'N/A',
             },
             explainability: {
-                reason: data.reason || "Conditions optimal",
-                factors: data.explanation?.factors || [],
-                confidence: 0.95
-            }
+                reason: `Conditions optimal for ${crop} crop`,
+                factors: ['Low moisture', 'High temperature', 'No rain forecast'],
+                confidence: 0.91,
+            },
         };
     },
 
-    getYieldPrediction: async (crop: string): Promise<any> => {
-        return await safeFetch('/yield/predict', {
-            method: 'POST',
-            body: JSON.stringify({ crop: crop.toLowerCase() })
-        });
+    getYieldPrediction: async (_crop: string): Promise<any> => {
+        await _delay(300);
+        return getMockYieldPrediction();
     },
 
-    getResourceAnalytics: async (cropId: string): Promise<ResourceAnalytics> => {
-        return await safeFetch(`/api/analytics/resources?crop_id=${cropId}`);
-    }
+    getResourceAnalytics: async (_cropId: string): Promise<ResourceAnalytics> => {
+        await _delay(300);
+        return getMockResourceAnalytics();
+    },
 };
 
 // ============================================
-// LEGACY HELPER FUNCTIONS (merged from old aiService.ts)
+// LEGACY HELPERS (preserved for compatibility)
 // ============================================
 
-const API_BASE = import.meta.env.VITE_API_URL || "http://127.0.0.1:5000";
-
-interface PredictionData {
-    soil_moisture: number;
-    temperature: number;
-    humidity: number;
-    rain_forecast: number;
+export async function predictIrrigation(_data: any): Promise<any> {
+    await _delay(300);
+    return getMockCropAIDetails();
 }
 
-interface PredictionResponse {
-    ml_prediction: number;
-    final_decision: number;
-    explanation: any;
+export async function sendFeedback(_data: any): Promise<any> {
+    return { success: true };
 }
 
-interface FeedbackData {
-    state: string;
-    final_decision: number;
-    outcome: string;
-}
-
-export async function predictIrrigation(data: PredictionData): Promise<PredictionResponse> {
-    try {
-        const response = await fetch(`${API_BASE}/api/irrigationDecision`, {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json",
-            },
-            body: JSON.stringify(data),
-        });
-
-        if (!response.ok) {
-            throw new Error("Prediction request failed");
-        }
-
-        return await response.json();
-    } catch (err) {
-        console.warn("[AI Service] Connectivity issue predicting irrigation:", err);
-        return null as any;
-    }
-}
-
-export async function sendFeedback(data: FeedbackData) {
-    try {
-        const response = await fetch(`${API_BASE}/feedback`, {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json",
-            },
-            body: JSON.stringify(data),
-        });
-
-        if (!response.ok) {
-            throw new Error("Feedback request failed");
-        }
-
-        return await response.json();
-    } catch (err) {
-        console.warn("[AI Service] Connectivity issue sending feedback:", err);
-        return null;
-    }
+// Simulated async delay
+function _delay(ms: number): Promise<void> {
+    return new Promise((resolve) => setTimeout(resolve, ms));
 }

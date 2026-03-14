@@ -4,7 +4,7 @@ import { getCropSensors, tickCropSensors, type CropSensorReading } from '../serv
 const INTERVAL_MS = 3000;
 
 export function useCropSensors(cropId: string | undefined): CropSensorReading {
-  const [reading, setReading] = useState<CropSensorReading>({ moisture: 0, ph: 0, n: 0, p: 0, k: 0, npk: '0-0-0' });
+  const [reading, setReading] = useState<CropSensorReading>({ moisture: 0, ph: 0, n: 0, p: 0, k: 0, npk: '0-0-0', temperature: 0, humidity: 0 });
 
   useEffect(() => {
     if (!cropId) return;

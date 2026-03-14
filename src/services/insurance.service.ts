@@ -1,183 +1,52 @@
-import { supabase } from '../lib/supabase';
+// ============================================
+// INSURANCE SERVICE — Mock only, no Supabase
+// ============================================
 
 export interface InsurancePolicy {
-    id: string;
-    name: string;
-    coverageType: string;
-    risksCovered: string[];
-    eligibility: string;
-    coverageAmount: string;
-    premium: string;
-    claimTrigger: string;
-    calamitySpecific: boolean;
-    officialLink: string;
-    description: string;
-    icon: string;
+    id: string; name: string; coverageType: string; risksCovered: string[];
+    eligibility: string; coverageAmount: string; premium: string; claimTrigger: string;
+    calamitySpecific: boolean; officialLink: string; description: string; icon: string;
 }
 
 export interface InsuranceRecommendation {
-    policy: InsurancePolicy;
-    urgencyLevel: 'Normal' | 'High' | 'Emergency';
-    reason: string;
-    matchScore: number;
+    policy: InsurancePolicy; urgencyLevel: 'Normal' | 'High' | 'Emergency'; reason: string; matchScore: number;
 }
 
 export interface RiskAssessment {
-    droughtRisk: number; // 0-100
-    floodRisk: number;
-    pestRisk: number;
-    weatherRisk: number;
+    droughtRisk: number; floodRisk: number; pestRisk: number; weatherRisk: number;
 }
 
+const MOCK_POLICIES: InsurancePolicy[] = [
+    { id: 'p1', name: 'PMFBY – Pradhan Mantri Fasal Bima Yojana', coverageType: 'Comprehensive Crop Insurance', risksCovered: ['Drought', 'Flood', 'Hailstorm', 'Pest Outbreak'], eligibility: 'All farmers', coverageAmount: 'Up to ₹2 lakh/ha', premium: '1.5–5% of sum insured', claimTrigger: 'Crop loss > 25%', calamitySpecific: false, officialLink: 'https://pmfby.gov.in', description: 'National crop insurance scheme covering all major risks.', icon: '🌾' },
+    { id: 'p2', name: 'Weather Based Crop Insurance (WBCIS)', coverageType: 'Weather Index Insurance', risksCovered: ['Rainfall Deficit', 'Excess Rain', 'Temperature Extremes'], eligibility: 'Notified areas', coverageAmount: 'Up to ₹1.2 lakh/ha', premium: '2% of sum insured', claimTrigger: 'Weather index threshold breach', calamitySpecific: true, officialLink: 'https://pmfby.gov.in', description: 'Triggered automatically by weather station data.', icon: '🌦️' },
+    { id: 'p3', name: 'PM-KISAN – Income Support', coverageType: 'Direct Income Transfer', risksCovered: ['Income Support'], eligibility: 'All landholding farmers', coverageAmount: '₹6,000/year', premium: 'Free – Government funded', claimTrigger: 'Auto-disbursed', calamitySpecific: false, officialLink: 'https://pmkisan.gov.in', description: 'Direct income support of ₹6000/year in three installments.', icon: '💰' },
+    { id: 'p4', name: 'Pradhan Mantri Suraksha Bima Yojana', coverageType: 'Accidental Insurance', risksCovered: ['Accidental Death', 'Disability'], eligibility: 'Age 18–70', coverageAmount: '₹2 lakh', premium: '₹20/year', claimTrigger: 'Accident', calamitySpecific: false, officialLink: 'https://jansuraksha.gov.in', description: 'Affordable accident insurance for farmers.', icon: '🛡️' },
+];
+
 class InsuranceService {
-    /**
-     * Get all insurance policies from database
-     */
-    async getAllPolicies(): Promise<InsurancePolicy[]> {
-        try {
-            const { data, error } = await supabase
-                .from('insurance_policies')
-                .select('*')
-                .order('calamity_specific', { ascending: false });
+    async getAllPolicies(): Promise<InsurancePolicy[]> { return MOCK_POLICIES; }
 
-            if (error) throw error;
-
-            return (data || []).map(policy => ({
-                id: policy.id,
-                name: policy.name,
-                coverageType: policy.coverage_type,
-                risksCovered: policy.risks_covered,
-                eligibility: policy.eligibility,
-                coverageAmount: policy.coverage_amount,
-                premium: policy.premium,
-                claimTrigger: policy.claim_trigger,
-                calamitySpecific: policy.calamity_specific,
-                officialLink: policy.official_link,
-                description: policy.description,
-                icon: policy.icon,
-            }));
-        } catch (error) {
-            console.error('Error fetching insurance policies:', error);
-            return [];
+    async getRecommendations(cropType: string, _location: string, r: RiskAssessment): Promise<InsuranceRecommendation[]> {
+        const recs: InsuranceRecommendation[] = [];
+        if (r.droughtRisk > 60 || r.floodRisk > 50) {
+            recs.push({ policy: MOCK_POLICIES[0], urgencyLevel: r.droughtRisk > 80 ? 'Emergency' : 'High', reason: `Risk detected. PMFBY recommended.`, matchScore: Math.max(r.droughtRisk, r.floodRisk) });
+            recs.push({ policy: MOCK_POLICIES[1], urgencyLevel: 'High', reason: 'Weather-based insurance for rain variability.', matchScore: r.weatherRisk });
         }
+        recs.push({ policy: MOCK_POLICIES[2], urgencyLevel: 'Normal', reason: 'Income support available for all farmers.', matchScore: 50 });
+        recs.push({ policy: MOCK_POLICIES[3], urgencyLevel: 'Normal', reason: 'Affordable accident insurance.', matchScore: 40 });
+        return recs.sort((a, b) => b.matchScore - a.matchScore);
     }
 
-    /**
-     * Get AI-driven insurance recommendations based on crop type, location, and risks
-     */
-    async getRecommendations(
-        cropType: string,
-        location: string,
-        riskAssessment: RiskAssessment
-    ): Promise<InsuranceRecommendation[]> {
-        const policies = await this.getAllPolicies();
-        const recommendations: InsuranceRecommendation[] = [];
-
-        // Drought risk analysis
-        if (riskAssessment.droughtRisk > 60) {
-            const pmfby = policies.find(p => p.name.includes('PMFBY'));
-            if (pmfby) {
-                recommendations.push({
-                    policy: pmfby,
-                    urgencyLevel: riskAssessment.droughtRisk > 80 ? 'Emergency' : 'High',
-                    reason: `High drought risk detected (${riskAssessment.droughtRisk}%). PMFBY covers crop failure due to drought.`,
-                    matchScore: riskAssessment.droughtRisk,
-                });
-            }
-
-            const wbcis = policies.find(p => p.name.includes('Weather Based'));
-            if (wbcis) {
-                recommendations.push({
-                    policy: wbcis,
-                    urgencyLevel: 'High',
-                    reason: `Weather-based insurance recommended due to rainfall deficit risk.`,
-                    matchScore: riskAssessment.droughtRisk * 0.8,
-                });
-            }
-        }
-
-        // Flood risk analysis
-        if (riskAssessment.floodRisk > 50) {
-            const pmfby = policies.find(p => p.name.includes('PMFBY'));
-            if (pmfby && !recommendations.find(r => r.policy.id === pmfby.id)) {
-                recommendations.push({
-                    policy: pmfby,
-                    urgencyLevel: riskAssessment.floodRisk > 75 ? 'Emergency' : 'High',
-                    reason: `Flood risk detected (${riskAssessment.floodRisk}%). PMFBY provides coverage for flood damage.`,
-                    matchScore: riskAssessment.floodRisk,
-                });
-            }
-        }
-
-        // Pest risk analysis
-        if (riskAssessment.pestRisk > 70) {
-            const pmfby = policies.find(p => p.name.includes('PMFBY'));
-            if (pmfby && !recommendations.find(r => r.policy.id === pmfby.id)) {
-                recommendations.push({
-                    policy: pmfby,
-                    urgencyLevel: 'Emergency',
-                    reason: `Pest outbreak risk detected (${riskAssessment.pestRisk}%). Immediate crop insurance coverage recommended.`,
-                    matchScore: riskAssessment.pestRisk,
-                });
-            }
-        }
-
-        // Always recommend basic schemes
-        const pmKisan = policies.find(p => p.name.includes('PM-KISAN'));
-        if (pmKisan && !recommendations.find(r => r.policy.id === pmKisan.id)) {
-            recommendations.push({
-                policy: pmKisan,
-                urgencyLevel: 'Normal',
-                reason: 'Direct income support scheme available for all eligible farmers.',
-                matchScore: 50,
-            });
-        }
-
-        // Farmer safety insurance
-        const pmsby = policies.find(p => p.name.includes('Suraksha'));
-        if (pmsby) {
-            recommendations.push({
-                policy: pmsby,
-                urgencyLevel: 'Normal',
-                reason: 'Affordable accident insurance for farmer safety.',
-                matchScore: 40,
-            });
-        }
-
-        // Sort by match score
-        return recommendations.sort((a, b) => b.matchScore - a.matchScore);
-    }
-
-    /**
-     * Detect calamity based on sensor data and weather
-     */
     detectCalamity(soilMoisture: number, rainfall: number, temperature: number): string[] {
-        const calamities: string[] = [];
-
-        // Drought detection
-        if (soilMoisture < 25 && rainfall < 10) {
-            calamities.push('Drought');
-        }
-
-        // Flood detection
-        if (rainfall > 100) {
-            calamities.push('Flood');
-        }
-
-        // Extreme heat
-        if (temperature > 42) {
-            calamities.push('Extreme Heat');
-        }
-
-        return calamities;
+        const c: string[] = [];
+        if (soilMoisture < 25 && rainfall < 10) c.push('Drought');
+        if (rainfall > 100) c.push('Flood');
+        if (temperature > 42) c.push('Extreme Heat');
+        return c;
     }
 
-    /**
-     * Get calamity-specific insurance policies
-     */
     async getCalamityInsurance(): Promise<InsurancePolicy[]> {
-        const policies = await this.getAllPolicies();
-        return policies.filter(p => p.calamitySpecific);
+        return MOCK_POLICIES.filter(p => p.calamitySpecific);
     }
 }
 

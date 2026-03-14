@@ -1,57 +1,33 @@
-import { getApiUrl } from './config';
+// ============================================
+// VALVE SERVICE — Mock only, no backend
+// ============================================
 
 export interface Valve {
-    id: string;
-    farmId: string;
-    cropId: string;
-    valveNumber: number;
-    zoneName: string;
-    isActive: boolean;
-    status: 'RUNNING' | 'IDLE' | 'ERROR';
-    lastActive?: string;
+    id: string; farmId: string; cropId: string;
+    valveNumber: number; zoneName: string;
+    isActive: boolean; status: 'RUNNING' | 'IDLE' | 'ERROR'; lastActive?: string;
 }
 
 export interface ValveSchedule {
-    id: string;
-    valveId: string;
-    scheduledTime: string;
-    durationMinutes: number;
-    waterQuantityLiters: number;
-    fertilizerType?: string;
-    source: 'AI' | 'MANUAL';
-    status: 'PENDING' | 'RUNNING' | 'COMPLETED' | 'SKIPPED';
-    aiReasoning?: string;
+    id: string; valveId: string; scheduledTime: string;
+    durationMinutes: number; waterQuantityLiters: number;
+    fertilizerType?: string; source: 'AI' | 'MANUAL';
+    status: 'PENDING' | 'RUNNING' | 'COMPLETED' | 'SKIPPED'; aiReasoning?: string;
 }
 
+const MOCK_VALVES: Valve[] = [
+    { id: 'v1', farmId: 'f1', cropId: 'c1', valveNumber: 1, zoneName: 'Zone A – Main Field', isActive: false, status: 'IDLE' },
+    { id: 'v2', farmId: 'f1', cropId: 'c1', valveNumber: 2, zoneName: 'Zone B – North',       isActive: false, status: 'IDLE' },
+    { id: 'v3', farmId: 'f1', cropId: 'c1', valveNumber: 3, zoneName: 'Zone C – South',       isActive: false, status: 'IDLE' },
+    { id: 'v4', farmId: 'f1', cropId: 'c1', valveNumber: 4, zoneName: 'Zone D – East',        isActive: false, status: 'IDLE' },
+];
+
 export const valveService = {
-    getValvesForCrop: async (cropId: string): Promise<Valve[]> => {
-        const url = getApiUrl(`/valves?crop_id=${cropId}`);
-        const response = await fetch(url);
-        if (!response.ok) throw new Error(`Valves API failed: ${response.status}`);
-        return await response.json();
-    },
-
+    getValvesForCrop: async (_cropId: string): Promise<Valve[]> => MOCK_VALVES,
     toggleValve: async (valveId: string, isActive: boolean): Promise<Valve> => {
-        const url = getApiUrl('/valves/toggle');
-        const response = await fetch(url, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ valve_id: valveId, active: isActive })
-        });
-
-        if (!response.ok) throw new Error(`Toggle valve API failed: ${response.status}`);
-        return await response.json();
+        const valve = MOCK_VALVES.find(v => v.id === valveId);
+        if (valve) { valve.isActive = isActive; valve.status = isActive ? 'RUNNING' : 'IDLE'; }
+        return valve ?? MOCK_VALVES[0];
     },
-
-    overrideSchedule: async (valveId: string, params: { duration: number, quantity: number }): Promise<boolean> => {
-        const url = getApiUrl('/valves/override');
-        const response = await fetch(url, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ valve_id: valveId, ...params })
-        });
-
-        if (!response.ok) throw new Error(`Override schedule API failed: ${response.status}`);
-        return true;
-    }
+    overrideSchedule: async (_valveId: string, _params: any): Promise<boolean> => true,
 };

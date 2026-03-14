@@ -1,11 +1,9 @@
-import { api } from "./api";
+// ============================================
+// CROP SERVICE — Mock Stub (thin wrapper)
+// ============================================
+import { getMockCropHealth } from '../mock/mockAnalytics';
+import { getMockDiseaseDetection } from '../mock/mockAI';
 
-export const getCropHealth = (farmId: string) =>
-  api.get(`/api/analytics/crop-health?farm_id=${farmId}`);
+export const getCropHealth = async (_farmId: string) => getMockCropHealth();
 
-export const detectDisease = (image: File) => {
-  const formData = new FormData();
-  formData.append("image", image);
-
-  return api.post("/api/cropnet-detect", formData);
-};
+export const detectDisease = async (_image: File) => getMockDiseaseDetection();

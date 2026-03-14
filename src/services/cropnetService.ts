@@ -1,24 +1,13 @@
-import { getApiUrl } from './config';
-
-const API_BASE = getApiUrl('');
+// ============================================
+// CROPNET DISEASE DETECTION — Mock only
+// ============================================
 
 export interface DiseaseResult {
     disease: string;
     confidence: number;
 }
 
-export async function detectCropDisease(file: File): Promise<DiseaseResult> {
-    const formData = new FormData();
-    formData.append("image", file);
-
-    const res = await fetch(`${API_BASE}/cropnet-detect`, {
-        method: "POST",
-        body: formData,
-    });
-
-    if (!res.ok) {
-        throw new Error("Disease detection failed");
-    }
-
-    return await res.json();
+export async function detectCropDisease(_file: File): Promise<DiseaseResult> {
+    await new Promise(r => setTimeout(r, 1500));
+    return { disease: 'Healthy', confidence: 0.94 };
 }

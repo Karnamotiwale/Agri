@@ -1,43 +1,57 @@
-import { createClient } from '@supabase/supabase-js';
+// ============================================
+// SUPABASE STUB — Mock mode. No real Supabase client.
+// All auth and database calls are replaced by mock services.
+// This file exists solely to prevent import errors in legacy
+// files that may still reference '../lib/supabase'.
+// ============================================
 
-const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
-const supabaseKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
+import { MOCK_USER } from '../mock/mockAuth';
 
-if (!supabaseUrl || !supabaseKey) {
-    console.error("CRITICAL: Missing Supabase Environment Variables!");
-    console.error("URL:", supabaseUrl);
-    console.error("KEY:", supabaseKey);
-} else {
-    console.log("Supabase Client Initializing with:", supabaseUrl);
-}
+// Minimal no-op Supabase stub
+export const supabase = {
+    auth: {
+        getUser: async () => ({ data: { user: MOCK_USER }, error: null }),
+        getSession: async () => ({ data: { session: null }, error: null }),
+        signInWithPassword: async () => ({ data: { user: MOCK_USER, session: null }, error: null }),
+        signInWithOAuth: async () => ({ error: null }),
+        signUp: async () => ({ data: { user: MOCK_USER, session: null }, error: null }),
+        signOut: async () => ({ error: null }),
+        onAuthStateChange: (_cb: any) => ({ data: { subscription: { unsubscribe: () => {} } } }),
+    },
+    from: (_table: string) => ({
+        select: (_cols?: string) => ({
+            eq: (_col: string, _val: any) => ({ order: () => ({ data: [], error: null }), data: [], error: null }),
+            order: (_col: string, _opts?: any) => Promise.resolve({ data: [], error: null }),
+            single: () => Promise.resolve({ data: null, error: null }),
+            data: [] as any[],
+            error: null,
+        }),
+        insert: (_data: any) => ({
+            select: () => ({ single: () => Promise.resolve({ data: { id: `mock-${Date.now()}` }, error: null }) }),
+        }),
+        update: (_data: any) => ({
+            eq: (_col: string, _val: any) => ({
+                eq: () => ({ select: () => ({ single: () => Promise.resolve({ data: null, error: null }) }) }),
+            }),
+        }),
+        delete: () => ({
+            eq: (_col: string, _val: any) => ({
+                eq: () => Promise.resolve({ error: null }),
+            }),
+        }),
+    }),
+    storage: {
+        from: (_bucket: string) => ({
+            upload: async () => ({ error: null }),
+            getPublicUrl: (_path: string) => ({ data: { publicUrl: '' } }),
+        }),
+    },
+};
 
-export const supabase = createClient(supabaseUrl || '', supabaseKey || '');
-
-/**
- * Get the current authenticated user's ID
- * @returns User ID if authenticated, null otherwise
- */
 export async function getCurrentUserId(): Promise<string | null> {
-    try {
-        const { data: { user }, error } = await supabase.auth.getUser();
-
-        if (error) {
-            console.error("Error getting current user:", error.message);
-            return null;
-        }
-
-        return user?.id || null;
-    } catch (err) {
-        console.error("Exception getting current user:", err);
-        return null;
-    }
+    return MOCK_USER.id;
 }
 
-/**
- * Check if user is authenticated
- * @returns true if user is authenticated, false otherwise
- */
 export async function isAuthenticated(): Promise<boolean> {
-    const userId = await getCurrentUserId();
-    return userId !== null;
+    return true;
 }

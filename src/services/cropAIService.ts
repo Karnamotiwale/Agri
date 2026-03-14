@@ -1,5 +1,7 @@
-// API Base URL
-const API_BASE = 'http://localhost:5000';
+// ============================================
+// CROP AI SERVICE — Mock only, no backend
+// ============================================
+import { getMockCropAIDetails, getMockDiseaseDetection } from '../mock/mockAI';
 
 export interface CropDetailsRequest {
     soil_moisture: number;
@@ -24,43 +26,12 @@ export interface DiseaseDetectionResponse {
     note?: string;
 }
 
-/**
- * Fetch unified crop AI details including:
- * - Irrigation decision
- * - Crop stress level
- * - AI explanation
- */
-export async function fetchCropDetails(data: CropDetailsRequest): Promise<CropDetailsResponse> {
-    const res = await fetch(`${API_BASE}/api/irrigationDecision`, {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(data),
-    });
-
-    if (!res.ok) {
-        throw new Error('Failed to fetch crop details');
-    }
-
-    return await res.json();
+export async function fetchCropDetails(_data: CropDetailsRequest): Promise<CropDetailsResponse> {
+    await new Promise((r) => setTimeout(r, 400));
+    return getMockCropAIDetails() as CropDetailsResponse;
 }
 
-/**
- * Detect disease from crop image upload using OpenAI Vision
- */
-export async function detectDisease(file: File): Promise<DiseaseDetectionResponse> {
-    const formData = new FormData();
-    formData.append('image', file);
-
-    const res = await fetch(`${API_BASE}/api/detectCropDisease`, {
-        method: 'POST',
-        body: formData,
-    });
-
-    if (!res.ok) {
-        throw new Error('Disease detection failed');
-    }
-
-    return await res.json();
+export async function detectDisease(_file: File): Promise<DiseaseDetectionResponse> {
+    await new Promise((r) => setTimeout(r, 1500));
+    return getMockDiseaseDetection();
 }

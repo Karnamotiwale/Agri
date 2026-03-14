@@ -1,12 +1,10 @@
-// Centralized API Configuration
-const API_BASE_URL =
-    import.meta.env.VITE_API_BASE_URL || "http://127.0.0.1:5000";
+// ============================================
+// CONFIG — Mock mode, no real API URL needed
+// ============================================
+export const API_BASE_URL = '';
 
-export const getApiUrl = (endpoint: string) => {
-    if (!endpoint.startsWith("/")) {
-        endpoint = `/${endpoint}`;
-    }
-    return `${API_BASE_URL}${endpoint}`;
+export const getApiUrl = (_endpoint: string) => {
+    // In mock mode all URLs are disabled — this function should never be called
+    console.warn('[Mock Mode] getApiUrl called — backend is disabled');
+    return '';
 };
-
-export { API_BASE_URL };

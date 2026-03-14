@@ -1,161 +1,45 @@
-import { supabase, getCurrentUserId } from '../lib/supabase';
+// ============================================
+// FARM SERVICE — Mock only, no Supabase
+// ============================================
 import type { Farm } from '../context/AppContext';
 
+const _farms: Farm[] = [
+    {
+        id: 'f1',
+        name: 'Kisaan Farm — Block A',
+        location: 'Bengaluru, Karnataka',
+        area: '4.5 acres',
+        lands: [{ id: 'l1', name: 'Main Field', area: 4.5, x: 77.59, y: 12.97 }],
+        crops: ['c1', 'c2'],
+        latitude: 12.9716,
+        longitude: 77.5946,
+    },
+    {
+        id: 'f2',
+        name: 'Kisaan Farm — Block B',
+        location: 'Mysuru, Karnataka',
+        area: '2.8 acres',
+        lands: [{ id: 'l2', name: 'North Field', area: 2.8, x: 76.64, y: 12.31 }],
+        crops: ['c3'],
+        latitude: 12.3051,
+        longitude: 76.6551,
+    },
+];
+
 export const farmService = {
-    /**
-     * Get all farms for the authenticated user
-     */
-    getAllFarms: async (): Promise<Farm[]> => {
-        try {
-            const userId = await getCurrentUserId();
-            if (!userId) {
-                throw new Error('User not authenticated');
-            }
-
-            const { data, error } = await supabase
-                .from('farms')
-                .select('*')
-                .eq('user_id', userId)
-                .order('created_at', { ascending: false });
-
-            if (error) throw error;
-
-            // Map DB fields to App types
-            return (data || []).map((f: any) => ({
-                id: f.id,
-                name: f.farm_name,
-                location: `Lat: ${f.latitude?.toFixed(2) || 0}, Long: ${f.longitude?.toFixed(2) || 0}`,
-                area: `${f.total_land_acres || 0} acres`,
-                lands: [{
-                    id: f.id,
-                    name: f.farm_name,
-                    area: f.total_land_acres || 0,
-                    x: f.longitude || 0,
-                    y: f.latitude || 0
-                }],
-                crops: [], // Populated separately
-                latitude: f.latitude,
-                longitude: f.longitude
-            })) as Farm[];
-        } catch (err: any) {
-            console.error('Error fetching farms:', err);
-            throw err;
-        }
-    },
-
-    /**
-     * Create a new farm for the authenticated user
-     */
+    getAllFarms: async (): Promise<Farm[]> => _farms,
     createFarm: async (farm: Farm): Promise<Farm> => {
-        try {
-            const userId = await getCurrentUserId();
-            if (!userId) {
-                throw new Error('User not authenticated. Please log in to create a farm.');
-            }
-
-            const areaValue = typeof farm.area === 'string'
-                ? parseFloat(farm.area.replace(/[^\d.]/g, ''))
-                : farm.area;
-
-            const { data, error } = await supabase
-                .from('farms')
-                .insert({
-                    user_id: userId,
-                    farm_name: farm.name,
-                    total_land_acres: areaValue,
-                    latitude: farm.latitude || 0,
-                    longitude: farm.longitude || 0
-                })
-                .select()
-                .single();
-
-            if (error) throw error;
-
-            return {
-                ...farm,
-                id: data.id,
-                latitude: data.latitude,
-                longitude: data.longitude
-            };
-        } catch (err: any) {
-            console.error('Error creating farm:', err);
-            throw err;
-        }
+        const newFarm = { ...farm, id: `f${_farms.length + 1}` };
+        _farms.push(newFarm);
+        return newFarm;
     },
-
-    /**
-     * Update an existing farm
-     */
     updateFarm: async (farmId: string, updates: Partial<Farm>): Promise<Farm> => {
-        try {
-            const userId = await getCurrentUserId();
-            if (!userId) {
-                throw new Error('User not authenticated');
-            }
-
-            const dbUpdates: any = {};
-            if (updates.name) dbUpdates.farm_name = updates.name;
-            if (updates.area) {
-                dbUpdates.total_land_acres = typeof updates.area === 'string'
-                    ? parseFloat(updates.area.replace(/[^\d.]/g, ''))
-                    : updates.area;
-            }
-            if (updates.latitude !== undefined) dbUpdates.latitude = updates.latitude;
-            if (updates.longitude !== undefined) dbUpdates.longitude = updates.longitude;
-
-            const { data, error } = await supabase
-                .from('farms')
-                .update(dbUpdates)
-                .eq('id', farmId)
-                .eq('user_id', userId)
-                .select()
-                .single();
-
-            if (error) throw error;
-            if (!data) throw new Error('Farm not found or access denied');
-
-            return {
-                id: data.id,
-                name: data.farm_name,
-                location: `Lat: ${data.latitude?.toFixed(2) || 0}, Long: ${data.longitude?.toFixed(2) || 0}`,
-                area: `${data.total_land_acres || 0} acres`,
-                lands: [{
-                    id: data.id,
-                    name: data.farm_name,
-                    area: data.total_land_acres || 0,
-                    x: data.longitude || 0,
-                    y: data.latitude || 0
-                }],
-                crops: [],
-                latitude: data.latitude,
-                longitude: data.longitude
-            };
-        } catch (err: any) {
-            console.error('Error updating farm:', err);
-            throw err;
-        }
+        const idx = _farms.findIndex(f => f.id === farmId);
+        if (idx >= 0) _farms[idx] = { ..._farms[idx], ...updates };
+        return _farms[idx];
     },
-
-    /**
-     * Delete a farm (and cascade delete associated crops)
-     */
     deleteFarm: async (farmId: string): Promise<void> => {
-        try {
-            const userId = await getCurrentUserId();
-            if (!userId) {
-                throw new Error('User not authenticated');
-            }
-
-            const { error } = await supabase
-                .from('farms')
-                .delete()
-                .eq('id', farmId)
-                .eq('user_id', userId);
-
-            if (error) throw error;
-        } catch (err: any) {
-            console.error('Error deleting farm:', err);
-            throw err;
-        }
-    }
+        const idx = _farms.findIndex(f => f.id === farmId);
+        if (idx >= 0) _farms.splice(idx, 1);
+    },
 };

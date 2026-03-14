@@ -9,8 +9,8 @@ export default function DiseaseDetection() {
       const file = e.target.files[0];
       try {
         const res = await detectDisease(file);
-        console.log(res.data);
-        setResult(res.data);
+        console.log(res);
+        setResult(res);
       } catch (err) {
         console.error(err);
       }
