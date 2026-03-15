@@ -58,7 +58,7 @@ export default function MyFarm() {
 
         {/* Farms & Crops Grid */}
         {farms.map((farm) => {
-          const farmCrops = crops.filter(c => c.farmId === farm.id);
+          const farmCrops = crops.filter(c => String(c.farmId) === String(farm.id));
           if (farmCrops.length === 0) return null;
 
           return (

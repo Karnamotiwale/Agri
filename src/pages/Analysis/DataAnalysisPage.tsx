@@ -23,6 +23,7 @@ import {
 } from 'recharts';
 import { cropService } from '../../services/crop.service';
 import { BottomNav } from '../../components/layout/BottomNav';
+import { useApp } from '../../context/AppContext';
 
 type DataType = 'weather' | 'soil' | 'npk';
 type ViewMode = 'chart' | 'table';
@@ -30,6 +31,7 @@ type TimeRange = '1D' | '1W' | '1M';
 
 export default function DataAnalysisPage() {
   const navigate = useNavigate();
+  const { farms, selectedFarmId, setSelectedFarmId } = useApp();
   const [dataType, setDataType] = useState<DataType>('weather');
   const [viewMode, setViewMode] = useState<ViewMode>('chart');
   const [timeRange, setTimeRange] = useState<TimeRange>('1W');
@@ -81,12 +83,28 @@ export default function DataAnalysisPage() {
         <h1 className="text-xl font-bold text-gray-900">Analysis</h1>
       </div>
 
-      {/* Location Selector */}
+      {/* Location Selector (Interactive Dropdown) */}
       <div className="px-6 mb-8">
-        <div className="inline-flex items-center gap-2 bg-white px-4 py-2 rounded-2xl shadow-sm border border-gray-100">
-          <MapPin className="w-4 h-4 text-gray-900" />
-          <span className="text-sm font-bold text-gray-900">hehehe, hahaha</span>
-          <ChevronDown className="w-4 h-4 text-gray-500" />
+        <div className="relative inline-block w-full max-w-[200px]">
+          <select
+            value={selectedFarmId || ''}
+            onChange={(e) => setSelectedFarmId(e.target.value)}
+            className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
+          >
+            {farms.map((farm) => (
+              <option key={farm.id} value={farm.id}>
+                {farm.name}
+              </option>
+            ))}
+          </select>
+          
+          <div className="inline-flex items-center gap-2 bg-white px-4 py-2 rounded-2xl shadow-sm border border-gray-100 cursor-pointer w-full">
+            <MapPin className="w-4 h-4 text-gray-900 flex-shrink-0" />
+            <span className="text-sm font-bold text-gray-900 truncate">
+              {farms.find(f => f.id === selectedFarmId)?.name || 'Select a Farm'}
+            </span>
+            <ChevronDown className="w-4 h-4 text-gray-500 ml-auto flex-shrink-0" />
+          </div>
         </div>
       </div>
 

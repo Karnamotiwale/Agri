@@ -7,7 +7,8 @@ import {
   Droplets,
   Activity,
   ArrowRight,
-  AlertCircle
+  AlertCircle,
+  ChevronDown
 } from 'lucide-react';
 import { FarmsView } from '@/app/components/FarmsView';
 import { AddFarmModal } from '@/components/forms/AddFarmModal';
@@ -26,7 +27,7 @@ import { useCropSensors } from '../../hooks/useCropSensors';
 import { useTranslation } from 'react-i18next';
 
 export default function Dashboard() {
-  const { getAllCrops, getAllFarms, dashboardActiveTab, setDashboardTab, auth } = useApp();
+  const { getAllCrops, getAllFarms, dashboardActiveTab, setDashboardTab, auth, selectedFarmId, setSelectedFarmId } = useApp();
   const navigate = useNavigate();
   const { t } = useTranslation();
   const [selectedPlant, setSelectedPlant] = useState<{ id: string; name: string; location: string; image: string; farmId: string; sowingDate?: string } | null>(null);
@@ -57,10 +58,36 @@ export default function Dashboard() {
     <div className="min-h-screen bg-[#F4F7F6] pb-24">
       {activeTab === 'home' && (
         <div className="relative">
-          {/* Top Bar: Title & Profile */}
+          {/* Top Bar: Title & Farm Selector & Profile */}
           <div className="px-6 pt-12 pb-6 flex justify-between items-center bg-white">
             <h1 className="text-2xl font-black text-gray-900">KisaanSaathi</h1>
             <div className="flex items-center gap-4">
+              
+              {/* Location Selector (Interactive Dropdown) */}
+              <div className="relative">
+                <select
+                  value={selectedFarmId || ''}
+                  onChange={(e) => setSelectedFarmId(e.target.value)}
+                  className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
+                >
+                  {farms.map((farm) => (
+                    <option key={farm.id} value={farm.id}>
+                      {farm.name}
+                    </option>
+                  ))}
+                </select>
+                
+                <div className="bg-gray-50 rounded-2xl p-2 px-3 shadow-sm flex items-center justify-between border border-gray-100 cursor-pointer">
+                  <div className="flex items-center gap-2">
+                    <MapPin className="w-4 h-4 text-green-600" />
+                    <span className="text-xs font-bold text-gray-700 max-w-[100px] truncate">
+                      {farms.find(f => f.id === selectedFarmId)?.name || 'Select Farm'}
+                    </span>
+                  </div>
+                  <ChevronDown className="w-4 h-4 text-gray-400 ml-2" />
+                </div>
+              </div>
+
               <button
                 onClick={() => navigate('/profile')}
                 className="flex-shrink-0 hover:scale-105 transition-transform duration-200"

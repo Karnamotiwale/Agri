@@ -9,6 +9,7 @@ import {
   Cpu, 
   Activity,
   ChevronRight,
+  ChevronDown,
   Sprout
 } from 'lucide-react';
 import { useApp } from '../../context/AppContext';
@@ -16,11 +17,10 @@ import { BottomNav } from '../../components/layout/BottomNav';
 
 export default function CropMonitoringPage() {
   const navigate = useNavigate();
-  const { crops, farms } = useApp();
+  const { crops, farms, selectedFarmId, setSelectedFarmId } = useApp();
 
-  // For this demo, we'll show crops for the "hehehe" farm (f1)
-  // In a real app, this would be based on the selected farm in the Services page
-  const selectedFarmCrops = crops.filter(c => c.farmId === 'f1');
+  const selectedFarm = farms.find(f => f.id === selectedFarmId);
+  const selectedFarmCrops = selectedFarm ? crops.filter(c => String(c.farmId) === String(selectedFarm.id)) : [];
 
   return (
     <div className="min-h-screen bg-[#F8FAFB] pb-24">
@@ -35,9 +35,27 @@ export default function CropMonitoringPage() {
           </button>
           <h1 className="text-2xl font-bold text-gray-900">Crop Monitoring</h1>
         </div>
-        <div className="flex items-center gap-2 text-sm text-gray-500 bg-gray-50 p-3 rounded-2xl border border-gray-100">
-          <Layers className="w-4 h-4" />
-          <span>Farm: <span className="font-bold text-gray-900">hehehe</span></span>
+        {/* Location Selector (Interactive Dropdown) */}
+        <div className="relative">
+          <select
+            value={selectedFarmId || ''}
+            onChange={(e) => setSelectedFarmId(e.target.value)}
+            className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
+          >
+            {farms.map((farm) => (
+              <option key={farm.id} value={farm.id}>
+                {farm.name}
+              </option>
+            ))}
+          </select>
+          
+          <div className="flex items-center justify-between gap-2 text-sm text-gray-500 bg-gray-50 p-3 rounded-2xl border border-gray-100 cursor-pointer">
+            <div className="flex items-center gap-2">
+               <Layers className="w-4 h-4" />
+               <span>Farm: <span className="font-bold text-gray-900">{selectedFarm?.name || 'Select a Farm'}</span></span>
+            </div>
+            <ChevronDown className="w-4 h-4 text-gray-400" />
+          </div>
         </div>
       </div>
 

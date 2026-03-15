@@ -18,7 +18,7 @@ const _items: MarketplaceItem[] = [
     price: '₹450',
     description: '100% organic earthworm compost for all types of crops.',
     link: 'https://www.amazon.in/s?k=organic+vermicompost',
-    image: 'https://images.unsplash.com/photo-1599423300746-b62533397364?q=80&w=400&auto=format&fit=crop',
+    image: '/marketplace/vermicompost.png',
     rating: 4.8
   },
   {
@@ -28,7 +28,7 @@ const _items: MarketplaceItem[] = [
     price: '₹320',
     description: 'Natural fertilizer and soil conditioner with pesticidal properties.',
     link: 'https://www.amazon.in/s?k=neem+cake+powder',
-    image: 'https://images.unsplash.com/photo-1605000797499-95a51c5269ae?q=80&w=400&auto=format&fit=crop',
+    image: '/marketplace/neem_cake.png',
     rating: 4.5
   },
   // Organic Pesticides
@@ -39,7 +39,7 @@ const _items: MarketplaceItem[] = [
     price: '₹280',
     description: 'Pure neem oil for effective pest control without chemicals.',
     link: 'https://www.amazon.in/s?k=organic+neem+oil+for+plants',
-    image: 'https://images.unsplash.com/photo-1615485925600-97237c4fc1ec?q=80&w=400&auto=format&fit=crop',
+    image: '/marketplace/neem_oil.jpg',
     rating: 4.7
   },
   {
@@ -49,7 +49,7 @@ const _items: MarketplaceItem[] = [
     price: '₹550',
     description: 'Traditional herbal pesticide made from 10 different leaves.',
     link: 'https://www.amazon.in/s?k=dashparni+arka',
-    image: 'https://images.unsplash.com/photo-1590004953392-5aba2e785943?q=80&w=400&auto=format&fit=crop',
+    image: '/marketplace/dashparni_arka.png',
     rating: 4.6
   },
   // Seeds
@@ -60,7 +60,7 @@ const _items: MarketplaceItem[] = [
     price: '₹1200',
     description: 'Certified organic wheat seeds adapted for local climate.',
     link: 'https://www.amazon.in/s?k=organic+wheat+seeds',
-    image: 'https://images.unsplash.com/photo-1574323347407-f5e1ad6d020b?q=80&w=400&auto=format&fit=crop',
+    image: '/marketplace/wheat_seeds.png',
     rating: 4.9
   },
   // Tools & Machinery
@@ -71,7 +71,7 @@ const _items: MarketplaceItem[] = [
     price: '₹3500',
     description: 'Ergonomic manual seed drill for uniform sowing.',
     link: 'https://www.amazon.in/s?k=manual+seed+drill',
-    image: 'https://images.unsplash.com/photo-1530507629858-e4977d30e9e0?q=80&w=400&auto=format&fit=crop',
+    image: '/marketplace/seed_drill.png',
     rating: 4.4
   },
   {
@@ -81,7 +81,7 @@ const _items: MarketplaceItem[] = [
     price: '₹4200',
     description: '16L high-pressure battery-operated sprayer for organic sprays.',
     link: 'https://www.amazon.in/s?k=battery+operated+sprayer',
-    image: 'https://images.unsplash.com/photo-1592982537447-7440770cbfc9?q=80&w=400&auto=format&fit=crop',
+    image: '/marketplace/backpack_sprayer.jpg',
     rating: 4.3
   },
   // Cattle Feed
@@ -92,7 +92,7 @@ const _items: MarketplaceItem[] = [
     price: '₹950',
     description: 'Nutrient-rich balanced diet for healthier cattle.',
     link: 'https://www.amazon.in/s?k=cattle+feed',
-    image: 'https://images.unsplash.com/photo-1500382017468-9049fee74a62?q=80&w=400&auto=format&fit=crop',
+    image: '/marketplace/cattle_feed.jpg',
     rating: 4.6
   }
 ];

@@ -1,74 +1,8 @@
-// ============================================
-// CROP SERVICE — Mock only, no Supabase / backend
-// ============================================
+import { api } from './api';
 import type { Crop } from '../context/AppContext';
 import { getMockYieldPrediction } from '../mock/mockAnalytics';
 
-const _crops: Crop[] = [
-    {
-        id: 'c1',
-        name: 'Rice',
-        image: 'https://images.unsplash.com/photo-1536304929831-ee1ca9d44906?q=80&w=400',
-        location: 'Block A – North',
-        landArea: '1.5 Hectares',
-        landSize: '1.5 Hectares',
-        sowingDate: '2024-06-15',
-        sowingPeriod: 'Jun – Nov',
-        currentStage: 'Vegetative',
-        stageDate: 'Day 45',
-        stages: [],
-        farmId: 'f1',
-        seedsPlanted: '15000',
-        cropType: 'Rice',
-        harvestDate: '2024-11-20',
-        cropClass: 'Cereal',
-        cropVariety: 'Basmati',
-        soilType: 'Loamy',
-        devices: ['Soil Moisture S1', 'NPK Pro v2']
-    },
-    {
-        id: 'c2',
-        name: 'Wheat',
-        image: 'https://images.unsplash.com/photo-1574323347407-f5e1ad6d020b?q=80&w=400',
-        location: 'Block A – South',
-        landArea: '2.0 Hectares',
-        landSize: '2.0 Hectares',
-        sowingDate: '2024-11-01',
-        sowingPeriod: 'Nov – Apr',
-        currentStage: 'Tillering',
-        stageDate: 'Day 30',
-        stages: [],
-        farmId: 'f1',
-        seedsPlanted: '12000',
-        cropType: 'Wheat',
-        harvestDate: '2025-04-15',
-        cropClass: 'Cereal',
-        cropVariety: 'Sharbati',
-        soilType: 'Clay',
-        devices: ['Soil Moisture S2', 'Temp Node A1']
-    },
-    {
-        id: 'c3',
-        name: 'Maize',
-        image: 'https://images.unsplash.com/photo-1601593346740-925612772716?q=80&w=400',
-        location: 'Block B',
-        landArea: '1.2 Hectares',
-        landSize: '1.2 Hectares',
-        sowingDate: '2024-07-01',
-        sowingPeriod: 'Jul – Oct',
-        currentStage: 'Tasselling',
-        stageDate: 'Day 65',
-        stages: [],
-        farmId: 'f2',
-        seedsPlanted: '8000',
-        cropType: 'Maize',
-        harvestDate: '2024-10-15',
-        cropClass: 'Cereal',
-        cropVariety: 'Sweet Corn',
-        soilType: 'Sandy Loam',
-        devices: ['Moisture Hub B1']
-    },
-];
+
 
 /** Shared Journey data generator (preserved for UI compatibility) */
 function generateMockJourneyData(days = 30): any[] {
@@ -104,26 +38,80 @@ export const cropService = {
 
     uploadDiseaseDetectionImage: async (_file: File): Promise<string | null> => null,
 
-    getAllCrops: async (): Promise<Crop[]> => [..._crops],
+    getAllCrops: async (): Promise<Crop[]> => {
+        const response = await api.get('/api/v1/crops');
+        return response.data.map((row: any) => ({
+            id: row.id,
+            name: row.crop_name,
+            image: row.image_url || 'https://images.unsplash.com/photo-1536304929831-ee1ca9d44906?q=80&w=400',
+            location: 'Farm Block',
+            landArea: '0 Hectares',
+            landSize: '0 Hectares',
+            sowingDate: row.sowing_date,
+            sowingPeriod: '',
+            currentStage: 'Vegetative',
+            stageDate: 'Day 1',
+            stages: [],
+            farmId: row.farm_id,
+            seedsPlanted: row.seeds_planted || '0',
+            cropType: row.crop_type || row.crop_name,
+            harvestDate: '',
+            cropClass: '',
+            cropVariety: '',
+            soilType: 'Unknown',
+            devices: []
+        }));
+    },
 
-    getCropsByFarm: async (farmId: string): Promise<Crop[]> =>
-        _crops.filter(c => c.farmId === farmId),
+    getCropsByFarm: async (farmId: string): Promise<Crop[]> => {
+        const response = await api.get(`/api/v1/crops?farm_id=${farmId}`);
+        return response.data.map((row: any) => ({
+            id: row.id,
+            name: row.crop_name,
+            image: row.image_url || 'https://images.unsplash.com/photo-1536304929831-ee1ca9d44906?q=80&w=400',
+            location: 'Farm Block',
+            landArea: '0 Hectares',
+            landSize: '0 Hectares',
+            sowingDate: row.sowing_date,
+            sowingPeriod: '',
+            currentStage: 'Vegetative',
+            stageDate: 'Day 1',
+            stages: [],
+            farmId: row.farm_id,
+            seedsPlanted: row.seeds_planted || '0',
+            cropType: row.crop_type || row.crop_name,
+            harvestDate: '',
+            cropClass: '',
+            cropVariety: '',
+            soilType: 'Unknown',
+            devices: []
+        }));
+    },
 
     createCrop: async (crop: Crop, farmId: string, _imageFile?: File): Promise<Crop> => {
-        const newCrop = { ...crop, id: `c${_crops.length + 1}`, farmId };
-        _crops.push(newCrop);
-        return newCrop;
+        const payload = {
+            farmId: farmId,
+            name: crop.name,
+            cropType: crop.cropType,
+            sowingDate: crop.sowingDate,
+            seedsPlanted: parseInt(crop.seedsPlanted) || 0,
+            image: crop.image
+        };
+        const response = await api.post('/api/v1/crops', payload);
+        const row = response.data;
+        return {
+            ...crop,
+            id: row.id,
+            farmId: row.farm_id,
+        };
     },
 
-    updateCrop: async (cropId: string, updates: Partial<Crop>): Promise<Crop> => {
-        const idx = _crops.findIndex(c => c.id === cropId);
-        if (idx >= 0) _crops[idx] = { ..._crops[idx], ...updates };
-        return _crops[idx];
+    updateCrop: async (_cropId: string, _updates: Partial<Crop>): Promise<Crop> => {
+        throw new Error("updateCrop not implemented on backend");
     },
 
-    deleteCrop: async (cropId: string): Promise<void> => {
-        const idx = _crops.findIndex(c => c.id === cropId);
-        if (idx >= 0) _crops.splice(idx, 1);
+    deleteCrop: async (_cropId: string): Promise<void> => {
+        throw new Error("deleteCrop not implemented on backend");
     },
 
     generateMockJourneyData,

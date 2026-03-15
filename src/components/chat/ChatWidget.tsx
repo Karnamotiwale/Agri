@@ -3,6 +3,7 @@
 // Real endpoint: POST /api/v1/chat
 // ============================================
 import React, { useState, useRef, useEffect } from 'react';
+import { api } from '../../services/api';
 
 interface Message {
     id: string;
@@ -11,16 +12,16 @@ interface Message {
     timestamp: Date;
 }
 
-// Mock response — replace with: POST /api/v1/chat { message }
-async function mockChatResponse(userMessage: string): Promise<string> {
-    await new Promise((r) => setTimeout(r, 800 + Math.random() * 600));
-    const lower = userMessage.toLowerCase();
-    if (lower.includes('irrig')) return '💧 Based on current soil moisture (38%) and the weather forecast, I recommend irrigating for 25 minutes in Zone A. No irrigation needed in Zone B.';
-    if (lower.includes('disease') || lower.includes('pest')) return '🔬 No active disease alerts detected. Leaf blight risk is LOW this week. Continue preventive spraying schedule.';
-    if (lower.includes('weather')) return '🌤️ Forecast: Sunny with 28°C high. No rain expected for 5 days. Increase irrigation slightly to compensate.';
-    if (lower.includes('yield') || lower.includes('harvest')) return '🌾 Predicted yield for this season: 4.2 tonnes/ha — 8% above average. Harvest window opens in ~3 weeks.';
-    if (lower.includes('fertiliz')) return '🌱 Nitrogen application recommended: 50 kg/ha via broadcasting. Best applied early morning or evening.';
-    return '🤖 I\'m your KisaanSaathi AI assistant. Ask me about irrigation, crop health, weather, yield predictions, or fertilizer recommendations!';
+// Real response — POST /api/v1/chat { message }
+async function getChatResponse(userMessage: string): Promise<string> {
+    try {
+        const response = await api.post('/api/v1/chat', { message: userMessage });
+        // The backend returns { "response": "..." }
+        return response.data.response || "No response received";
+    } catch (err) {
+        console.error("Chat API error:", err);
+        return "⚠️ Unable to reach the AI. Please try again.";
+    }
 }
 
 export default function ChatWidget() {
@@ -55,7 +56,7 @@ export default function ChatWidget() {
         setIsLoading(true);
 
         try {
-            const reply = await mockChatResponse(text);
+            const reply = await getChatResponse(text);
             const botMsg: Message = { id: `b-${Date.now()}`, role: 'assistant', text: reply, timestamp: new Date() };
             setMessages((prev) => [...prev, botMsg]);
         } catch {

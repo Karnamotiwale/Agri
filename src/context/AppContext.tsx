@@ -105,6 +105,7 @@ export interface AppState {
   auth: AuthState;
   farms: Farm[];
   crops: Crop[];
+  selectedFarmId: string | null;
   cropControls: Record<string, CropControls>;
   dashboardActiveTab: string;
   healthDetections: HealthDetectionResult[];
@@ -127,6 +128,7 @@ type AppAction =
   | { type: 'SET_ONBOARDING_COMPLETE' }
   | { type: 'SET_SYSTEM_READY' }
   | { type: 'SET_FARMS'; farms: Farm[] }
+  | { type: 'SET_SELECTED_FARM'; farmId: string }
   | { type: 'ADD_FARM'; farm: Farm }
   | { type: 'ADD_CROPS'; crops: Crop[] }
   | { type: 'ADD_CROP'; crop: Crop; farmId: string }
@@ -176,7 +178,17 @@ function appReducer(state: AppState, action: AppAction): AppState {
       };
     }
     case 'SET_FARMS':
-      return { ...state, farms: action.farms };
+      // Auto-select first farm if none is selected
+      const initialFarmId = action.farms.length > 0 ? action.farms[0].id : null;
+      return { 
+        ...state, 
+        farms: action.farms,
+        selectedFarmId: state.selectedFarmId && action.farms.find(f => f.id === state.selectedFarmId) 
+          ? state.selectedFarmId 
+          : initialFarmId 
+      };
+    case 'SET_SELECTED_FARM':
+      return { ...state, selectedFarmId: action.farmId };
     case 'ADD_CROPS': {
       const byId = new Map(state.crops.map((c) => [c.id, c]));
       action.crops.forEach((c) => byId.set(c.id, c));
@@ -246,6 +258,7 @@ const initialState: AppState = {
   },
   farms: [],
   crops: [],
+  selectedFarmId: null,
   cropControls: initialCropControls,
   dashboardActiveTab: 'home',
   healthDetections: [],
@@ -271,6 +284,7 @@ interface AppContextValue extends AppState {
   addCropHistory: (entry: CropHistoryEntry) => void;
   getCropHistory: (cropId: string) => CropHistoryEntry[];
   getHealthDetections: (cropId: string) => HealthDetectionResult[];
+  setSelectedFarmId: (farmId: string) => void;
 }
 
 const AppContext = createContext<AppContextValue | null>(null);
@@ -460,6 +474,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
     addCropHistory,
     getCropHistory,
     getHealthDetections,
+    setSelectedFarmId: (farmId: string) => dispatch({ type: 'SET_SELECTED_FARM', farmId }),
   };
 
   return <AppContext.Provider value={value}>{children}</AppContext.Provider>;

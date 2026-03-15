@@ -24,7 +24,7 @@ import { useApp } from '../../context/AppContext';
 
 export default function ServicesPage() {
   const navigate = useNavigate();
-  const { auth } = useApp();
+  const { auth, farms, selectedFarmId, setSelectedFarmId } = useApp();
   return (
     <div className="min-h-screen bg-[#F4F7F6] pb-24">
       {/* Header */}
@@ -34,15 +34,31 @@ export default function ServicesPage() {
           <h1 className="text-2xl font-bold text-gray-900">Services</h1>
         </div>
 
-        {/* Location Selector */}
-        <div className="bg-white rounded-2xl p-4 shadow-sm flex items-center justify-between border border-gray-100">
-          <div className="flex items-center gap-3">
-            <div className="bg-gray-50 p-2 rounded-xl">
-              <MapPin className="w-5 h-5 text-gray-900" />
+        {/* Location Selector (Interactive Dropdown) */}
+        <div className="relative">
+          <select
+            value={selectedFarmId || ''}
+            onChange={(e) => setSelectedFarmId(e.target.value)}
+            className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
+          >
+            {farms.map((farm) => (
+              <option key={farm.id} value={farm.id}>
+                {farm.name}
+              </option>
+            ))}
+          </select>
+          
+          <div className="bg-white rounded-2xl p-4 shadow-sm flex items-center justify-between border border-gray-100 cursor-pointer">
+            <div className="flex items-center gap-3">
+              <div className="bg-gray-50 p-2 rounded-xl">
+                <MapPin className="w-5 h-5 text-gray-900" />
+              </div>
+              <span className="text-sm font-medium text-gray-700">
+                {farms.find(f => f.id === selectedFarmId)?.name || 'Select a Farm'}
+              </span>
             </div>
-            <span className="text-sm font-medium text-gray-700">hehehe</span>
+            <ChevronDown className="w-5 h-5 text-gray-400" />
           </div>
-          <ChevronDown className="w-5 h-5 text-gray-400" />
         </div>
       </div>
 
