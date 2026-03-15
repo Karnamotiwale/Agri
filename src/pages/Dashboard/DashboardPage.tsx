@@ -13,13 +13,16 @@ import {
 import { FarmsView } from '@/app/components/FarmsView';
 import { AddFarmModal } from '@/components/forms/AddFarmModal';
 import { AddCropModal } from '@/components/forms/AddCropModal';
+import { motion } from 'motion/react';
 
 // New Dashboard Components
 import { WarningsAlerts } from '../../components/dashboard/WarningsAlerts';
-import { IrrigationReminders } from '../../components/dashboard/IrrigationReminders';
 import { DashboardCarousel } from '../../components/dashboard/DashboardCarousel';
+import { DashboardWeather } from '../../components/dashboard/DashboardWeather';
 import { WisdomCards } from '../../components/dashboard/WisdomCards';
 import { BottomNav } from '../../components/layout/BottomNav';
+import SoilMoistureCard from '../../features/sensors/SoilMoistureCard';
+import NPKCard from '../../features/sensors/NPKCard';
 
 import { useApp } from '../../context/AppContext';
 import { useCropSensors } from '../../hooks/useCropSensors';
@@ -55,38 +58,13 @@ export default function Dashboard() {
   const popupSensors = useCropSensors(selectedPlant?.id);
 
   return (
-    <div className="min-h-screen bg-[#F4F7F6] pb-24">
+    <div className="min-h-screen pb-24" style={{ background: 'var(--background)' }}>
       {activeTab === 'home' && (
         <div className="relative">
-          {/* Top Bar: Title & Farm Selector & Profile */}
-          <div className="px-6 pt-12 pb-6 flex justify-between items-center bg-white">
-            <h1 className="text-2xl font-black text-gray-900">KisaanSaathi</h1>
+          {/* Top Bar: Title & Profile */}
+          <div className="px-6 pt-12 pb-24 rounded-b-[2.5rem] flex justify-between items-center" style={{ background: 'linear-gradient(135deg, #2E7D32 0%, #4CAF50 100%)' }}>
+            <h1 className="text-2xl font-black text-white">KisaanSaathi 👋</h1>
             <div className="flex items-center gap-4">
-              
-              {/* Location Selector (Interactive Dropdown) */}
-              <div className="relative">
-                <select
-                  value={selectedFarmId || ''}
-                  onChange={(e) => setSelectedFarmId(e.target.value)}
-                  className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
-                >
-                  {farms.map((farm) => (
-                    <option key={farm.id} value={farm.id}>
-                      {farm.name}
-                    </option>
-                  ))}
-                </select>
-                
-                <div className="bg-gray-50 rounded-2xl p-2 px-3 shadow-sm flex items-center justify-between border border-gray-100 cursor-pointer">
-                  <div className="flex items-center gap-2">
-                    <MapPin className="w-4 h-4 text-green-600" />
-                    <span className="text-xs font-bold text-gray-700 max-w-[100px] truncate">
-                      {farms.find(f => f.id === selectedFarmId)?.name || 'Select Farm'}
-                    </span>
-                  </div>
-                  <ChevronDown className="w-4 h-4 text-gray-400 ml-2" />
-                </div>
-              </div>
 
               <button
                 onClick={() => navigate('/profile')}
@@ -101,18 +79,30 @@ export default function Dashboard() {
             </div>
           </div>
 
-          {/* Main Dashboard Carousel */}
-          <div className="bg-white">
-             <DashboardCarousel />
-          </div>
+          {/* OpenWeather API Widget */}
+          <motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}>
+            <DashboardWeather />
+          </motion.div>
 
-          {/* Existing Sections: Warnings & Alerts, Irrigation Reminders */}
-          <div className="px-6 mt-12 space-y-6">
-            <h3 className="text-lg font-black text-gray-900 px-1">Tools</h3>
+          {/* Main Dashboard Carousel */}
+          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }} className="bg-white">
+            <DashboardCarousel />
+          </motion.div>
+
+          {/* Live IoT Sensor Cards */}
+          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }} className="px-6 mt-10">
+            <h2 className="text-base font-black mb-3" style={{ color: '#1B3A1B' }}>Live Field Sensors</h2>
+            <div className="flex flex-col gap-4">
+              <SoilMoistureCard />
+              <NPKCard />
+            </div>
+          </motion.div>
+
+          {/* Existing Sections: Warnings & Alerts, Weather Advice */}
+          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.4 }} className="px-6 mt-6 space-y-6">
             <WarningsAlerts />
-            <IrrigationReminders />
             <WisdomCards />
-          </div>
+          </motion.div>
         </div>
       )}
 

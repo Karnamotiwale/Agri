@@ -1,8 +1,11 @@
+import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Home, Sprout, Landmark, Activity, MapPin, BarChart2, Cpu, Plus } from 'lucide-react';
+import { Sprout, MapPin, Plus, Tractor } from 'lucide-react';
 import { useApp } from '../../context/AppContext';
 import { CropCard } from '@/components/cards/CropCard';
 import { BottomNav } from '../../components/layout/BottomNav';
+import { AddFarmModal } from '../../components/forms/AddFarmModal';
+import { AddCropModal } from '../../components/forms/AddCropModal';
 
 function getProgress(cropId: string): number {
   return 25 + (((cropId.charCodeAt(0) || 0) + new Date().getDate()) % 45);
@@ -16,25 +19,50 @@ export default function MyFarm() {
     progress: getProgress(c.id),
   }));
 
+  const [showAddFarmModal, setShowAddFarmModal] = useState(false);
+  const [showAddCropModal, setShowAddCropModal] = useState(false);
+
   const allCropsCount = crops.length;
 
+  // Called when farm is saved — automatically opens the crop modal next
+  const handleFarmSuccess = (_farmId: string) => {
+    setShowAddFarmModal(false);
+    // Small delay so farm modal fully closes before crop modal opens
+    setTimeout(() => setShowAddCropModal(true), 300);
+  };
+
   return (
-    <div className="min-h-screen bg-gray-50/50 pb-24">
+    <div className="min-h-screen pb-24" style={{ background: 'var(--background)' }}>
       {/* Header */}
-      <div className="bg-white/80 backdrop-blur-xl border-b border-gray-200 sticky top-0 z-50 px-6 py-4">
+      <div
+        className="sticky top-0 z-50 px-6 py-4 border-b"
+        style={{ background: 'white', borderColor: '#E6F4EA', boxShadow: '0 2px 12px rgba(46,125,50,0.06)' }}
+      >
         <div className="flex items-center justify-between max-w-7xl mx-auto w-full">
           <div>
-            <h1 className="text-2xl font-black text-gray-900">Crop Management</h1>
-            <p className="text-sm font-medium text-gray-500">Monitor and manage all active crops</p>
+            <h1 className="text-2xl font-black" style={{ color: '#1B3A1B' }}>Crop Management</h1>
+            <p className="text-sm font-medium" style={{ color: '#4F6F52' }}>Monitor and manage all active crops</p>
           </div>
-          <button
-            onClick={() => navigate('/crop-registration')}
-            className="flex items-center gap-2 bg-gray-900 text-white px-5 py-2.5 rounded-xl font-bold text-sm hover:bg-gray-800 transition-all shadow-lg shadow-gray-900/10 active:scale-95"
-          >
-            <Plus className="w-4 h-4" />
-            <span className="hidden sm:inline">Add New Crop</span>
-            <span className="sm:hidden">Add</span>
-          </button>
+
+          {/* Two action buttons */}
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => setShowAddFarmModal(true)}
+              className="flex items-center gap-1.5 bg-white px-4 py-2.5 rounded-xl font-bold text-sm transition-all shadow-sm active:scale-95"
+              style={{ border: '1.5px solid #C7E76C', color: '#2E7D32' }}
+            >
+              <Tractor className="w-4 h-4" />
+              <span className="hidden sm:inline">Add Farm</span>
+            </button>
+            <button
+              onClick={() => setShowAddCropModal(true)}
+              className="flex items-center gap-1.5 text-white px-4 py-2.5 rounded-xl font-bold text-sm transition-all shadow-md active:scale-95"
+              style={{ background: 'linear-gradient(135deg, #4CAF50, #2E7D32)', boxShadow: '0 4px 16px rgba(76,175,80,0.3)' }}
+            >
+              <Plus className="w-4 h-4" />
+              <span className="hidden sm:inline">Add Crop</span>
+            </button>
+          </div>
         </div>
       </div>
 
@@ -46,13 +74,24 @@ export default function MyFarm() {
               <Sprout className="w-8 h-8 text-green-600" />
             </div>
             <h3 className="text-xl font-black text-gray-900 mb-2">No crops added yet</h3>
-            <p className="text-gray-500 max-w-xs text-center mb-6">Start by adding your first crop to monitor its health and irrigation.</p>
-            <button
-              onClick={() => navigate('/crop-registration')}
-              className="bg-green-600 text-white px-6 py-3 rounded-xl font-bold shadow-lg shadow-green-600/20 hover:bg-green-700 transition-all"
-            >
-              Add Your First Crop
-            </button>
+            <p className="text-gray-500 max-w-xs text-center mb-6">Start by registering your farm first, then add crops to it.</p>
+
+            <div className="flex gap-3">
+              <button
+                onClick={() => setShowAddFarmModal(true)}
+                className="flex items-center gap-2 border border-gray-200 text-gray-700 px-5 py-3 rounded-xl font-bold text-sm hover:bg-gray-50 transition-all"
+              >
+                <Tractor className="w-4 h-4" />
+                Register Farm
+              </button>
+              <button
+                onClick={() => setShowAddCropModal(true)}
+                className="flex items-center gap-2 bg-green-600 text-white px-5 py-3 rounded-xl font-bold text-sm shadow-lg shadow-green-600/20 hover:bg-green-700 transition-all"
+              >
+                <Plus className="w-4 h-4" />
+                Add First Crop
+              </button>
+            </div>
           </div>
         )}
 
@@ -82,8 +121,8 @@ export default function MyFarm() {
                     image={crop.image}
                     farmName={farm.name}
                     sowingDate={crop.sowingDate}
-                    healthStatus="healthy" // Mocked for UI demo
-                    sensorsActive={true}   // Mocked for UI demo
+                    healthStatus="healthy"
+                    sensorsActive={true}
                     stage={crop.currentStage}
                     progress={crop.progress}
                   />
@@ -96,6 +135,20 @@ export default function MyFarm() {
 
       {/* Bottom Navigation */}
       <BottomNav />
+
+      {/* Add Farm Modal — on success, auto-opens Add Crop Modal */}
+      <AddFarmModal
+        isOpen={showAddFarmModal}
+        onClose={() => setShowAddFarmModal(false)}
+        onSuccess={handleFarmSuccess}
+      />
+
+      {/* Add Crop Modal */}
+      <AddCropModal
+        isOpen={showAddCropModal}
+        onClose={() => setShowAddCropModal(false)}
+        onSuccess={() => setShowAddCropModal(false)}
+      />
     </div>
   );
 }

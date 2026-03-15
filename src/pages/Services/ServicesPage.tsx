@@ -26,12 +26,12 @@ export default function ServicesPage() {
   const navigate = useNavigate();
   const { auth, farms, selectedFarmId, setSelectedFarmId } = useApp();
   return (
-    <div className="min-h-screen bg-[#F4F7F6] pb-24">
+    <div className="min-h-screen pb-24" style={{ background: 'var(--background)' }}>
       {/* Header */}
       <div className="px-6 pt-12 pb-6">
         <div className="flex items-center gap-2 mb-6">
-          <div className="w-2 h-6 bg-amber-500 rounded-full"></div>
-          <h1 className="text-2xl font-bold text-gray-900">Services</h1>
+          <div className="w-2 h-6 rounded-full" style={{ background: 'linear-gradient(180deg, #FFE27A, #4CAF50)' }}></div>
+          <h1 className="text-2xl font-bold" style={{ color: '#1B3A1B' }}>Services</h1>
         </div>
 
         {/* Location Selector (Interactive Dropdown) */}

@@ -52,7 +52,7 @@ export default function MarketPage() {
   );
 
   return (
-    <div className="min-h-screen bg-[#F8FAFB] pb-24">
+    <div className="min-h-screen pb-24" style={{ background: 'var(--background)' }}>
       <Header title="Marketplace" showBack onBackClick={() => navigate('/dashboard')} />
 
       <div className="px-6 py-4">

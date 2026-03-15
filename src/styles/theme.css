@@ -1,81 +1,88 @@
 @custom-variant dark (&:is(.dark *));
 
+/* ====================================================
+   AGRITECH COLOR SYSTEM — Green-Yellow Harvest Theme
+   ==================================================== */
 :root {
-  --font-size: 16px;
-  --background: #ffffff;
-  --foreground: oklch(0.145 0 0);
+  /* Primary AgriTech Palette */
+  --agri-yellow: #F6C945;
+  --agri-light-yellow: #FFE27A;
+  --agri-lime: #C7E76C;
+  --agri-light-green: #8CD867;
+  --agri-green: #4CAF50;
+  --agri-deep-green: #2E7D32;
+  --agri-dark-green: #0F5132;
+
+  /* Semantic Aliases */
+  --primary: #4CAF50;
+  --primary-foreground: #ffffff;
+  --secondary: #C7E76C;
+  --secondary-foreground: #1B3A1B;
+  --accent: #F6C945;
+  --accent-foreground: #1B3A1B;
+  --dark: #2E7D32;
+  --background: #F2FBEF;
+  --foreground: #1B3A1B;
   --card: #ffffff;
-  --card-foreground: oklch(0.145 0 0);
-  --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.145 0 0);
-  --primary: #030213;
-  --primary-foreground: oklch(1 0 0);
-  --secondary: oklch(0.95 0.0058 264.53);
-  --secondary-foreground: #030213;
-  --muted: #ececf0;
-  --muted-foreground: #717182;
-  --accent: #e9ebef;
-  --accent-foreground: #030213;
+  --card-foreground: #1B3A1B;
+  --popover: #ffffff;
+  --popover-foreground: #1B3A1B;
+  --muted: #E6F4EA;
+  --muted-foreground: #4F6F52;
   --destructive: #d4183d;
   --destructive-foreground: #ffffff;
-  --border: rgba(0, 0, 0, 0.1);
+  --border: rgba(46,125,50,0.12);
   --input: transparent;
-  --input-background: #f3f3f5;
-  --switch-background: #cbced4;
-  --font-weight-medium: 500;
-  --font-weight-normal: 400;
-  --ring: oklch(0.708 0 0);
-  --chart-1: oklch(0.646 0.222 41.116);
-  --chart-2: oklch(0.6 0.118 184.704);
-  --chart-3: oklch(0.398 0.07 227.392);
-  --chart-4: oklch(0.828 0.189 84.429);
-  --chart-5: oklch(0.769 0.188 70.08);
-  --radius: 0.625rem;
-  --sidebar: oklch(0.985 0 0);
-  --sidebar-foreground: oklch(0.145 0 0);
-  --sidebar-primary: #030213;
-  --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.97 0 0);
-  --sidebar-accent-foreground: oklch(0.205 0 0);
-  --sidebar-border: oklch(0.922 0 0);
-  --sidebar-ring: oklch(0.708 0 0);
-}
+  --input-background: #F0FAF0;
+  --switch-background: #A5D6A7;
+  --ring: #4CAF50;
 
-.dark {
-  --background: oklch(0.145 0 0);
-  --foreground: oklch(0.985 0 0);
-  --card: oklch(0.145 0 0);
-  --card-foreground: oklch(0.985 0 0);
-  --popover: oklch(0.145 0 0);
-  --popover-foreground: oklch(0.985 0 0);
-  --primary: oklch(0.985 0 0);
-  --primary-foreground: oklch(0.205 0 0);
-  --secondary: oklch(0.269 0 0);
-  --secondary-foreground: oklch(0.985 0 0);
-  --muted: oklch(0.269 0 0);
-  --muted-foreground: oklch(0.708 0 0);
-  --accent: oklch(0.269 0 0);
-  --accent-foreground: oklch(0.985 0 0);
-  --destructive: oklch(0.396 0.141 25.723);
-  --destructive-foreground: oklch(0.637 0.237 25.331);
-  --border: oklch(0.269 0 0);
-  --input: oklch(0.269 0 0);
-  --ring: oklch(0.439 0 0);
+  /* Text */
+  --text-primary: #1B3A1B;
+  --text-secondary: #4F6F52;
+  --text-muted: #7E9E80;
+
+  /* Gradients */
+  --gradient-primary: linear-gradient(180deg, #FFE27A 0%, #C7E76C 35%, #8CD867 55%, #4CAF50 75%, #2E7D32 100%);
+  --gradient-card: linear-gradient(135deg, #ffffff 0%, #F2FBEF 100%);
+  --gradient-btn: linear-gradient(135deg, #4CAF50, #2E7D32);
+  --gradient-accent: linear-gradient(135deg, #FFE27A, #C7E76C);
+  --gradient-hero: linear-gradient(135deg, #FFE27A 0%, #C7E76C 50%, #4CAF50 100%);
+
+  /* Shadows */
+  --shadow-card: 0 4px 20px rgba(46, 125, 50, 0.12);
+  --shadow-green: 0 4px 20px rgba(76, 175, 80, 0.25);
+  --shadow-accent: 0 4px 20px rgba(246, 201, 69, 0.25);
+
+  /* Radius */
+  --radius: 1rem;
+  --radius-sm: 0.5rem;
+  --radius-md: 0.75rem;
+  --radius-lg: 1rem;
+  --radius-xl: 1.5rem;
+  --radius-2xl: 2rem;
+
+  /* Font */
+  --font-size: 16px;
   --font-weight-medium: 500;
   --font-weight-normal: 400;
-  --chart-1: oklch(0.488 0.243 264.376);
-  --chart-2: oklch(0.696 0.17 162.48);
-  --chart-3: oklch(0.769 0.188 70.08);
-  --chart-4: oklch(0.627 0.265 303.9);
-  --chart-5: oklch(0.645 0.246 16.439);
-  --sidebar: oklch(0.205 0 0);
-  --sidebar-foreground: oklch(0.985 0 0);
-  --sidebar-primary: oklch(0.488 0.243 264.376);
-  --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.269 0 0);
-  --sidebar-accent-foreground: oklch(0.985 0 0);
-  --sidebar-border: oklch(0.269 0 0);
-  --sidebar-ring: oklch(0.439 0 0);
+
+  /* Charts — green palette */
+  --chart-1: #4CAF50;
+  --chart-2: #8CD867;
+  --chart-3: #F6C945;
+  --chart-4: #2E7D32;
+  --chart-5: #C7E76C;
+
+  /* Sidebar */
+  --sidebar: #ffffff;
+  --sidebar-foreground: #1B3A1B;
+  --sidebar-primary: #2E7D32;
+  --sidebar-primary-foreground: #ffffff;
+  --sidebar-accent: #F2FBEF;
+  --sidebar-accent-foreground: #2E7D32;
+  --sidebar-border: #E6F4EA;
+  --sidebar-ring: #4CAF50;
 }
 
 @theme inline {
@@ -105,10 +112,10 @@
   --color-chart-3: var(--chart-3);
   --color-chart-4: var(--chart-4);
   --color-chart-5: var(--chart-5);
-  --radius-sm: calc(var(--radius) - 4px);
-  --radius-md: calc(var(--radius) - 2px);
-  --radius-lg: var(--radius);
-  --radius-xl: calc(var(--radius) + 4px);
+  --radius-sm: var(--radius-sm);
+  --radius-md: var(--radius-md);
+  --radius-lg: var(--radius-lg);
+  --radius-xl: var(--radius-xl);
   --color-sidebar: var(--sidebar);
   --color-sidebar-foreground: var(--sidebar-foreground);
   --color-sidebar-primary: var(--sidebar-primary);
@@ -125,57 +132,117 @@
   }
 
   body {
-    @apply bg-background text-foreground;
+    background: var(--background);
+    color: var(--foreground);
+    font-family: 'Inter', 'Outfit', system-ui, sans-serif;
+    min-height: 100vh;
+    -webkit-font-smoothing: antialiased;
   }
-
-  /**
-  * Default typography styles for HTML elements (h1-h4, p, label, button, input).
-  * These are in @layer base, so Tailwind utility classes (like text-sm, text-lg) automatically override them.
-  */
 
   html {
     font-size: var(--font-size);
   }
 
-  h1 {
-    font-size: var(--text-2xl);
-    font-weight: var(--font-weight-medium);
-    line-height: 1.5;
-  }
+  h1 { font-size: 28px; font-weight: 800; line-height: 1.2; color: var(--text-primary); }
+  h2 { font-size: 22px; font-weight: 700; line-height: 1.3; color: var(--text-primary); }
+  h3 { font-size: 18px; font-weight: 700; line-height: 1.4; color: var(--text-primary); }
+  h4 { font-size: 16px; font-weight: 600; line-height: 1.5; }
+  p  { font-size: 14px; line-height: 1.6; color: var(--text-secondary); }
 
-  h2 {
-    font-size: var(--text-xl);
-    font-weight: var(--font-weight-medium);
-    line-height: 1.5;
-  }
+  label { font-size: 14px; font-weight: 600; color: var(--text-primary); }
+  button { font-size: 14px; font-weight: 600; }
+  input  { font-size: 14px; font-weight: 400; }
+}
 
-  h3 {
-    font-size: var(--text-lg);
-    font-weight: var(--font-weight-medium);
-    line-height: 1.5;
-  }
+/* ===========================
+   GLOBAL UTILITY CLASSES
+   =========================== */
 
-  h4 {
-    font-size: var(--text-base);
-    font-weight: var(--font-weight-medium);
-    line-height: 1.5;
-  }
+/* Cards */
+.agri-card {
+  background: var(--card-bg, #ffffff);
+  border-radius: 16px;
+  padding: 20px;
+  box-shadow: var(--shadow-card);
+  border: 1px solid var(--border);
+}
 
-  label {
-    font-size: var(--text-base);
-    font-weight: var(--font-weight-medium);
-    line-height: 1.5;
-  }
+.agri-card-gradient {
+  background: var(--gradient-hero);
+  border-radius: 20px;
+  padding: 24px;
+  color: #1B3A1B;
+}
 
-  button {
-    font-size: var(--text-base);
-    font-weight: var(--font-weight-medium);
-    line-height: 1.5;
-  }
+/* Buttons */
+.btn-primary {
+  background: var(--gradient-btn);
+  color: white;
+  border: none;
+  border-radius: 10px;
+  padding: 10px 20px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: var(--shadow-green);
+}
+.btn-primary:hover { filter: brightness(1.05); transform: translateY(-1px); }
+.btn-primary:active { transform: scale(0.97); }
 
-  input {
-    font-size: var(--text-base);
-    font-weight: var(--font-weight-normal);
-    line-height: 1.5;
-  }
+.btn-secondary {
+  background: var(--accent);
+  color: var(--text-primary);
+  border: none;
+  border-radius: 10px;
+  padding: 10px 18px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+.btn-secondary:hover { filter: brightness(1.05); }
+
+/* Inputs */
+input, select, textarea {
+  background: var(--input-background) !important;
+  border-color: var(--border) !important;
+  color: var(--text-primary) !important;
+}
+input:focus, select:focus, textarea:focus {
+  border-color: var(--primary) !important;
+  box-shadow: 0 0 0 3px rgba(76,175,80,0.1) !important;
+}
+
+/* Bottom Navigation focus color */
+.nav-active {
+  color: var(--agri-deep-green) !important;
+}
+
+/* No scrollbar utility */
+.no-scrollbar::-webkit-scrollbar { display: none; }
+.no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+
+/* Alert cards */
+.agri-alert {
+  background: #FFFBEA;
+  border-left: 4px solid var(--accent);
+  border-radius: 12px;
+  padding: 16px;
+}
+
+/* Stat highlight pills */
+.agri-pill {
+  display: inline-flex;
+  align-items: center;
+  background: var(--muted);
+  color: var(--agri-deep-green);
+  border-radius: 999px;
+  padding: 4px 12px;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+/* Page background wrapper */
+.page-bg {
+  background: var(--background);
+  min-height: 100vh;
 }
