@@ -20,6 +20,7 @@ import { WarningsAlerts } from '../../components/dashboard/WarningsAlerts';
 import { DashboardCarousel } from '../../components/dashboard/DashboardCarousel';
 import { DashboardWeather } from '../../components/dashboard/DashboardWeather';
 import { WisdomCards } from '../../components/dashboard/WisdomCards';
+import { DashboardAIInsights } from '../../components/dashboard/DashboardAIInsights';
 import { BottomNav } from '../../components/layout/BottomNav';
 import SoilMoistureCard from '../../features/sensors/SoilMoistureCard';
 import NPKCard from '../../features/sensors/NPKCard';
@@ -82,6 +83,11 @@ export default function Dashboard() {
           {/* OpenWeather API Widget */}
           <motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}>
             <DashboardWeather />
+          </motion.div>
+
+          {/* AI Insights & ML Suggestions Widget */}
+          <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} transition={{ delay: 0.15 }}>
+            <DashboardAIInsights />
           </motion.div>
 
           {/* Main Dashboard Carousel */}
