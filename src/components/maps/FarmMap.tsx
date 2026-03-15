@@ -1,115 +1,229 @@
-import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, Calendar, Sun } from 'lucide-react';
-import mapImage from '../../assets/33bf725052eafa258f512dc9b6e87fb9ded80757.png';
+/**
+ * FarmMap.tsx — Bulletproof OpenStreetMap component for KisaanSaathi
+ *
+ * Approach:
+ *  • Pure Leaflet (no React-Leaflet) for maximum control
+ *  • leaflet-draw imported via dynamic import to avoid ESM/CJS conflicts
+ *  • Comprehensive error boundaries + try/catch everywhere
+ *  • GPS with graceful fallback (India center)
+ *  • Click-to-place draggable farm marker
+ *  • Polygon draw toolbar for field boundary
+ */
+import { Component, type ReactNode, useEffect, useRef, useState } from 'react';
+import type L from 'leaflet';
 
-export function MapView() {
-  const navigate = useNavigate();
+// ─── Props ──────────────────────────────────────────────────────────────────
+interface FarmMapProps {
+  onLocationChange?: (lat: number, lng: number, address?: string) => void;
+  onPolygonChange?: (geojson: GeoJSON.Polygon | null) => void;
+  height?: number | string;
+}
 
-  const handleSelectLocation = () => navigate('/action-selection');
+// ─── Error Boundary ─────────────────────────────────────────────────────────
+interface EBState { hasError: boolean; error?: string }
+class MapErrorBoundary extends Component<{ children: ReactNode }, EBState> {
+  constructor(props: { children: ReactNode }) {
+    super(props);
+    this.state = { hasError: false };
+  }
+  static getDerivedStateFromError(err: Error): EBState {
+    return { hasError: true, error: err.message };
+  }
+  render() {
+    if (this.state.hasError) {
+      return (
+        <div style={{
+          padding: 24, background: '#FFF3E0', borderRadius: 16, textAlign: 'center',
+          border: '2px solid #FF9800', color: '#E65100',
+        }}>
+          <div style={{ fontSize: 40, marginBottom: 12 }}>🗺️</div>
+          <p style={{ fontWeight: 700, fontSize: 15, marginBottom: 8 }}>Map failed to load</p>
+          <p style={{ fontSize: 13, color: '#795548' }}>
+            {this.state.error ?? 'Unknown error. Please refresh the page.'}
+          </p>
+          <button
+            onClick={() => this.setState({ hasError: false })}
+            style={{
+              marginTop: 12, padding: '8px 20px', background: '#FF9800',
+              color: '#fff', border: 'none', borderRadius: 10, cursor: 'pointer', fontWeight: 700,
+            }}
+          >
+            Retry
+          </button>
+        </div>
+      );
+    }
+    return this.props.children;
+  }
+}
+
+// ─── Map Inner Component ─────────────────────────────────────────────────────
+function FarmMapInner({ onLocationChange, onPolygonChange, height = 420 }: FarmMapProps) {
+  const divRef     = useRef<HTMLDivElement>(null);
+  const mapRef     = useRef<L.Map | null>(null);
+  const markerRef  = useRef<L.Marker | null>(null);
+  const itemsRef   = useRef<L.FeatureGroup | null>(null);
+
+  const [status, setStatus] = useState<'detecting' | 'found' | 'denied' | 'ready'>('detecting');
+
+  // ── Nominatim reverse geocode ──────────────────────────────────────────
+  const geocode = async (lat: number, lng: number): Promise<string> => {
+    try {
+      const r = await fetch(`https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lng}&format=json`, 
+        { headers: { 'Accept-Language': 'en' } });
+      const d = await r.json();
+      return d?.display_name ?? `${lat.toFixed(5)}, ${lng.toFixed(5)}`;
+    } catch { return `${lat.toFixed(5)}, ${lng.toFixed(5)}`; }
+  };
+
+  // ── Init map + leaflet-draw (dynamic import) ──────────────────────────
+  useEffect(() => {
+    if (!divRef.current || mapRef.current) return;
+
+    let map: L.Map;
+    let cancelled = false;
+
+    (async () => {
+      try {
+        // Dynamic import to avoid top-level CJS/ESM conflict
+        const L = (await import('leaflet')).default;
+        await import('leaflet/dist/leaflet.css');
+        await import('leaflet-draw');
+        await import('leaflet-draw/dist/leaflet.draw.css');
+
+        if (cancelled || !divRef.current) return;
+
+        // Fix marker icons
+        L.Icon.Default.mergeOptions({
+          iconUrl:       'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png',
+          iconRetinaUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon-2x.png',
+          shadowUrl:     'https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png',
+        });
+
+        // Create map
+        map = L.map(divRef.current, { center: [20.5937, 78.9629], zoom: 5 });
+
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+          attribution: '© <a href="https://www.openstreetmap.org">OpenStreetMap</a>',
+          maxZoom: 19,
+        }).addTo(map);
+
+        // Feature group for drawn shapes
+        const items = new L.FeatureGroup().addTo(map);
+        itemsRef.current = items;
+
+        // Draw control — only polygon
+        const LDraw = (L as any);
+        if (LDraw.Control?.Draw) {
+          const ctrl = new LDraw.Control.Draw({
+            edit: { featureGroup: items },
+            draw: {
+              polyline: false, circle: false, rectangle: false,
+              circlemarker: false, marker: false,
+              polygon: {
+                allowIntersection: false, showArea: true,
+                shapeOptions: { color: '#4CAF50', weight: 3, fillOpacity: 0.2 },
+              },
+            },
+          });
+          map.addControl(ctrl);
+        }
+
+        // Click to place/move marker
+        map.on('click', async (e: any) => {
+          const { lat, lng } = e.latlng;
+          if (markerRef.current) {
+            markerRef.current.setLatLng([lat, lng]);
+          } else {
+            const m = L.marker([lat, lng], { draggable: true }).addTo(map);
+            m.on('dragend', async () => {
+              const p = m.getLatLng();
+              const addr = await geocode(p.lat, p.lng);
+              onLocationChange?.(p.lat, p.lng, addr);
+            });
+            markerRef.current = m;
+          }
+          const addr = await geocode(lat, lng);
+          onLocationChange?.(lat, lng, addr);
+        });
+
+        const emitPolygon = () => {
+          try {
+            const geo = items.toGeoJSON() as GeoJSON.FeatureCollection;
+            const f = geo.features?.[0];
+            onPolygonChange?.(f?.geometry?.type === 'Polygon' ? f.geometry as GeoJSON.Polygon : null);
+          } catch { onPolygonChange?.(null); }
+        };
+
+        // Draw events
+        const DrawEvent = (L as any).Draw?.Event ?? {};
+        if (DrawEvent.CREATED) map.on(DrawEvent.CREATED, (e: any) => { items.clearLayers(); items.addLayer(e.layer); emitPolygon(); });
+        if (DrawEvent.EDITED)  map.on(DrawEvent.EDITED, emitPolygon);
+        if (DrawEvent.DELETED) map.on(DrawEvent.DELETED, () => onPolygonChange?.(null));
+
+        mapRef.current = map;
+
+        // Detect GPS
+        if (navigator.geolocation) {
+          navigator.geolocation.getCurrentPosition(
+            ({ coords }) => {
+              if (!cancelled && mapRef.current) {
+                mapRef.current.flyTo([coords.latitude, coords.longitude], 15, { animate: true });
+                setStatus('found');
+              }
+            },
+            () => setStatus('denied'),
+            { enableHighAccuracy: true, timeout: 10_000 }
+          );
+        } else {
+          setStatus('ready');
+        }
+
+      } catch (err) {
+        console.error('FarmMap init error:', err);
+        setStatus('ready');
+      }
+    })();
+
+    return () => {
+      cancelled = true;
+      if (mapRef.current) { mapRef.current.remove(); mapRef.current = null; }
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  const banners = {
+    detecting: { text: '📍 Detecting your location…',                              bg: '#FF9800' },
+    found:     { text: '✅ Location found! Click the map to pin your farm.',        bg: '#4CAF50' },
+    denied:    { text: '⚠️ GPS unavailable. Click the map to mark your farm.',      bg: '#FF5722' },
+    ready:     { text: '🗺️ Click on the map to mark your farm location.',           bg: '#1565C0' },
+  };
+  const b = banners[status] ?? banners.ready;
 
   return (
-    <div className="min-h-screen bg-white">
-      {/* Header */}
-      <div className="absolute top-0 left-0 right-0 z-10 px-6 pt-6 pb-4">
-        <div className="flex items-center justify-between mb-6">
-          <button 
-            onClick={() => navigate('/dashboard')}
-            className="w-10 h-10 flex items-center justify-center bg-white rounded-full shadow-md hover:shadow-lg transition-shadow active:scale-95"
-          >
-            <div className="w-6 h-1 bg-gray-700 rounded" />
-            <div className="w-6 h-1 bg-gray-700 rounded mt-1" />
-            <div className="w-6 h-1 bg-gray-700 rounded mt-1" />
-          </button>
-          <h1 className="text-lg font-medium text-white drop-shadow-lg">
-            Home
-          </h1>
-          <div className="w-10" />
-        </div>
+    <div style={{ width: '100%', borderRadius: 20, overflow: 'hidden', boxShadow: '0 4px 24px rgba(0,0,0,0.10)' }}>
+      <div style={{ padding: '9px 16px', background: b.bg, color: '#fff', fontSize: 13, fontWeight: 600 }}>
+        {b.text}
       </div>
-
-      {/* Map Image */}
-      <div className="relative h-screen">
-        <img
-          src={mapImage}
-          alt="Farm Map"
-          className="w-full h-full object-cover"
-        />
-
-        {/* Location Pin */}
-        <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-full">
-          <div className="w-10 h-10 bg-white rounded-full shadow-lg flex items-center justify-center">
-            <svg
-              className="w-6 h-6 text-green-500"
-              fill="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z" />
-            </svg>
-          </div>
-        </div>
-      </div>
-
-      {/* Bottom Card */}
-      <div className="absolute bottom-0 left-0 right-0">
-        <div className="bg-white rounded-t-3xl shadow-2xl p-6 mx-2">
-          <div className="mb-6">
-            <h2 className="text-xl font-medium text-gray-900 mb-2">
-              Task Instructions
-            </h2>
-            <p className="text-sm text-gray-600">
-              Maecen habitant sem, ut vir posuere sit ullamcorp aman nunc.
-              Lorem ipsum.
-            </p>
-          </div>
-          <button onClick={handleSelectLocation} className="w-full bg-green-500 text-white py-4 rounded-2xl font-medium hover:bg-green-600 transition">
-            Select Location
-          </button>
-        </div>
-
-        {/* Bottom Navigation */}
-        <div className="bg-white border-t border-gray-100 pt-4">
-          <div className="max-w-md mx-auto px-6 pb-6">
-            <div className="flex items-center justify-around">
-              <button
-                onClick={() => navigate('/dashboard')}
-                className="flex flex-col items-center gap-1 text-gray-400"
-              >
-                <div className="w-6 h-6 rounded-lg bg-current opacity-20" />
-                <span className="text-xs">Home</span>
-              </button>
-              <button onClick={() => navigate('/farms')} className="flex flex-col items-center gap-1 text-gray-400">
-                <Calendar className="w-6 h-6" />
-                <span className="text-xs">Calendar</span>
-              </button>
-              <button onClick={() => navigate('/action-selection')} className="flex flex-col items-center gap-1 text-gray-400">
-                <div className="w-12 h-12 rounded-full bg-green-500 flex items-center justify-center -mt-6">
-                  <svg
-                    className="w-6 h-6 text-white"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M12 4v16m8-8H4"
-                    />
-                  </svg>
-                </div>
-              </button>
-              <button onClick={() => navigate('/dashboard')} className="flex flex-col items-center gap-1 text-gray-400">
-                <Sun className="w-6 h-6" />
-                <span className="text-xs">Weather</span>
-              </button>
-              <button onClick={() => navigate('/profile')} className="flex flex-col items-center gap-1 text-gray-400">
-                <div className="w-6 h-6 rounded-full bg-current opacity-20" />
-                <span className="text-xs">Profile</span>
-              </button>
-            </div>
-          </div>
-        </div>
+      <div ref={divRef} style={{ width: '100%', height }} />
+      <div style={{
+        background: '#F8FBF8', borderTop: '1px solid #ddd',
+        padding: '10px 16px', display: 'flex', flexWrap: 'wrap',
+        gap: 18, fontSize: 12, color: '#4F6F52', fontWeight: 600,
+      }}>
+        <span>📍 Click map → Pin farm</span>
+        <span>🔷 Polygon tool → Draw field boundary</span>
+        <span>✏️ Edit / delete anytime</span>
       </div>
     </div>
+  );
+}
+
+// ─── Exported Component (wrapped in Error Boundary) ──────────────────────────
+export function FarmMap(props: FarmMapProps) {
+  return (
+    <MapErrorBoundary>
+      <FarmMapInner {...props} />
+    </MapErrorBoundary>
   );
 }

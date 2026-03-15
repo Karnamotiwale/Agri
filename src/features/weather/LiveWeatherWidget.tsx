@@ -17,7 +17,7 @@ export function LiveWeatherWidget() {
     const loadWeather = async () => {
         try {
             setLoading(true);
-            const data = await weatherService.getLocalWeather();
+            const data = await weatherService.getCurrentWeather();
             setWeather(data);
             setError(null);
         } catch (err) {
@@ -109,8 +109,8 @@ export function LiveWeatherWidget() {
                             <Wind className="w-4 h-4 text-emerald-200" />
                             <span className="text-xs text-emerald-200">Wind Speed</span>
                         </div>
-                        <p className="text-xl font-bold">{Math.round(current.wind_kph)}</p>
-                        <p className="text-xs text-emerald-200">km/h {current.wind_dir}</p>
+                        <p className="text-xl font-bold">{Math.round(current.wind_ms)}</p>
+                        <p className="text-xs text-emerald-200">m/s {current.wind_dir}</p>
                     </div>
 
                     <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-3 border border-white/20">
@@ -169,7 +169,7 @@ export function LiveWeatherWidget() {
                                 ? 'High temperature alert. Ensure adequate irrigation.'
                                 : current.humidity < 40
                                     ? 'Low humidity. Consider additional watering for young plants.'
-                                    : current.wind_kph > 30
+                                    : current.wind_ms > 8.3
                                         ? 'Strong winds detected. Secure lightweight structures.'
                                         : 'Favorable conditions for most farming activities.'}
                     </p>

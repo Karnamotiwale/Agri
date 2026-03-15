@@ -62,7 +62,7 @@
     "farm": {
         "addFarm": "Add Farm Details",
         "farmName": "Farm Name",
-        "totalLand": "Total Estimated Land (acres)",
+        "totalLand": "Total Estimated Land (ha)",
         "farmLocation": "Farm Location",
         "latitude": "Latitude",
         "longitude": "Longitude",

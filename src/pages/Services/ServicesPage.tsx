@@ -7,7 +7,8 @@ import {
   FileText, 
   Droplets,
   ChevronDown,
-  MapPin
+  MapPin,
+  Bot
 } from 'lucide-react';
 import { BottomNav } from '../../components/layout/BottomNav';
 
@@ -17,6 +18,7 @@ const services = [
   { icon: BarChart, label: 'Analysis', color: 'bg-white' },
   { icon: Tractor, label: 'Soil Analysis', color: 'bg-white' },
   { icon: FileText, label: 'Activity Logs', color: 'bg-white' },
+  { icon: Bot, label: 'AI Advisory', color: 'bg-green-50' },
 ];
 
 import { useNavigate } from 'react-router-dom';
@@ -73,6 +75,7 @@ export default function ServicesPage() {
               if (service.label === 'Analysis') navigate('/analysis');
               if (service.label === 'Soil Analysis') navigate('/soil-analysis');
               if (service.label === 'Activity Logs') navigate('/activity-logs');
+              if (service.label === 'AI Advisory') navigate('/services/ai-advisory');
             }}
             className="bg-white rounded-3xl p-6 shadow-sm border border-gray-50 flex flex-col items-start gap-4 active:scale-95 transition-transform cursor-pointer"
           >

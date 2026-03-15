@@ -24,6 +24,7 @@ import {
 import { cropService } from '../../services/crop.service';
 import { BottomNav } from '../../components/layout/BottomNav';
 import { useApp } from '../../context/AppContext';
+import CarbonFootprintCard from '../../features/analytics/CarbonFootprintCard';
 
 type DataType = 'weather' | 'soil' | 'npk';
 type ViewMode = 'chart' | 'table';
@@ -285,6 +286,11 @@ export default function DataAnalysisPage() {
             </div>
           </div>
         </div>
+      </div>
+
+      {/* Carbon Footprint Analytics — below weather analytics */}
+      <div className="px-4">
+        <CarbonFootprintCard farmId={selectedFarmId || undefined} />
       </div>
 
       <BottomNav />

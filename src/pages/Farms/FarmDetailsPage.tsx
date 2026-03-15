@@ -44,7 +44,7 @@ export default function FarmDetailsForm() {
         id: '', // Will be set by database
         name: farmName,
         location: latitude && longitude ? `${latitude.toFixed(4)}, ${longitude.toFixed(4)}` : 'Not Specified',
-        area: `${totalArea} acres`,
+        area: `${totalArea} ha`,
         lands: lands,
         crops: [],
         latitude: latitude || 0,
@@ -105,7 +105,7 @@ export default function FarmDetailsForm() {
 
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
-                Total Estimated Land (acres)
+                Total Estimated Land (ha)
               </label>
               <input
                 type="number"

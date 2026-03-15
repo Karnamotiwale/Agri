@@ -13,14 +13,14 @@ export function WeatherScreen() {
   const [activeProduct, setActiveProduct] = useState(3);
   const [hum, setHum] = useState(72);
   const [temp, setTemp] = useState(28);
-  const [wind, setWind] = useState(18);
+  const [wind, setWind] = useState(5);
   const [rain, setRain] = useState(45);
 
   useEffect(() => {
     const t = setInterval(() => {
       setHum((h) => clamp(h + (Math.random() - 0.5) * 6, 40, 95));
       setTemp((x) => clamp(x + (Math.random() - 0.5) * 2, 15, 38));
-      setWind((w) => clamp(w + (Math.random() - 0.5) * 4, 2, 35));
+      setWind((w) => clamp(w + (Math.random() - 0.5) * 2, 1, 10));
       setRain((r) => clamp(r + (Math.random() - 0.5) * 10, 0, 100));
     }, 5000);
     return () => clearInterval(t);
@@ -29,7 +29,7 @@ export function WeatherScreen() {
   const weatherMetrics = [
     { label: 'Humidity', value: `${Math.round(hum)}%`, icon: '💧' },
     { label: 'Temperature', value: `${Math.round(temp)}°C`, icon: '🌡️' },
-    { label: 'Wind Speed', value: `${Math.round(wind)} km/h`, icon: '💨' },
+    { label: 'Wind Speed', value: `${Math.round(wind)} m/s`, icon: '💨' },
     { label: 'Rainfall', value: `${Math.round(rain)}%`, icon: '🌧️' },
   ];
 

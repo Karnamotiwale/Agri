@@ -1,0 +1,4 @@
+﻿src/components/statistics/AdvisoryCards.tsx(28,50): error TS2554: Expected 2 arguments, but got 1.
+src/components/statistics/AdvisoryCards.tsx(29,25): error TS2345: Argument of type 'DetailedAdvisory' is not assignable to parameter of type 'SetStateAction<CropAdvisory>'.
+src/features/analytics/AIFertilizerPesticideAdvisory.tsx(38,54): error TS2554: Expected 2 arguments, but got 1.
+src/features/analytics/AIFertilizerPesticideAdvisory.tsx(39,29): error TS2345: Argument of type 'DetailedAdvisory' is not assignable to parameter of type 'SetStateAction<CropAdvisory>'.

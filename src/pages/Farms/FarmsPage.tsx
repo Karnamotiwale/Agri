@@ -44,8 +44,16 @@ export default function MyFarm() {
             <p className="text-sm font-medium" style={{ color: '#4F6F52' }}>Monitor and manage all active crops</p>
           </div>
 
-          {/* Two action buttons */}
+          {/* Three action buttons */}
           <div className="flex items-center gap-2">
+            <button
+              onClick={() => navigate('/farms/tag-land')}
+              className="flex items-center gap-1.5 bg-white px-4 py-2.5 rounded-xl font-bold text-sm transition-all shadow-sm active:scale-95"
+              style={{ border: '1.5px solid #64B5F6', color: '#1565C0' }}
+            >
+              <MapPin className="w-4 h-4" />
+              <span className="hidden sm:inline">Tag Land</span>
+            </button>
             <button
               onClick={() => setShowAddFarmModal(true)}
               className="flex items-center gap-1.5 bg-white px-4 py-2.5 rounded-xl font-bold text-sm transition-all shadow-sm active:scale-95"

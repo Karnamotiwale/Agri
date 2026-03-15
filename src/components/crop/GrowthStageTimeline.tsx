@@ -26,7 +26,7 @@ export function GrowthStageTimeline({ cropId }: Props) {
                 daysSinceSowing = Math.max(0, Math.floor((now.getTime() - sDate.getTime()) / (1000 * 60 * 60 * 24)));
             }
 
-            const data = await cropService.getGrowthStages(cropId, daysSinceSowing);
+            const data = await cropService.getGrowthStages(cropId);
             setStageData(data);
         } catch (err) {
             console.error(err);

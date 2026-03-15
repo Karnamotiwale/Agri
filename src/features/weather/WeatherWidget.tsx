@@ -5,7 +5,7 @@ export function WeatherWidget() {
         temp: 28,
         condition: 'Sunny',
         humidity: 65,
-        wind: 12,
+        wind: 3.3,
         location: 'Field Sector A',
         impact: 'Optimal for Wheat growth'
     };
@@ -54,7 +54,7 @@ export function WeatherWidget() {
                     <Wind className="w-5 h-5 text-blue-200" />
                     <div>
                         <p className="text-xs opacity-70">Wind</p>
-                        <p className="font-bold">{current.wind} km/h</p>
+                        <p className="font-bold">{current.wind} m/s</p>
                     </div>
                 </div>
             </div>

@@ -180,46 +180,46 @@ export const aiService = {
 // ADVISORY AGENT
 // ============================================
 
+export interface DetailedAdvisory {
+  recommended_pesticide?: string;
+  dosage_instructions?: string;
+  prevention_advice?: string;
+  message?: string;
+}
+
+import { api } from './api';
+
 export const aiAdvisoryService = {
-    getDetailedAdvisory: async (crop: string): Promise<CropAdvisory> => {
-        await _delay(300);
-        return {
-            fertilizer: {
-                recommended: true,
-                productName: 'Urea (Nitrogen)',
-                type: 'Mineral',
-                nutrients: { N: '46%', P: '0%', K: '0%' },
-                dosage: '50 kg/ha',
-                timing: 'Immediate',
-                method: 'Broadcasting',
-                status: 'REQUIRED',
-            },
-            pesticide: {
-                detected: false,
-                riskLevel: 'LOW',
-                productName: 'N/A',
-                category: 'N/A',
-                target: 'N/A',
-                dosage: 'N/A',
-                safetyInterval: 'N/A',
-            },
-            explainability: {
-                reason: `Conditions optimal for ${crop} crop`,
-                factors: ['Low moisture', 'High temperature', 'No rain forecast'],
-                confidence: 0.91,
-            },
-        };
-    },
+  getDetailedAdvisory: async (crop: string, diseaseName: string): Promise<DetailedAdvisory> => {
+    try {
+      const response = await api.post('/api/v1/ai/disease-advice', {
+        crop,
+        disease_name: diseaseName
+      });
+      // The backend now returns { message: "short string" }, map it fallback style so UI doesn't break
+      if (response.data.message) {
+         return {
+             recommended_pesticide: response.data.message,
+             dosage_instructions: "",
+             prevention_advice: ""
+         };
+      }
+      return response.data;
+    } catch (error) {
+      console.error('Error fetching detailed advisory:', error);
+      throw error;
+    }
+  },
 
-    getYieldPrediction: async (_crop: string): Promise<any> => {
-        await _delay(300);
-        return getMockYieldPrediction();
-    },
+  getYieldPrediction: async (_crop: string): Promise<any> => {
+      await _delay(300);
+      return getMockYieldPrediction();
+  },
 
-    getResourceAnalytics: async (_cropId: string): Promise<ResourceAnalytics> => {
-        await _delay(300);
-        return getMockResourceAnalytics();
-    },
+  getResourceAnalytics: async (_cropId: string): Promise<ResourceAnalytics> => {
+      await _delay(300);
+      return getMockResourceAnalytics();
+  },
 };
 
 // ============================================

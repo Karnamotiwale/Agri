@@ -18,10 +18,10 @@ export function SensorGuide() {
     {
       icon: Droplets,
       title: 'Soil Moisture Sensor',
-      description: 'Place sensors 6-8 inches deep in the root zone',
+      description: 'Place sensors 15-20 cm deep in the root zone',
       tips: [
         'Install in representative areas of each field',
-        'Keep 15-20 feet away from irrigation lines',
+        'Keep 4.5-6 meters away from irrigation lines',
         'Ensure good soil contact for accurate readings',
       ],
       color: 'bg-blue-100 text-blue-600',
@@ -31,7 +31,7 @@ export function SensorGuide() {
       title: 'NPK & pH Sensors',
       description: 'Install at multiple depths for comprehensive analysis',
       tips: [
-        'Place at 6", 12", and 18" depths',
+        'Place at 15cm, 30cm, and 45cm depths',
         'Calibrate before first use',
         'Avoid areas with heavy fertilizer application',
       ],

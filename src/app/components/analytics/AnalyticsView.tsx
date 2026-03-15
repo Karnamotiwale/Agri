@@ -61,7 +61,7 @@ export function AnalyticsView({ selectedCrop }: AnalyticsViewProps) {
             const promises = [
                 cropService.getCropJourney(cName),
                 getCropSensors(cropName),
-                cropService.getGrowthStages(cName, calculateDaysSinceSowing(sowingDate)),
+                cropService.getGrowthStages(cName),
                 cropService.getYieldPrediction(cName),
                 cropService.getRotationRecommendation(cName),
                 analyticsPromise,

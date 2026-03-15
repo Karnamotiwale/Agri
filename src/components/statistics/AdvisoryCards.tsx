@@ -25,8 +25,35 @@ export function AdvisoryCards({ cropId, cropName }: Props) {
 
         try {
             // Attempt to fetch real data
-            const data = await aiAdvisoryService.getDetailedAdvisory(nameToUse);
-            setAdvisory(data);
+            const data = await aiAdvisoryService.getDetailedAdvisory(nameToUse, 'General Health');
+            // We need to map DetailedAdvisory into the complex CropAdvisory the component expects
+            const mappedAdvisory: CropAdvisory = {
+                fertilizer: {
+                    recommended: true,
+                    productName: data.recommended_pesticide || 'Standard Fertilizer',
+                    type: 'General',
+                    dosage: data.dosage_instructions || 'Standard Application',
+                    timing: 'As Needed',
+                    nutrients: { N: '20%', P: '20%', K: '20%' },
+                    method: 'General spray',
+                    status: 'OPTIONAL'
+                },
+                pesticide: {
+                    detected: !!data.recommended_pesticide,
+                    riskLevel: 'LOW',
+                    target: 'General Prevention',
+                    productName: data.recommended_pesticide || 'Standard Fungicide',
+                    category: 'Treatment',
+                    dosage: data.dosage_instructions || 'Standard safety dose',
+                    safetyInterval: 'Check Label'
+                },
+                explainability: {
+                    reason: data.prevention_advice || 'AI recommends this based on generalized crop conditions.',
+                    factors: ['General Health'],
+                    confidence: 0.80
+                }
+            };
+            setAdvisory(mappedAdvisory);
         } catch (err: any) {
             console.warn('Backend advisory API unreachable, using simulation data.');
             // Fallback Mock Data

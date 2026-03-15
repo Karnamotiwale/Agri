@@ -1,7 +1,8 @@
-import { useState, useRef } from 'react';
-import { MapPin, X, Check, ArrowRight } from 'lucide-react';
+import { useState } from 'react';
+import { MapPin, X, Check, ArrowRight, Save } from 'lucide-react';
 import { useApp } from '../../context/AppContext';
 import type { Farm, LandLocation } from '../../context/AppContext';
+import { FarmMap } from '../maps/FarmMap';
 
 interface AddFarmModalProps {
     isOpen: boolean;
@@ -17,53 +18,20 @@ export function AddFarmModal({ isOpen, onClose, onSuccess }: AddFarmModalProps) 
     const [cropType, setCropType] = useState('');
     const [lands, setLands] = useState<LandLocation[]>([]);
 
-    // Map Interaction State
-    const mapRef = useRef<HTMLDivElement>(null);
-    const [tempPin, setTempPin] = useState<{ x: number; y: number } | null>(null);
-    const [isAddingLand, setIsAddingLand] = useState(false);
-    const [newLandName, setNewLandName] = useState('');
-    const [newLandArea, setNewLandArea] = useState('');
+    // Real Map State
+    const [latitude, setLatitude] = useState<number | null>(null);
+    const [longitude, setLongitude] = useState<number | null>(null);
+    const [address, setAddress] = useState<string>('');
+    const [boundaryGeojson, setBoundaryGeojson] = useState<any>(null);
 
-    const handleMapClick = (e: React.MouseEvent<HTMLDivElement>) => {
-        if (isAddingLand || !mapRef.current) return;
-
-        const rect = mapRef.current.getBoundingClientRect();
-        const x = ((e.clientX - rect.left) / rect.width) * 100;
-        const y = ((e.clientY - rect.top) / rect.height) * 100;
-
-        setTempPin({ x, y });
-        setIsAddingLand(true);
-        setNewLandName(`Land ${lands.length + 1}`);
-        setNewLandArea('');
+    const handleLocationChange = (lat: number, lng: number, addr?: string) => {
+        setLatitude(lat);
+        setLongitude(lng);
+        if (addr) setAddress(addr);
     };
 
-    const handleSaveLand = () => {
-        if (tempPin && newLandName && newLandArea) {
-            setLands([
-                ...lands,
-                {
-                    id: Date.now().toString(),
-                    name: newLandName,
-                    area: parseFloat(newLandArea),
-                    x: tempPin.x,
-                    y: tempPin.y,
-                },
-            ]);
-            setTempPin(null);
-            setIsAddingLand(false);
-            setNewLandName('');
-            setNewLandArea('');
-        }
-    };
-
-    const handleCancelLand = () => {
-        setTempPin(null);
-        setIsAddingLand(false);
-    };
-
-    const handleRemoveLand = (id: string, e: React.MouseEvent) => {
-        e.stopPropagation();
-        setLands(lands.filter((land) => land.id !== id));
+    const handlePolygonChange = (geojson: GeoJSON.Polygon | null) => {
+        setBoundaryGeojson(geojson);
     };
 
     const handleNext = () => {
@@ -73,18 +41,19 @@ export function AddFarmModal({ isOpen, onClose, onSuccess }: AddFarmModalProps) 
     };
 
     const handleSave = async () => {
-        if (step === 2 && lands.length > 0) {
+        if (step === 2 && latitude && longitude) {
             try {
                 const farm: Farm = {
                     id: '',
                     name: farmName,
-                    location: 'Marked on map',
-                    area: String(totalArea) + ' acres',
-                    lands: lands as LandLocation[],
+                    location: address || 'Marked on map',
+                    area: String(totalArea) + ' ha',
+                    lands: [], // Backward compatibility with mock lands array handled by service
                     crops: [],
                     primaryCrop: cropType,
-                    latitude: lands[0]?.y || 0,
-                    longitude: lands[0]?.x || 0,
+                    latitude,
+                    longitude,
+                    boundary_geojson: boundaryGeojson
                 };
 
                 const farmId = await addFarm(farm);
@@ -106,9 +75,10 @@ export function AddFarmModal({ isOpen, onClose, onSuccess }: AddFarmModalProps) 
         setFarmName('');
         setTotalArea('');
         setCropType('');
-        setLands([]);
-        setTempPin(null);
-        setIsAddingLand(false);
+        setLatitude(null);
+        setLongitude(null);
+        setAddress('');
+        setBoundaryGeojson(null);
         onClose();
     };
 
@@ -128,10 +98,10 @@ export function AddFarmModal({ isOpen, onClose, onSuccess }: AddFarmModalProps) 
                 <div className="flex items-center justify-between p-6 border-b border-gray-100">
                     <div>
                         <h2 className="text-2xl font-bold text-gray-900">
-                            {step === 1 ? 'Add New Farm' : 'Mark Farm Lands'}
+                            {step === 1 ? 'Add New Farm' : '🗺️ Tag Your Farm Land'}
                         </h2>
                         <p className="text-sm text-gray-500 mt-1">
-                            {step === 1 ? 'Enter farm details' : 'Tap on map to add land locations'}
+                            {step === 1 ? 'Enter farm details' : 'Mark the location and draw boundaries'}
                         </p>
                     </div>
                     <button
@@ -161,7 +131,7 @@ export function AddFarmModal({ isOpen, onClose, onSuccess }: AddFarmModalProps) 
 
                             <div>
                                 <label className="block text-sm font-semibold text-gray-700 mb-2">
-                                    Total Area (acres)
+                                    Total Area (ha)
                                 </label>
                                 <input
                                     type="number"
@@ -193,92 +163,18 @@ export function AddFarmModal({ isOpen, onClose, onSuccess }: AddFarmModalProps) 
                             </div>
                         </div>
                     ) : (
-                        <div className="relative h-96">
-                            {/* Map */}
-                            <div
-                                ref={mapRef}
-                                onClick={handleMapClick}
-                                className="absolute inset-0 bg-[#e6f0e6] cursor-crosshair"
-                                style={{
-                                    backgroundImage: 'radial-gradient(#c2e0c2 1px, transparent 1px)',
-                                    backgroundSize: '20px 20px',
-                                }}
-                            >
-                                {/* Hint */}
-                                {lands.length === 0 && !isAddingLand && (
-                                    <div className="absolute top-8 left-1/2 -translate-x-1/2 bg-white/90 backdrop-blur px-6 py-3 rounded-full shadow-lg z-10 animate-bounce">
-                                        <p className="text-green-800 font-medium text-sm flex items-center gap-2">
-                                            <MapPin className="w-4 h-4" /> Tap anywhere to mark land
-                                        </p>
-                                    </div>
-                                )}
-
-                                {/* Existing Pins */}
-                                {lands.map((land) => (
-                                    <div
-                                        key={land.id}
-                                        className="absolute transform -translate-x-1/2 -translate-y-full group"
-                                        style={{ left: `${land.x}%`, top: `${land.y}%` }}
-                                    >
-                                        <div className="relative">
-                                            <MapPin className="w-10 h-10 text-green-600 drop-shadow-md" fill="currentColor" />
-                                            <div className="absolute -top-8 left-1/2 -translate-x-1/2 bg-white px-3 py-1 rounded-lg shadow-md whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
-                                                <p className="text-xs font-bold text-gray-800">{land.name}</p>
-                                                <p className="text-[10px] text-gray-500">{land.area} ac</p>
-                                            </div>
-                                            <button
-                                                onClick={(e) => handleRemoveLand(land.id, e)}
-                                                className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity shadow-sm hover:scale-110"
-                                            >
-                                                <X className="w-3 h-3" />
-                                            </button>
-                                        </div>
-                                    </div>
-                                ))}
-
-                                {/* Temporary Pin */}
-                                {tempPin && (
-                                    <div
-                                        className="absolute transform -translate-x-1/2 -translate-y-full"
-                                        style={{ left: `${tempPin.x}%`, top: `${tempPin.y}%` }}
-                                    >
-                                        <MapPin className="w-12 h-12 text-green-500 animate-bounce" fill="currentColor" />
-                                    </div>
-                                )}
-                            </div>
-
-                            {/* Add Land Form */}
-                            {isAddingLand && (
-                                <div className="absolute bottom-0 left-0 right-0 bg-white border-t border-gray-200 p-4 z-20">
-                                    <div className="flex items-center justify-between mb-3">
-                                        <h3 className="font-semibold text-sm">Add Land Details</h3>
-                                        <button onClick={handleCancelLand} className="p-1 hover:bg-gray-100 rounded-full">
-                                            <X className="w-4 h-4 text-gray-600" />
-                                        </button>
-                                    </div>
-                                    <div className="flex gap-2">
-                                        <input
-                                            autoFocus
-                                            type="text"
-                                            value={newLandName}
-                                            onChange={(e) => setNewLandName(e.target.value)}
-                                            placeholder="Land Name"
-                                            className="flex-1 px-3 py-2 bg-gray-50 rounded-lg border-none focus:ring-2 focus:ring-green-500 text-sm"
-                                        />
-                                        <input
-                                            type="number"
-                                            value={newLandArea}
-                                            onChange={(e) => setNewLandArea(e.target.value)}
-                                            placeholder="Area (acres)"
-                                            className="w-32 px-3 py-2 bg-gray-50 rounded-lg border-none focus:ring-2 focus:ring-green-500 text-sm"
-                                        />
-                                        <button
-                                            onClick={handleSaveLand}
-                                            disabled={!newLandName || !newLandArea}
-                                            className="bg-green-600 text-white px-4 rounded-lg font-medium hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed text-sm"
-                                        >
-                                            Save
-                                        </button>
+                        <div className="p-4">
+                            <FarmMap 
+                                height={380}
+                                onLocationChange={handleLocationChange}
+                                onPolygonChange={handlePolygonChange}
+                            />
+                            {address && (
+                                <div className="mt-4 p-3 bg-blue-50 border border-blue-100 rounded-xl flex items-start gap-2 animate-in slide-in-from-bottom-2 duration-300">
+                                    <MapPin className="w-5 h-5 text-blue-600 shrink-0 mt-0.5" />
+                                    <div>
+                                        <p className="text-[11px] font-bold text-blue-600 uppercase tracking-wider">Detected Location</p>
+                                        <p className="text-sm text-blue-900 font-medium leading-normal">{address}</p>
                                     </div>
                                 </div>
                             )}
@@ -296,7 +192,7 @@ export function AddFarmModal({ isOpen, onClose, onSuccess }: AddFarmModalProps) 
                     </button>
                     <button
                         onClick={step === 1 ? handleNext : handleSave}
-                        disabled={step === 1 ? !farmName || !totalArea || !cropType : lands.length === 0}
+                        disabled={step === 1 ? !farmName || !totalArea || !cropType : !latitude}
                         className="px-6 py-2.5 bg-green-600 text-white font-semibold rounded-xl hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all flex items-center gap-2"
                     >
                         {step === 1 ? (

@@ -41,4 +41,25 @@ export const farmService = {
     deleteFarm: async (_farmId: string): Promise<void> => {
         throw new Error("deleteFarm not implemented on backend");
     },
+
+    /**
+     * Save a farm with full location data including GPS coordinates + drawn boundary polygon.
+     */
+    saveFarmLocation: async (payload: {
+        farm_name: string;
+        latitude: number;
+        longitude: number;
+        address?: string;
+        boundary_geojson?: GeoJSON.Polygon | null;
+    }): Promise<any> => {
+        const response = await api.post('/api/v1/farms', {
+            name: payload.farm_name,
+            area: 0,
+            latitude: payload.latitude,
+            longitude: payload.longitude,
+            address: payload.address || '',
+            boundary_geojson: payload.boundary_geojson ? JSON.stringify(payload.boundary_geojson) : null,
+        });
+        return response.data;
+    },
 };

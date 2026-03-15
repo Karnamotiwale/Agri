@@ -9,8 +9,8 @@ export interface WeatherData {
     current: {
         temp_c: number; temp_f: number;
         condition: { text: string; icon: string; code: number };
-        wind_kph: number; wind_dir: string; pressure_mb: number; humidity: number;
-        cloud: number; feelslike_c: number; vis_km: number; uv: number; gust_kph: number;
+        wind_ms: number; wind_dir: string; pressure_mb: number; humidity: number;
+        cloud: number; feelslike_c: number; vis_km: number; uv: number; gust_ms: number;
     };
     forecast?: {
         forecastday: Array<{
@@ -24,7 +24,7 @@ export const weatherService = {
     getCurrentWeather: async (lat: number = 12.97, lon: number = 77.59): Promise<any> => {
         try {
             const response = await fetch(
-                `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=temperature_2m,relative_humidity_2m,is_day,precipitation,weather_code,cloud_cover,wind_speed_10m,wind_direction_10m&hourly=temperature_2m,weather_code&daily=weather_code,temperature_2m_max,temperature_2m_min,sunrise,sunset,daylight_duration&timezone=auto`
+                `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=temperature_2m,relative_humidity_2m,is_day,precipitation,weather_code,cloud_cover,wind_speed_10m,wind_direction_10m&hourly=temperature_2m,weather_code&daily=weather_code,temperature_2m_max,temperature_2m_min,sunrise,sunset,daylight_duration&wind_speed_unit=ms&timezone=auto`
             );
             const data = await response.json();
             
@@ -35,7 +35,7 @@ export const weatherService = {
                     temp_c: data.current.temperature_2m,
                     condition: { text: getWeatherCodeText(data.current.weather_code), code: data.current.weather_code },
                     humidity: data.current.relative_humidity_2m,
-                    wind_kph: data.current.wind_speed_10m,
+                    wind_ms: data.current.wind_speed_10m,
                     wind_dir: getWindDirection(data.current.wind_direction_10m),
                     precipitation: data.current.precipitation,
                     is_day: data.current.is_day

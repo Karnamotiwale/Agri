@@ -27,6 +27,7 @@ export interface Farm {
   primaryCrop?: string;
   latitude?: number;
   longitude?: number;
+  boundary_geojson?: any;
 }
 
 export interface CropStage {

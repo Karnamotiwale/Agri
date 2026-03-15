@@ -24,6 +24,7 @@ import { DashboardAIInsights } from '../../components/dashboard/DashboardAIInsig
 import { BottomNav } from '../../components/layout/BottomNav';
 import SoilMoistureCard from '../../features/sensors/SoilMoistureCard';
 import NPKCard from '../../features/sensors/NPKCard';
+import SmartAlerts from '../../components/dashboard/SmartAlerts';
 
 import { useApp } from '../../context/AppContext';
 import { useCropSensors } from '../../hooks/useCropSensors';
@@ -85,9 +86,13 @@ export default function Dashboard() {
             <DashboardWeather />
           </motion.div>
 
-          {/* AI Insights & ML Suggestions Widget */}
           <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} transition={{ delay: 0.15 }}>
             <DashboardAIInsights />
+          </motion.div>
+
+          {/* AI Smart Alerts — Water & Fertilizer Warnings */}
+          <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2, type: 'spring', stiffness: 200 }}>
+            <SmartAlerts />
           </motion.div>
 
           {/* Main Dashboard Carousel */}
@@ -160,8 +165,8 @@ export default function Dashboard() {
               </div>
               <div className="bg-gradient-to-br from-indigo-50 to-indigo-100/50 rounded-2xl p-3 text-center border border-indigo-100">
                 <ArrowRight className="mx-auto text-indigo-600 mb-1.5 w-5 h-5" />
-                <p className="text-sm font-bold text-gray-900">{18 + Math.round(popupSensors.ph)}</p>
-                <p className="text-[10px] text-gray-600 font-medium mt-0.5">km/h</p>
+                <p className="text-sm font-bold text-gray-900">{2 + Math.round(popupSensors.ph % 8)}</p>
+                <p className="text-[10px] text-gray-600 font-medium mt-0.5">m/s</p>
               </div>
             </div>
 

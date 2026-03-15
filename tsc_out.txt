@@ -1,0 +1,12 @@
+﻿src/app/components/analytics/AnalyticsView.tsx(64,52): error TS2554: Expected 1 arguments, but got 2.
+src/components/crop/GrowthStageTimeline.tsx(29,68): error TS2554: Expected 1 arguments, but got 2.
+src/components/forms/AddFarmModal.tsx(14,29): error TS2304: Cannot find name 'useState'.
+src/components/forms/AddFarmModal.tsx(15,37): error TS2304: Cannot find name 'useState'.
+src/components/forms/AddFarmModal.tsx(16,39): error TS2304: Cannot find name 'useState'.
+src/components/forms/AddFarmModal.tsx(17,37): error TS2304: Cannot find name 'useState'.
+src/components/forms/AddFarmModal.tsx(18,31): error TS2304: Cannot find name 'useState'.
+src/components/forms/AddFarmModal.tsx(21,37): error TS2304: Cannot find name 'useState'.
+src/components/forms/AddFarmModal.tsx(22,39): error TS2304: Cannot find name 'useState'.
+src/components/forms/AddFarmModal.tsx(23,35): error TS2304: Cannot find name 'useState'.
+src/components/forms/AddFarmModal.tsx(24,51): error TS2304: Cannot find name 'useState'.
+src/features/weather/LiveWeatherWidget.tsx(20,47): error TS2339: Property 'getLocalWeather' does not exist on type '{ getCurrentWeather: (lat?: number, lon?: number) => Promise<any>; getWeatherByCity: (city: string) => Promise<any>; getUserLocation: () => Promise<GeolocationPosition>; }'.

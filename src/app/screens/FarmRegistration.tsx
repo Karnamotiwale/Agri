@@ -72,7 +72,7 @@ export function FarmRegistration() {
           id: '', // Will be set by database
           name: farmName,
           location: 'Marked on map',
-          area: String(totalArea) + ' acres',
+          area: String(totalArea) + ' ha',
           lands: lands as LandLocation[],
           crops: [],
           primaryCrop: cropType,
@@ -130,7 +130,7 @@ export function FarmRegistration() {
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Total Estimated Area (acres)
+                  Total Estimated Area (ha)
                 </label>
                 <input
                   type="number"
@@ -216,7 +216,7 @@ export function FarmRegistration() {
                   <MapPin className="w-10 h-10 text-green-600 drop-shadow-md" fill="currentColor" />
                   <div className="absolute -top-8 left-1/2 -translate-x-1/2 bg-white px-3 py-1 rounded-lg shadow-md whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
                     <p className="text-xs font-bold text-gray-800">{land.name}</p>
-                    <p className="text-[10px] text-gray-500">{land.area} ac</p>
+                    <p className="text-[10px] text-gray-500">{land.area} ha</p>
                   </div>
                   <button
                     onClick={(e) => handleRemoveLand(land.id, e)}
@@ -263,7 +263,7 @@ export function FarmRegistration() {
                       type="number"
                       value={newLandArea}
                       onChange={(e) => setNewLandArea(e.target.value)}
-                      placeholder="Area (acres)"
+                      placeholder="Area (ha)"
                       className="flex-1 px-4 py-3 bg-gray-50 rounded-xl border-none focus:ring-2 focus:ring-green-500"
                     />
                     <button

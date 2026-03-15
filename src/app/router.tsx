@@ -15,9 +15,11 @@ import CropMonitoringPage from "../pages/Monitoring/CropMonitoringPage";
 import DataAnalysisPage from "../pages/Analysis/DataAnalysisPage";
 import SoilAnalysisPage from "../pages/Soil/SoilAnalysisPage";
 import ActivityLogsPage from "../pages/Activities/ActivityLogsPage";
+import AIAdvisoryPage from "../pages/Services/AIAdvisoryPage";
 import DiagnosisResultPage from "../pages/Health/DiagnosisResultPage";
 import WeatherSoilPestPage from "../pages/Weather/WeatherSoilPestPage";
 import SchemesPage from "../pages/Schemes/SchemesPage";
+import LandTaggingPage from "../pages/Farms/LandTaggingPage";
 
 // Original Screens (preserving routing structure)
 import { LoginScreen } from "./screens/LoginScreen";
@@ -72,6 +74,7 @@ export default function Router() {
         <Route path="/analysis" element={<ProtectedRoute><DataAnalysisPage /></ProtectedRoute>} />
         <Route path="/soil-analysis" element={<ProtectedRoute><SoilAnalysisPage /></ProtectedRoute>} />
         <Route path="/activity-logs" element={<ProtectedRoute><ActivityLogsPage /></ProtectedRoute>} />
+        <Route path="/services/ai-advisory" element={<ProtectedRoute><AIAdvisoryPage /></ProtectedRoute>} />
         <Route path="/diagnosis-result" element={<ProtectedRoute><DiagnosisResultPage /></ProtectedRoute>} />
         <Route path="/activities" element={<ProtectedRoute><DashboardPage /></ProtectedRoute>} />
         <Route path="/schemes" element={<ProtectedRoute><SchemesPage /></ProtectedRoute>} />
@@ -83,6 +86,7 @@ export default function Router() {
         <Route path="/profile" element={<ProtectedRoute><ProfileScreen /></ProtectedRoute>} />
         <Route path="/action-selection" element={<ProtectedRoute><ActionSelection /></ProtectedRoute>} />
         <Route path="/farm-details" element={<ProtectedRoute><FarmDetailsPage /></ProtectedRoute>} />
+        <Route path="/farms/tag-land" element={<ProtectedRoute><LandTaggingPage /></ProtectedRoute>} />
         <Route path="/crop-details" element={<ProtectedRoute><CropDetailsForm /></ProtectedRoute>} />
         
         {/* AI Routes */}

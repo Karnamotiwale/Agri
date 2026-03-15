@@ -175,7 +175,7 @@ export default function WeatherSoilPestPage() {
               <div className="flex items-center justify-between">
                 <span className="text-xs font-bold uppercase tracking-widest" style={{ color: '#9CA3AF' }}>Wind</span>
                 <span className="text-sm font-black flex items-center gap-1" style={{ color: '#1B3A1B' }}>
-                  {(weather.wind?.speed * 3.6).toFixed(1)} km/h {degreesToDir(weather.wind?.deg ?? 0)}
+                  {weather.wind?.speed?.toFixed(1)} m/s {degreesToDir(weather.wind?.deg ?? 0)}
                   <Navigation className="w-3 h-3 rotate-[225deg]" />
                 </span>
               </div>
@@ -261,7 +261,7 @@ export default function WeatherSoilPestPage() {
           <div className="mt-6 p-4 rounded-2xl flex items-center gap-3" style={{ background: '#F0FAF0', border: '1px solid #C7E76C50' }}>
             <Navigation className="w-5 h-5 flex-shrink-0" style={{ color: '#2E7D32' }} />
             <p className="text-xs font-bold" style={{ color: '#2E7D32' }}>
-              Wind: {(weather.wind?.speed * 3.6).toFixed(1)} km/h · Suitable conditions for field activities today
+              Wind: {weather.wind?.speed?.toFixed(1)} m/s · Suitable conditions for field activities today
             </p>
           </div>
         </div>
@@ -279,8 +279,8 @@ export default function WeatherSoilPestPage() {
             <AdvisoryItem
               icon={<Wind className="w-4 h-4" style={{ color: '#2E7D32' }} />}
               label="Spraying Conditions"
-              value={(weather.wind?.speed * 3.6) < 20 ? 'Good — low wind, safe to spray' : 'Caution — high wind, avoid spraying'}
-              positive={(weather.wind?.speed * 3.6) < 20}
+              value={(weather.wind?.speed) < 5.5 ? 'Good — low wind, safe to spray' : 'Caution — high wind, avoid spraying'}
+              positive={(weather.wind?.speed) < 5.5}
             />
             <AdvisoryItem
               icon={<Sun className="w-4 h-4 text-amber-400" />}

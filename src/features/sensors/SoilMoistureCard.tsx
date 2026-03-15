@@ -7,9 +7,9 @@ interface Props {
 
 // Moisture thresholds for visual feedback
 function getMoistureStatus(val: number) {
-  if (val < 300)  return { label: '🏜️ Very Dry',         color: '#EF4444', bg: '#FEF2F2', bar: '#EF4444' };
-  if (val < 500)  return { label: '🔥 Dry — Irrigate',   color: '#F97316', bg: '#FFF7ED', bar: '#F97316' };
-  if (val < 700)  return { label: '💧 Optimal',          color: '#2E7D32', bg: '#F0FAF0', bar: '#4CAF50' };
+  if (val < 30)  return { label: '🏜️ Very Dry',         color: '#EF4444', bg: '#FEF2F2', bar: '#EF4444' };
+  if (val < 50)  return { label: '🔥 Dry — Irrigate',   color: '#F97316', bg: '#FFF7ED', bar: '#F97316' };
+  if (val < 70)  return { label: '💧 Optimal',          color: '#2E7D32', bg: '#F0FAF0', bar: '#4CAF50' };
   return           { label: '🌊 Saturated',              color: '#1E40AF', bg: '#EFF6FF', bar: '#3B82F6' };
 }
 
@@ -18,8 +18,8 @@ export default function SoilMoistureCard({ farmId }: Props) {
 
   const moisture = data?.soil_moisture ?? null;
   const status = moisture !== null ? getMoistureStatus(moisture) : null;
-  // Raw sensor 0–1023 → percentage (approx)
-  const pct = moisture !== null ? Math.min(100, Math.round((moisture / 1023) * 100)) : 0;
+  // Direct percentage format
+  const pct = moisture !== null ? Math.min(100, Math.max(0, Math.round(moisture))) : 0;
 
   return (
     <div
@@ -51,9 +51,7 @@ export default function SoilMoistureCard({ farmId }: Props) {
         <>
           {/* Value */}
           <div className="flex items-baseline gap-1 mb-1">
-            <span className="text-3xl font-black" style={{ color: '#1B3A1B' }}>{moisture ?? '—'}</span>
-            <span className="text-xs font-bold" style={{ color: '#9CA3AF' }}>raw</span>
-            <span className="ml-auto text-lg font-black" style={{ color: status?.color }}>{pct}%</span>
+            <span className="text-3xl font-black" style={{ color: '#1B3A1B' }}>{pct}%</span>
           </div>
 
           {/* Progress bar */}
