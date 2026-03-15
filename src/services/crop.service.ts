@@ -133,9 +133,26 @@ export const cropService = {
     }),
 
     toggleValve: async (valveId: string, status: boolean): Promise<boolean> => {
-        // Simulate ESP32 HTTP Request
-        console.log(`Sending HTTP command to ESP32: Valve ${valveId} -> ${status ? 'ON' : 'OFF'}`);
-        await new Promise(r => setTimeout(r, 800));
+        const ESP_IP = "10.171.0.66";
+        let url = "";
+
+        if (valveId === "irrigation" || valveId === "v1") {
+            url = status ? `http://${ESP_IP}/pump1/on` : `http://${ESP_IP}/pump1/off`;
+        } else if (valveId === "fertilization" || valveId === "fertigation" || valveId === "v2") {
+            url = status ? `http://${ESP_IP}/pump2/on` : `http://${ESP_IP}/pump2/off`;
+        }
+
+        if (url !== "") {
+            try {
+                // Use no-cors to prevent browser from blocking requests to local IPs that don't return CORS headers
+                await fetch(url, { mode: 'no-cors' });
+                console.log(`Sent HTTP command to ESP32 (${ESP_IP}): ${valveId} -> ${status ? 'ON' : 'OFF'}`);
+            } catch (err) {
+                console.error("ESP32 fetch error:", err);
+            }
+        }
+        
+        await new Promise(r => setTimeout(r, 400)); // Short UI delay
         return true;
     },
 

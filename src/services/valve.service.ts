@@ -25,11 +25,41 @@ const MOCK_VALVES: Valve[] = [
     { id: 'v4', farmId: 'f1', cropId: 'c1', valveNumber: 4, zoneName: 'Zone D – East',        isActive: false, status: 'IDLE' },
 ];
 
+const ESP_IP = "10.171.0.66";
+
 export const valveService = {
     getValvesForCrop: async (_cropId: string): Promise<Valve[]> => MOCK_VALVES,
     toggleValve: async (valveId: string, isActive: boolean): Promise<Valve> => {
+
+        let url = "";
+
+        if (valveId === "v1") {
+            url = isActive
+                ? `http://${ESP_IP}/pump1/on`
+                : `http://${ESP_IP}/pump1/off`;
+        }
+
+        if (valveId === "v2") {
+            url = isActive
+                ? `http://${ESP_IP}/pump2/on`
+                : `http://${ESP_IP}/pump2/off`;
+        }
+
+        if (url !== "") {
+            try {
+                // Use no-cors to prevent browser from blocking requests to local IPs that don't return CORS headers
+                await fetch(url, { mode: 'no-cors' });
+            } catch (err) {
+                console.error("Valve fetch error:", err);
+            }
+        }
+
         const valve = MOCK_VALVES.find(v => v.id === valveId);
-        if (valve) { valve.isActive = isActive; valve.status = isActive ? 'RUNNING' : 'IDLE'; }
+        if (valve) {
+            valve.isActive = isActive;
+            valve.status = isActive ? "RUNNING" : "IDLE";
+        }
+
         return valve ?? MOCK_VALVES[0];
     },
     overrideSchedule: async (_valveId: string, _params: any): Promise<boolean> => true,

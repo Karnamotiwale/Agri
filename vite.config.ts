@@ -60,6 +60,11 @@ export default defineConfig({
       '/ai/detailed-advisory': 'http://localhost:5000',
       '/ai/valves': 'http://localhost:5000',
       '/sensors': 'http://localhost:5000',
+      '/esp': {
+        target: 'http://10.171.0.66',
+        changeOrigin: true,
+        rewrite: (path) => path.replace(/^\/esp/, ''),
+      }
     }
   },
   resolve: {
