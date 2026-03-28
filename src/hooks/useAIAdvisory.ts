@@ -21,7 +21,8 @@ export function useAIAdvisory() {
 
     try {
       const answer = await askAI(question);
-      const assistantMessage: ChatMessage = { role: 'assistant', content: answer };
+      console.log("AI Response Received:", answer);
+      const assistantMessage: ChatMessage = { role: 'assistant', content: answer || 'No response received' };
       setMessages(prev => [...prev, assistantMessage]);
     } catch (err: any) {
       console.error('AI Advisory Error:', err);
