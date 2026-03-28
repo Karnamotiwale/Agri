@@ -14,10 +14,21 @@ export const SmartValveControl: React.FC<Props> = ({ cropId, farmId }) => {
     const [loading, setLoading] = useState(true);
     const [manualOverride, setManualOverride] = useState(false);
     const [processingId, setProcessingId] = useState<string | null>(null);
+    const [connectionError, setConnectionError] = useState<string | null>(null);
+    const [isEspConnected, setIsEspConnected] = useState<boolean>(true);
 
     useEffect(() => {
         loadData();
+        checkConnection();
+        const interval = setInterval(checkConnection, 15000);
+        return () => clearInterval(interval);
     }, [cropId]);
+
+    const checkConnection = async () => {
+        const connected = await valveService.checkESP32Connection();
+        setIsEspConnected(connected);
+        if (connected) setConnectionError(null);
+    };
 
     const loadData = async () => {
         try {
@@ -37,16 +48,27 @@ export const SmartValveControl: React.FC<Props> = ({ cropId, farmId }) => {
     const handleToggleValve = async (valve: Valve) => {
         if (!manualOverride) return;
 
+        setProcessingId(valve.id);
+        const isOnline = await valveService.checkESP32Connection();
+        setIsEspConnected(isOnline);
+        
+        if (!isOnline) {
+            setConnectionError("ESP32 Device Offline. Failed connectivity check.");
+            setProcessingId(null);
+            return;
+        }
+
         try {
-            setProcessingId(valve.id);
+            setConnectionError(null);
             await valveService.toggleValve(valve.id, !valve.isActive);
 
             // Optimistic update
             setValves(prev => prev.map(v =>
                 v.id === valve.id ? { ...v, isActive: !v.isActive, status: !v.isActive ? 'RUNNING' : 'IDLE' } : v
             ));
-        } catch (e) {
+        } catch (e: any) {
             console.error('Failed to toggle valve', e);
+            setConnectionError(e.message || "Failed to connect to ESP32 device");
         } finally {
             setProcessingId(null);
         }
@@ -69,12 +91,12 @@ export const SmartValveControl: React.FC<Props> = ({ cropId, farmId }) => {
                     Smart Valve Scheduling
                     <span className="text-[10px] bg-blue-50 text-blue-600 px-2 py-0.5 rounded-full border border-blue-100 font-bold ml-1">AI CONTROLLED</span>
                 </h3>
-                <div className="flex items-center gap-1.5 text-[10px] font-medium text-green-600 bg-green-50 px-2 py-1 rounded-lg">
+                <div className={`flex items-center gap-1.5 text-[10px] font-medium px-2 py-1 rounded-lg transition-colors ${isEspConnected ? 'text-green-600 bg-green-50' : 'text-red-600 bg-red-50'}`}>
                     <div className="relative w-2 h-2">
-                        <div className="absolute inset-0 bg-green-500 rounded-full animate-ping opacity-75"></div>
-                        <div className="relative w-2 h-2 bg-green-600 rounded-full"></div>
+                        {isEspConnected && <div className="absolute inset-0 bg-green-500 rounded-full animate-ping opacity-75"></div>}
+                        <div className={`relative w-2 h-2 rounded-full ${isEspConnected ? 'bg-green-600' : 'bg-red-600'}`}></div>
                     </div>
-                    ESP32 CONNECTED
+                    {isEspConnected ? 'ESP32 ONLINE' : 'ESP32 OFFLINE'}
                 </div>
             </div>
 
@@ -86,6 +108,19 @@ export const SmartValveControl: React.FC<Props> = ({ cropId, farmId }) => {
                         <p className="text-xs font-bold text-amber-800">Manual Override Active</p>
                         <p className="text-[11px] text-amber-700 leading-tight mt-0.5">
                             AI automation is paused. You are manually controlling the valves. Safety locks are enabled for max capacity.
+                        </p>
+                    </div>
+                </div>
+            )}
+
+            {/* Connection Error Banner */}
+            {connectionError && (
+                <div className="bg-red-50 border border-red-200 rounded-xl p-3 mb-4 flex items-start gap-3 animate-in slide-in-from-top-2">
+                    <AlertTriangle className="w-5 h-5 text-red-600 flex-shrink-0 mt-0.5" />
+                    <div>
+                        <p className="text-xs font-bold text-red-800">Connection Failed</p>
+                        <p className="text-[11px] text-red-700 leading-tight mt-0.5">
+                            {connectionError}
                         </p>
                     </div>
                 </div>
@@ -162,8 +197,8 @@ export const SmartValveControl: React.FC<Props> = ({ cropId, farmId }) => {
                                     <td className="py-3 pr-2 text-right">
                                         <button
                                             onClick={() => handleToggleValve(valve)}
-                                            disabled={!manualOverride || processingId === valve.id}
-                                            className={`px-4 py-2 rounded-lg flex items-center gap-2 font-bold text-xs transition-all ${!manualOverride
+                                            disabled={!manualOverride || processingId === valve.id || !isEspConnected}
+                                            className={`px-4 py-2 rounded-lg flex items-center gap-2 font-bold text-xs transition-all ${(!manualOverride || !isEspConnected)
                                                     ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
                                                     : valve.isActive
                                                         ? 'bg-red-500 text-white hover:bg-red-600 shadow-md shadow-red-500/30'

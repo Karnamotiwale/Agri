@@ -133,27 +133,53 @@ export const cropService = {
     }),
 
     toggleValve: async (valveId: string, status: boolean): Promise<boolean> => {
-        const ESP_IP = "10.171.0.66";
-        let url = "";
+        const ESP32_BASE_URL = "http://10.33.211.66";
+        let path = "";
 
         if (valveId === "irrigation" || valveId === "v1") {
-            url = status ? `http://${ESP_IP}/pump1/on` : `http://${ESP_IP}/pump1/off`;
+            path = status ? `/pump1/on` : `/pump1/off`;
         } else if (valveId === "fertilization" || valveId === "fertigation" || valveId === "v2") {
-            url = status ? `http://${ESP_IP}/pump2/on` : `http://${ESP_IP}/pump2/off`;
+            path = status ? `/pump2/on` : `/pump2/off`;
         }
 
-        if (url !== "") {
+        if (!path) return false;
+
+        const url = `${ESP32_BASE_URL}${path}`;
+        const maxRetries = 3;
+        const timeoutMs = 10000;
+
+        for (let attempt = 1; attempt <= maxRetries; attempt++) {
+            const controller = new AbortController();
+            const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
+
             try {
-                // Use no-cors to prevent browser from blocking requests to local IPs that don't return CORS headers
-                await fetch(url, { mode: 'no-cors' });
-                console.log(`Sent HTTP command to ESP32 (${ESP_IP}): ${valveId} -> ${status ? 'ON' : 'OFF'}`);
-            } catch (err) {
-                console.error("ESP32 fetch error:", err);
+                console.log(`[ESP32] Connection Attempt ${attempt}/${maxRetries} to ${url}...`);
+                
+                // Use no-cors to prevent browser blocking, but we can still detect timeouts/network unreachable
+                await fetch(url, { 
+                    mode: 'no-cors',
+                    signal: controller.signal
+                });
+                
+                clearTimeout(timeoutId);
+                console.log(`✅ [ESP32] Command Successful: ${valveId} -> ${status ? 'ON' : 'OFF'}`);
+                return true;
+                
+            } catch (err: any) {
+                clearTimeout(timeoutId);
+                const isTimeout = err.name === 'AbortError';
+                console.error(`❌ [ESP32] Request ${isTimeout ? 'Timed out' : 'Failed'} on attempt ${attempt}:`, err.message || err);
+                
+                if (attempt === maxRetries) {
+                    console.error("🚨 [ESP32] OFFLINE or UNREACHABLE. All retry attempts failed.");
+                    throw new Error(`ESP32 Connection Failed: ${isTimeout ? '10s Timeout Reached' : 'Device Unreachable'} at ${ESP32_BASE_URL}`);
+                }
+                
+                // Wait 1 second before retrying
+                await new Promise(r => setTimeout(r, 1000));
             }
         }
-        
-        await new Promise(r => setTimeout(r, 400)); // Short UI delay
-        return true;
+        return false;
     },
 
     getGrowthStages: async (_cropId: string): Promise<any[]> => [

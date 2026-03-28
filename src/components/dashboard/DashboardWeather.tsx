@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
-import { getWeather } from "../../services/weatherService";
+import { getWeather, getUserLocation } from "../../services/weatherService";
+import { useApp } from "../../context/AppContext";
 import {
   Droplets,
   Wind,
@@ -10,40 +11,51 @@ import {
 } from "lucide-react";
 
 export function DashboardWeather() {
+  const { farms, selectedFarmId } = useApp();
   const [weather, setWeather] = useState<any>(null);
   const [cityName, setCityName] = useState("");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    if (!navigator.geolocation) {
-      setError("Geolocation not supported");
-      setLoading(false);
-      return;
-    }
+    let active = true;
 
-    navigator.geolocation.getCurrentPosition(
-      async (position) => {
-        const { latitude, longitude } = position.coords;
+    const loadWeather = async () => {
+      let farmLat: number | undefined;
+      let farmLon: number | undefined;
 
-        try {
-          const data = await getWeather(latitude, longitude);
-          setWeather(data);
-          setCityName(data.name || "");
-        } catch (err) {
-          console.error("Weather fetch failed:", err);
-          setError("Unable to load weather");
-        } finally {
-          setLoading(false);
-        }
-      },
-      () => {
-        setError("Location access denied");
-        setLoading(false);
-      },
-      { enableHighAccuracy: true, timeout: 8000 }
-    );
-  }, []);
+      const farm = farms.find(f => f.id === selectedFarmId);
+      if (farm && farm.latitude && farm.longitude) {
+        farmLat = Number(farm.latitude);
+        farmLon = Number(farm.longitude);
+      }
+
+      try {
+        setLoading(true);
+        const { lat, lon } = await getUserLocation(farmLat, farmLon);
+        if (!active) return;
+
+        const data = await getWeather(lat, lon);
+        if (!active) return;
+
+        setWeather(data);
+        setCityName(data.name || "");
+        setError(null);
+      } catch (err) {
+        if (!active) return;
+        console.error("Weather fetch failed:", err);
+        setError("Unable to load weather");
+      } finally {
+        if (active) setLoading(false);
+      }
+    };
+
+    loadWeather();
+
+    return () => {
+      active = false;
+    };
+  }, [farms, selectedFarmId]);
 
   /* ---------------- LOADING ---------------- */
 

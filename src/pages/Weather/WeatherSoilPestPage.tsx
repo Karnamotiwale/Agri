@@ -19,7 +19,7 @@ import {
   ArrowDown,
   Thermometer,
 } from 'lucide-react';
-import { getWeather } from '../../services/weatherService';
+import { getWeather, getUserLocation } from '../../services/weatherService';
 import { BottomNav } from '../../components/layout/BottomNav';
 import { useApp } from '../../context/AppContext';
 
@@ -59,31 +59,43 @@ export default function WeatherSoilPestPage() {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    if (!navigator.geolocation) {
-      setError('Geolocation not supported');
-      setLoading(false);
-      return;
-    }
+    let active = true;
 
-    navigator.geolocation.getCurrentPosition(
-      async ({ coords }) => {
-        try {
-          const data = await getWeather(coords.latitude, coords.longitude);
-          setWeather(data);
-          setLocationName(data.name || 'Your Location');
-        } catch (e) {
-          setError('Could not fetch weather');
-        } finally {
-          setLoading(false);
-        }
-      },
-      (err) => {
-        setError('Location access denied');
-        setLoading(false);
-      },
-      { enableHighAccuracy: true, timeout: 8000 }
-    );
-  }, []);
+    const loadWeather = async () => {
+      let farmLat: number | undefined;
+      let farmLon: number | undefined;
+
+      const farm = farms.find(f => f.id === selectedFarmId);
+      if (farm && farm.latitude && farm.longitude) {
+        farmLat = Number(farm.latitude);
+        farmLon = Number(farm.longitude);
+      }
+
+      try {
+        setLoading(true);
+        const { lat, lon } = await getUserLocation(farmLat, farmLon);
+        if (!active) return;
+
+        const data = await getWeather(lat, lon);
+        if (!active) return;
+
+        setWeather(data);
+        setLocationName(data.name || 'Your Location');
+        setError(null);
+      } catch (e) {
+        if (!active) return;
+        setError('Could not fetch weather');
+      } finally {
+        if (active) setLoading(false);
+      }
+    };
+
+    loadWeather();
+
+    return () => {
+      active = false;
+    };
+  }, [farms, selectedFarmId]);
 
   if (loading) {
     return (

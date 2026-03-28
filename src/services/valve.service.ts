@@ -25,32 +25,67 @@ const MOCK_VALVES: Valve[] = [
     { id: 'v4', farmId: 'f1', cropId: 'c1', valveNumber: 4, zoneName: 'Zone D – East',        isActive: false, status: 'IDLE' },
 ];
 
-const ESP_IP = "10.171.0.66";
+const ESP32_BASE_URL = "http://10.33.211.66";
 
 export const valveService = {
     getValvesForCrop: async (_cropId: string): Promise<Valve[]> => MOCK_VALVES,
+    
+    checkESP32Connection: async (): Promise<boolean> => {
+        try {
+            const controller = new AbortController();
+            const timeoutId = setTimeout(() => controller.abort(), 3000);
+            await fetch(`${ESP32_BASE_URL}/`, { mode: 'no-cors', signal: controller.signal });
+            clearTimeout(timeoutId);
+            return true;
+        } catch (e) {
+            return false;
+        }
+    },
+
     toggleValve: async (valveId: string, isActive: boolean): Promise<Valve> => {
 
-        let url = "";
+        let path = "";
 
-        if (valveId === "v1") {
-            url = isActive
-                ? `http://${ESP_IP}/pump1/on`
-                : `http://${ESP_IP}/pump1/off`;
+        if (valveId === "v1" || valveId === "irrigation") {
+            path = isActive ? `/pump1/on` : `/pump1/off`;
+        } else if (valveId === "v2" || valveId === "fertigation" || valveId === "fertilization") {
+            path = isActive ? `/pump2/on` : `/pump2/off`;
         }
 
-        if (valveId === "v2") {
-            url = isActive
-                ? `http://${ESP_IP}/pump2/on`
-                : `http://${ESP_IP}/pump2/off`;
-        }
+        if (path) {
+            const url = `${ESP32_BASE_URL}${path}`;
+            const maxRetries = 3;
+            const timeoutMs = 10000; // Increased to 10 seconds
 
-        if (url !== "") {
-            try {
-                // Use no-cors to prevent browser from blocking requests to local IPs that don't return CORS headers
-                await fetch(url, { mode: 'no-cors' });
-            } catch (err) {
-                console.error("Valve fetch error:", err);
+            for (let attempt = 1; attempt <= maxRetries; attempt++) {
+                const controller = new AbortController();
+                const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
+
+                try {
+                    console.log(`[ESP32 Valve] Attempt ${attempt}/${maxRetries} to ${url}...`);
+                    
+                    await fetch(url, { 
+                        mode: 'no-cors',
+                        signal: controller.signal
+                    });
+                    
+                    clearTimeout(timeoutId);
+                    console.log(`✅ [ESP32 Valve] Command Successful: ${valveId} -> ${isActive ? 'ON' : 'OFF'}`);
+                    break; // Success, exit retry loop
+                    
+                } catch (err: any) {
+                    clearTimeout(timeoutId);
+                    const isTimeout = err.name === 'AbortError';
+                    console.error(`❌ [ESP32 Valve] Request ${isTimeout ? 'Timed out' : 'Failed'} on attempt ${attempt}:`, err.message || err);
+                    
+                    if (attempt === maxRetries) {
+                        console.error("🚨 [ESP32 Valve] OFFLINE or UNREACHABLE. All attempts failed.");
+                        throw new Error(`ESP32 Connection Failed: ${isTimeout ? '10s Timeout Reached' : 'Device Unreachable'} at ${ESP32_BASE_URL}`);
+                    }
+                    
+                    // Wait 1 second before retrying
+                    await new Promise(r => setTimeout(r, 1000));
+                }
             }
         }
 
