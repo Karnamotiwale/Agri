@@ -52,7 +52,8 @@ export function DiseaseDetection() {
       formData.append("image", image); 
 
       // Send a direct POST request to the Flask backend's detect-disease endpoint
-      const response = await fetch("http://localhost:5000/api/v1/crops/detect-disease", {
+      const BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+      const response = await fetch(`${BASE_URL}/api/v1/crops/detect-disease`, {
         method: "POST",
         body: formData,
         // Do NOT set Content-Type to multipart/form-data manually, 

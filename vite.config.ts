@@ -1,76 +1,79 @@
-import { defineConfig } from 'vite'
+import { defineConfig, loadEnv } from 'vite'
 import path from 'path'
 import tailwindcss from '@tailwindcss/vite'
 import react from '@vitejs/plugin-react'
 import { VitePWA } from 'vite-plugin-pwa'
 
-export default defineConfig({
-  plugins: [
-    // The React and Tailwind plugins are both required for Make, even if
-    // Tailwind is not being actively used – do not remove them
-    react(),
-    tailwindcss(),
-    VitePWA({
-      registerType: 'autoUpdate',
-      includeAssets: ['favicon.ico', 'apple-touch-icon.png', 'masked-icon.svg'],
-      manifest: {
-        name: 'AgriAI',
-        short_name: 'AgriAI',
-        description: 'Smart Farming & AI Automation',
-        theme_color: '#16a34a',
-        background_color: '#ffffff',
-        display: 'standalone',
-        start_url: '/',
-        icons: [
-          {
-            src: 'pwa-192x192.png',
-            sizes: '192x192',
-            type: 'image/png'
-          },
-          {
-            src: 'pwa-512x512.png',
-            sizes: '512x512',
-            type: 'image/png'
-          }
-        ]
-      },
-      workbox: {
-        globPatterns: ['**/*.{js,css,html,ico,png,svg}'],
-        cleanupOutdatedCaches: true,
-        clientsClaim: true,
-        skipWaiting: true
+export default defineConfig(({ mode }) => {
+  const env = loadEnv(mode, process.cwd(), '');
+  const apiUrl = env.VITE_API_URL || 'http://localhost:5000';
+
+  return {
+    plugins: [
+      react(),
+      tailwindcss(),
+      VitePWA({
+        registerType: 'autoUpdate',
+        includeAssets: ['favicon.ico', 'apple-touch-icon.png', 'masked-icon.svg'],
+        manifest: {
+          name: 'AgriAI',
+          short_name: 'AgriAI',
+          description: 'Smart Farming & AI Automation',
+          theme_color: '#16a34a',
+          background_color: '#ffffff',
+          display: 'standalone',
+          start_url: '/',
+          icons: [
+            {
+              src: 'pwa-192x192.png',
+              sizes: '192x192',
+              type: 'image/png'
+            },
+            {
+              src: 'pwa-512x512.png',
+              sizes: '512x512',
+              type: 'image/png'
+            }
+          ]
+        },
+        workbox: {
+          globPatterns: ['**/*.{js,css,html,ico,png,svg}'],
+          cleanupOutdatedCaches: true,
+          clientsClaim: true,
+          skipWaiting: true
+        }
+      }),
+    ],
+    server: {
+      proxy: {
+        '/decide': apiUrl,
+        '/feedback': apiUrl,
+        '/recommendations': apiUrl,
+        '/valves': apiUrl,
+        '/crop/journey': apiUrl,
+        '/crop/stages': apiUrl,
+        '/crop/rotation': apiUrl,
+        '/yield': apiUrl,
+        '/ai/health-detect': apiUrl,
+        '/ai/rl-performance': apiUrl,
+        '/ai/rl-actions': apiUrl,
+        '/ai/rl-rewards': apiUrl,
+        '/ai/rl-insights': apiUrl,
+        '/ai/detailed-advisory': apiUrl,
+        '/ai/valves': apiUrl,
+        '/sensors': apiUrl,
+        '/esp': {
+          target: 'http://10.171.0.66',
+          changeOrigin: true,
+          rewrite: (path) => path.replace(/^\/esp/, ''),
+        }
       }
-    }),
-  ],
-  server: {
-    proxy: {
-      '/decide': 'http://localhost:5000',
-      '/feedback': 'http://localhost:5000',
-      '/recommendations': 'http://localhost:5000',
-      '/valves': 'http://localhost:5000',
-      '/crop/journey': 'http://localhost:5000',
-      '/crop/stages': 'http://localhost:5000',
-      '/crop/rotation': 'http://localhost:5000',
-      '/yield': 'http://localhost:5000',
-      '/ai/health-detect': 'http://localhost:5000',
-      '/ai/rl-performance': 'http://localhost:5000',
-      '/ai/rl-actions': 'http://localhost:5000',
-      '/ai/rl-rewards': 'http://localhost:5000',
-      '/ai/rl-insights': 'http://localhost:5000',
-      '/ai/detailed-advisory': 'http://localhost:5000',
-      '/ai/valves': 'http://localhost:5000',
-      '/sensors': 'http://localhost:5000',
-      '/esp': {
-        target: 'http://10.171.0.66',
-        changeOrigin: true,
-        rewrite: (path) => path.replace(/^\/esp/, ''),
-      }
-    }
-  },
-  resolve: {
-    alias: {
-      // Alias @ to the src directory
-      '@': path.resolve(__dirname, './src'),
     },
-  },
-})
+    resolve: {
+      alias: {
+        // Alias @ to the src directory
+        '@': path.resolve(__dirname, './src'),
+      },
+    }
+  };
+});
