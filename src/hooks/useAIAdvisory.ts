@@ -21,13 +21,25 @@ export function useAIAdvisory() {
 
     try {
       const answer = await askAI(question);
-      console.log("AI Response Received:", answer);
-      const assistantMessage: ChatMessage = { role: 'assistant', content: answer || 'No response received' };
+      
+      // Detect if the backend returned an AI failure message
+      const isAIBusy = answer && (
+        answer.toLowerCase().includes('busy') || 
+        answer.toLowerCase().includes('offline') || 
+        answer.toLowerCase().includes('unavailable') ||
+        answer.toLowerCase().includes('temporarily')
+      );
+      
+      const displayText = isAIBusy
+        ? '🤖 AI assistant is busy right now. Please try again in a moment.'
+        : (answer || 'No response received');
+        
+      const assistantMessage: ChatMessage = { role: 'assistant', content: displayText };
       setMessages(prev => [...prev, assistantMessage]);
     } catch (err: any) {
       console.error('AI Advisory Error:', err);
       setError(err.message || 'Failed to get response');
-      const errorMessage: ChatMessage = { role: 'assistant', content: 'Sorry, I am facing some technical difficulties. Please try again later.' };
+      const errorMessage: ChatMessage = { role: 'assistant', content: '🤖 AI assistant is busy right now. Please try again in a moment.' };
       setMessages(prev => [...prev, errorMessage]);
     } finally {
       setLoading(false);

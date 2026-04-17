@@ -56,27 +56,34 @@ export function DiseaseDetection() {
       const response = await fetch(`${BASE_URL}/api/v1/crops/detect-disease`, {
         method: "POST",
         body: formData,
-        // Do NOT set Content-Type to multipart/form-data manually, 
-        // fetch will automatically set it along with the correct boundary!
       });
-
-      if (!response.ok) {
-        throw new Error(`Server error: ${response.status} ${response.statusText}`);
-      }
 
       const data = await response.json();
       console.log("Disease API Response:", data);
 
+      // Check if AI was busy or analysis failed
+      if (data.success === false) {
+        setError(data.message || "🤖 AI assistant is busy. Please retry shortly.");
+        return;
+      }
+
+      // Validate we got real data back
+      if (!data.crop || !data.disease) {
+        setError("🤖 AI could not analyze this image. Please try with a clearer photo.");
+        return;
+      }
+
       setResult({
         crop: data.crop,
         disease: data.disease,
-        confidence: data.confidence,
+        confidence: data.confidence || 0,
         organic_remedies: data.organic_remedies,
         prevention: data.prevention,
       });
     } catch (err: any) {
       console.error("Detection failed:", err);
-      setError(err.message || "Failed to analyze crop image. Check if the Flask backend is running on port 5000.");
+      // Never show raw technical errors to farmers
+      setError("🤖 AI assistant is busy right now. Please try again in a moment.");
     } finally {
       setLoading(false);
     }
