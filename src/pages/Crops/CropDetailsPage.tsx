@@ -22,6 +22,7 @@ import { useCropSensors } from '../../hooks/useCropSensors';
 import { useEffect, useState } from 'react';
 import { cropService } from '../../services/crop.service';
 import { motion } from 'motion/react';
+import { AgronomicForm, AgronomicData } from '../../features/crop/AgronomicForm';
 
 export default function CropFullDetails() {
    const { id } = useParams();
@@ -37,19 +38,16 @@ export default function CropFullDetails() {
    const [rotation, setRotation] = useState<any>(null);
    const [organicRecs, setOrganicRecs] = useState<any>(null);
    const [loading, setLoading] = useState(true);
+   const [hasAgronomicData, setHasAgronomicData] = useState(false);
 
    useEffect(() => {
       async function loadData() {
          try {
-            const [stageList, yieldInfo, rotationInfo, organicInfo] = await Promise.all([
+            const [stageList, organicInfo] = await Promise.all([
                cropService.getGrowthStages(cropId),
-               cropService.getYieldPrediction(cropId),
-               cropService.getRotationRecommendation(cropId),
                cropService.getOrganicRecommendations(cropId)
             ]);
             setStages(stageList);
-            setYieldData(yieldInfo);
-            setRotation(rotationInfo);
             setOrganicRecs(organicInfo);
          } catch (err) {
             console.error('Failed to load crop details:', err);
@@ -65,6 +63,23 @@ export default function CropFullDetails() {
       const success = await cropService.toggleValve(type, newStatus);
       if (success) {
          setValves(prev => ({ ...prev, [type]: newStatus }));
+      }
+   };
+
+   const handleAgronomicSubmit = async (data: AgronomicData) => {
+      setLoading(true);
+      try {
+         const [yieldInfo, rotationInfo] = await Promise.all([
+             cropService.getYieldPrediction(cropId, data),
+             cropService.getRotationRecommendation(cropId, data)
+         ]);
+         setYieldData(yieldInfo);
+         setRotation(rotationInfo);
+         setHasAgronomicData(true);
+      } catch (err) {
+         console.error('Prediction failed', err);
+      } finally {
+         setLoading(false);
       }
    };
 
@@ -324,71 +339,108 @@ export default function CropFullDetails() {
                </div>
             </div>
 
-            {/* 4. Yield Prediction Analysis */}
-            <div className="bg-gradient-to-br from-amber-500 to-amber-600 rounded-[2.5rem] p-8 text-white shadow-xl shadow-amber-600/30">
-               <div className="flex items-center gap-4 mb-8">
-                  <div className="p-3 bg-white/20 rounded-2xl backdrop-blur-md">
-                     <TrendingUp className="w-6 h-6 text-white" />
-                  </div>
-                  <h3 className="text-lg font-black">Yield Prediction</h3>
-               </div>
-
-               <div className="space-y-6">
-                  <div className="flex items-baseline gap-2">
-                     <span className="text-4xl font-black">{yieldData?.estimatedYield}</span>
-                     <span className="text-sm font-bold opacity-80">expected</span>
-                  </div>
-
-                  <div className="grid grid-cols-2 gap-4">
-                     <div className="bg-white/10 p-4 rounded-2xl backdrop-blur-sm">
-                        <p className="text-[10px] font-bold uppercase opacity-80 mb-1">Confidence</p>
-                        <p className="text-xl font-black">{yieldData?.confidence}%</p>
+            {/* AI Calculations Block */}
+            {!hasAgronomicData ? (
+               <AgronomicForm 
+                   onSubmit={handleAgronomicSubmit} 
+                   initialData={{
+                       cropType: crop.name,
+                       sowingDate: crop.sowingDate,
+                       soilType: crop.soilType?.toLowerCase().includes('loam') ? 'loam' : 'sandy',
+                       moisture: Math.round(sensors.moisture || 40)
+                   }}
+               />
+            ) : (
+               <>
+                  {/* 4. Yield Prediction Analysis */}
+                  <div className="bg-gradient-to-br from-amber-500 to-amber-600 rounded-[2.5rem] p-8 text-white shadow-xl shadow-amber-600/30">
+                     <div className="flex items-center justify-between mb-8">
+                        <div className="flex items-center gap-4">
+                           <div className="p-3 bg-white/20 rounded-2xl backdrop-blur-md">
+                              <TrendingUp className="w-6 h-6 text-white" />
+                           </div>
+                           <h3 className="text-lg font-black">Dynamic Yield Prediction</h3>
+                        </div>
+                        <button 
+                           onClick={() => setHasAgronomicData(false)}
+                           className="px-4 py-2 bg-black/10 hover:bg-black/20 text-white rounded-xl text-xs font-black backdrop-blur-md transition-all border border-white/10"
+                        >
+                           Make Adjustments
+                        </button>
                      </div>
-                     <div className="bg-white/10 p-4 rounded-2xl backdrop-blur-sm">
-                        <p className="text-[10px] font-bold uppercase opacity-80 mb-1">Harvest Window</p>
-                        <p className="text-xs font-black">{yieldData?.harvestWindow}</p>
-                     </div>
-                  </div>
-               </div>
-            </div>
 
-            {/* 5. Crop Rotation Recommendation */}
-            <div className="bg-white rounded-[2.5rem] p-8 shadow-xl shadow-gray-200/50">
-               <div className="flex items-center gap-4 mb-6">
-                  <div className="w-12 h-12 bg-green-50 text-green-600 rounded-2xl flex items-center justify-center">
-                     <Factory className="w-6 h-6" />
-                  </div>
-                  <div>
-                     <h3 className="text-lg font-black text-gray-900">Next Rotation</h3>
-                     <p className="text-[10px] font-black text-green-600 uppercase tracking-widest">Post-Harvest Strategy</p>
-                  </div>
-               </div>
+                     <div className="space-y-6">
+                        <div className="flex items-baseline gap-2">
+                           <span className="text-5xl font-black">{yieldData?.estimatedYield?.split(" ")[0]}</span>
+                           <span className="text-sm font-bold opacity-80">{yieldData?.estimatedYield?.split(" ").slice(1).join(" ")} expected</span>
+                        </div>
 
-               <div className="bg-green-50/50 rounded-3xl p-6 border border-green-100">
-                  <div className="flex items-center gap-4 mb-4">
-                     <div className="w-16 h-16 bg-white rounded-full flex items-center justify-center shadow-sm text-3xl">
-                        🌱
-                     </div>
-                     <div>
-                        <h4 className="text-base font-black text-gray-900">{rotation?.recommendedCrop}</h4>
-                        <p className="text-xs font-bold text-gray-500">Perfect match for current soil</p>
+                        <div className="grid grid-cols-2 gap-4">
+                           <div className="bg-white/10 p-4 rounded-2xl backdrop-blur-sm">
+                              <p className="text-[10px] font-bold uppercase opacity-80 mb-1">Confidence</p>
+                              <p className="text-xl font-black">{yieldData?.confidence}%</p>
+                           </div>
+                           <div className="bg-white/10 p-4 rounded-2xl backdrop-blur-sm">
+                              <p className="text-[10px] font-bold uppercase opacity-80 mb-1">Harvest Window</p>
+                              <p className="text-xs font-black">{yieldData?.harvestWindow}</p>
+                           </div>
+                        </div>
+
+                        {/* Explainability factors */}
+                        <div className="pt-4 border-t border-white/20">
+                           <p className="text-xs font-bold opacity-90 leading-relaxed mb-3">
+                              {yieldData?.explainability?.reason}
+                           </p>
+                           <div className="flex flex-wrap gap-2 mt-2">
+                               {yieldData?.factors?.map((f: any, idx: number) => (
+                                   <div key={idx} className="bg-white/10 rounded-lg px-2.5 py-1 text-[10px] font-black uppercase text-white/90">
+                                       {f.name} {f.impact === 'POSITIVE' ? '↑' : '↓'}
+                                   </div>
+                               ))}
+                           </div>
+                        </div>
                      </div>
                   </div>
 
-                  <div className="space-y-3">
-                     <p className="text-sm font-bold text-gray-700 leading-relaxed">
-                        {rotation?.reason}
-                     </p>
-                     <div className="flex flex-wrap gap-2">
-                        {rotation?.benefits.map((benefit: string, i: number) => (
-                           <span key={i} className="px-3 py-1 bg-white text-[10px] font-black text-green-600 rounded-full border border-green-100">
-                              {benefit}
-                           </span>
-                        ))}
+                  {/* 5. Crop Rotation Recommendation */}
+                  <div className="bg-white rounded-[2.5rem] p-8 shadow-xl shadow-gray-200/50">
+                     <div className="flex items-center gap-4 mb-6">
+                        <div className="w-12 h-12 bg-green-50 text-green-600 rounded-2xl flex items-center justify-center">
+                           <Factory className="w-6 h-6" />
+                        </div>
+                        <div>
+                           <h3 className="text-lg font-black text-gray-900">Next Rotation</h3>
+                           <p className="text-[10px] font-black text-green-600 uppercase tracking-widest">Optimized for Field Health</p>
+                        </div>
+                     </div>
+
+                     <div className="bg-green-50/50 rounded-3xl p-6 border border-green-100">
+                        <div className="flex items-center gap-4 mb-4">
+                           <div className="w-16 h-16 bg-white rounded-full flex items-center justify-center shadow-sm text-3xl">
+                              🌱
+                           </div>
+                           <div>
+                              <h4 className="text-base font-black text-gray-900">{rotation?.recommendedCrop}</h4>
+                              <p className="text-xs font-bold text-gray-500">Suggested follow-up crop</p>
+                           </div>
+                        </div>
+
+                        <div className="space-y-3">
+                           <p className="text-sm font-bold text-gray-700 leading-relaxed">
+                              {rotation?.reason}
+                           </p>
+                           <div className="flex flex-wrap gap-2">
+                              {rotation?.benefits?.map((benefit: string, i: number) => (
+                                 <span key={i} className="px-3 py-1 bg-white text-[10px] font-black text-green-600 rounded-full border border-green-100">
+                                    {benefit}
+                                 </span>
+                              ))}
+                           </div>
+                        </div>
                      </div>
                   </div>
-               </div>
-            </div>
+               </>
+            )}
          </div>
       </div>
    );

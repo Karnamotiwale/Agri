@@ -336,7 +336,37 @@ export function AppProvider({ children }: { children: ReactNode }) {
     }
   }, [user, loading, fetchData]);
 
-  // Real-time subscriptions are disabled in mock mode
+  // ── Supabase Realtime: auto-update farms list on INSERT ─────────────────
+  useEffect(() => {
+    if (!user) return;
+
+    const channel = supabase
+      .channel('app-farms-realtime')
+      .on(
+        'postgres_changes',
+        { event: 'INSERT', schema: 'public', table: 'farms' },
+        (payload) => {
+          const raw = payload.new as any;
+          const newFarm: Farm = {
+            id: raw.id,
+            name: raw.farm_name || 'Unnamed Farm',
+            location: 'India',
+            area: raw.total_land_acres ? `${raw.total_land_acres} acres` : '0 acres',
+            lands: [],
+            crops: [],
+            latitude: raw.latitude ?? undefined,
+            longitude: raw.longitude ?? undefined,
+          };
+          dispatch({ type: 'ADD_FARM', farm: newFarm });
+          // Auto-select this new farm if none selected
+          dispatch({ type: 'SET_SELECTED_FARM', farmId: raw.id });
+          console.log('[AppContext] Realtime: new farm added', raw.farm_name);
+        }
+      )
+      .subscribe();
+
+    return () => { supabase.removeChannel(channel); };
+  }, [user]);
 
 
   const login = useCallback(async (email?: string, phone?: string) => {

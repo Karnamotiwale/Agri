@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Sprout, MapPin, Plus, Tractor } from 'lucide-react';
 import { useApp } from '../../context/AppContext';
+import { useFarm } from '../../context/FarmContext';
 import { CropCard } from '@/components/cards/CropCard';
 import { BottomNav } from '../../components/layout/BottomNav';
 import { AddFarmModal } from '../../components/forms/AddFarmModal';
@@ -14,6 +15,7 @@ function getProgress(cropId: string): number {
 export default function MyFarm() {
   const navigate = useNavigate();
   const { getAllCrops, farms } = useApp();
+  const { refreshFarms, setSelectedFarmId } = useFarm();
   const crops = getAllCrops().map((c) => ({
     ...c,
     progress: getProgress(c.id),
@@ -24,10 +26,11 @@ export default function MyFarm() {
 
   const allCropsCount = crops.length;
 
-  // Called when farm is saved — automatically opens the crop modal next
+  // Called when farm is saved — refresh FarmContext, then open crop modal
   const handleFarmSuccess = (_farmId: string) => {
     setShowAddFarmModal(false);
-    // Small delay so farm modal fully closes before crop modal opens
+    refreshFarms(); // Sync FarmContext with new farm
+    if (_farmId) setSelectedFarmId(_farmId); // Select the new farm globally
     setTimeout(() => setShowAddCropModal(true), 300);
   };
 

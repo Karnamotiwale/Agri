@@ -1,9 +1,9 @@
 // ============================================
-// VALVE SERVICE — Mock only, no backend
-// Real endpoints (for future integration):
-//   POST /api/v1/valves/open  → valveService.toggleValve(id, true)
-//   POST /api/v1/valves/stop  → valveService.toggleValve(id, false)
+// VALVE SERVICE
+// Controls ESP32 irrigation hardware + auto-logs activities to Supabase
 // ============================================
+
+import { activityService } from './activity.service';
 
 export interface Valve {
     id: string; farmId: string; cropId: string;
@@ -25,7 +25,7 @@ const MOCK_VALVES: Valve[] = [
     { id: 'v4', farmId: 'f1', cropId: 'c1', valveNumber: 4, zoneName: 'Zone D – East',        isActive: false, status: 'IDLE' },
 ];
 
-const ESP32_BASE_URL = "http://10.33.211.66";
+const ESP32_BASE_URL = "http://10.241.105.66";
 
 export const valveService = {
     getValvesForCrop: async (_cropId: string): Promise<Valve[]> => MOCK_VALVES,
@@ -98,4 +98,36 @@ export const valveService = {
         return valve ?? MOCK_VALVES[0];
     },
     overrideSchedule: async (_valveId: string, _params: any): Promise<boolean> => true,
+
+    /**
+     * Log an irrigation event directly to field_activities.
+     * Call this after valve toggle succeeds.
+     */
+    logIrrigationEvent: async (params: {
+      farmId?: string | null;
+      farmName?: string;
+      cropName?: string;
+      valveId: string;
+      isActive: boolean;
+      durationMinutes?: number;
+    }): Promise<void> => {
+      if (!params.isActive) return; // Only log when turning ON
+      try {
+        await activityService.logIrrigation({
+          field_id: params.farmId,
+          farm_name: params.farmName,
+          crop_name: params.cropName,
+          valve_id: params.valveId,
+          duration_minutes: params.durationMinutes || 0,
+          operation: 'Drip Irrigation',
+          objective: 'Moisture Maintenance',
+          method: 'Drip',
+          water_source: 'Borewell',
+          growth_stage: 'Vegetative',
+        });
+        console.log('[ValveService] Irrigation activity logged');
+      } catch (e) {
+        console.warn('[ValveService] Failed to log irrigation activity:', e);
+      }
+    },
 };

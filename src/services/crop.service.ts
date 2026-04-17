@@ -119,21 +119,47 @@ export const cropService = {
     getCropJourney: async (_cropId: string): Promise<any[]> =>
         generateMockJourneyData(30),
 
-    getYieldPrediction: async (_cropId: string): Promise<any> => ({
-        estimatedYield: '4.2 Tons/Hectare',
-        confidence: 88,
-        harvestWindow: 'Oct 15 - Oct 25',
-        trend: 'up'
-    }),
+    getYieldPrediction: async (cropId: string, data?: any): Promise<any> => {
+        try {
+            const payload = data || { cropType: "Wheat" }; // Fallback payload
+            const res = await api.post('/api/v1/crops/yield-prediction', payload);
+            return res.data;
+        } catch (e) {
+            console.error("Yield prediction failed", e);
+            return {
+                estimatedYield: '0 Tons/Hectare',
+                confidence: 0,
+                harvestWindow: 'Unknown',
+                summary: {
+                    expectedYield: "0 Tons/Hectare",
+                    yieldRange: "0 - 0 Tons/Ha",
+                    stability: "AT_RISK",
+                    vsAverage: "N/A"
+                },
+                factors: [],
+                risks: [],
+                explainability: { confidence: 0, reason: "Error computing yield" }
+            };
+        }
+    },
 
-    getRotationRecommendation: async (_cropId: string): Promise<any> => ({
-        recommendedCrop: 'Soybean',
-        reason: 'Restores Nitrogen levels after Rice cultivation.',
-        benefits: ['Natural Nitrogen Fixation', 'Market Demand', 'Pest Cycle Break']
-    }),
+    getRotationRecommendation: async (cropId: string, data?: any): Promise<any> => {
+        try {
+            const payload = data || { previousCrop: "Wheat" }; // Fallback payload
+            const res = await api.post('/api/v1/crops/rotation', payload);
+            return res.data;
+        } catch (e) {
+            console.error("Rotation recommendation failed", e);
+            return {
+                recommendedCrop: 'Unknown',
+                reason: 'Error fetching rotation recommendation.',
+                benefits: []
+            };
+        }
+    },
 
     toggleValve: async (valveId: string, status: boolean): Promise<boolean> => {
-        const ESP32_BASE_URL = "http://10.33.211.66";
+        const ESP32_BASE_URL = "http://10.241.105.66";
         let path = "";
 
         if (valveId === "irrigation" || valveId === "v1") {
