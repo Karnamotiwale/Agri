@@ -61,12 +61,7 @@ export default defineConfig(({ mode }) => {
         '/ai/rl-insights': apiUrl,
         '/ai/detailed-advisory': apiUrl,
         '/ai/valves': apiUrl,
-        '/sensors': apiUrl,
-        '/esp': {
-          target: 'http://10.171.0.66',
-          changeOrigin: true,
-          rewrite: (path) => path.replace(/^\/esp/, ''),
-        }
+        '/sensors': apiUrl
       }
     },
     resolve: {
