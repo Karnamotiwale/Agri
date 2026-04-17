@@ -25,7 +25,10 @@ const MOCK_VALVES: Valve[] = [
     { id: 'v4', farmId: 'f1', cropId: 'c1', valveNumber: 4, zoneName: 'Zone D – East',        isActive: false, status: 'IDLE' },
 ];
 
-const ESP32_BASE_URL = "http://10.241.105.66";
+// ESP32 base URL — configurable via env var, falls back to local IP
+// NOTE: When deployed on HTTPS (Vercel), browser blocks HTTP (ESP32) requests.
+// This is a known Mixed-Content limitation. The app degrades gracefully.
+const ESP32_BASE_URL = import.meta.env.VITE_ESP32_URL || "http://10.241.105.66";
 
 export const valveService = {
     getValvesForCrop: async (_cropId: string): Promise<Valve[]> => MOCK_VALVES,
@@ -76,14 +79,21 @@ export const valveService = {
                 } catch (err: any) {
                     clearTimeout(timeoutId);
                     const isTimeout = err.name === 'AbortError';
+                    const isMixedContent = window.location.protocol === 'https:' && ESP32_BASE_URL.startsWith('http:');
+                    
+                    if (isMixedContent) {
+                        console.warn('[ESP32 Valve] Mixed Content: Browser blocked HTTP request from HTTPS page. ESP32 must use HTTPS or be reached via backend proxy.');
+                        break; // Don't retry — mixed content will always fail
+                    }
+                    
                     console.error(`❌ [ESP32 Valve] Request ${isTimeout ? 'Timed out' : 'Failed'} on attempt ${attempt}:`, err.message || err);
                     
                     if (attempt === maxRetries) {
                         console.error("🚨 [ESP32 Valve] OFFLINE or UNREACHABLE. All attempts failed.");
-                        throw new Error(`ESP32 Connection Failed: ${isTimeout ? '10s Timeout Reached' : 'Device Unreachable'} at ${ESP32_BASE_URL}`);
+                        // Don't throw — log and continue so UI doesn't crash
+                        break;
                     }
                     
-                    // Wait 1 second before retrying
                     await new Promise(r => setTimeout(r, 1000));
                 }
             }

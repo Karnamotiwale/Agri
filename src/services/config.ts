@@ -1,10 +1,16 @@
 // ============================================
-// CONFIG — Mock mode, no real API URL needed
+// CONFIG — Central API configuration for KisaanSaathi
 // ============================================
-export const API_BASE_URL = '';
 
-export const getApiUrl = (_endpoint: string) => {
-    // In mock mode all URLs are disabled — this function should never be called
-    console.warn('[Mock Mode] getApiUrl called — backend is disabled');
-    return '';
+/**
+ * Backend API base URL.
+ * Set VITE_API_URL in your .env.production file on Vercel.
+ * Falls back to localhost for local development.
+ */
+export const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+
+export const getApiUrl = (endpoint: string): string => {
+    const base = API_BASE_URL.replace(/\/$/, ''); // strip trailing slash
+    const path = endpoint.startsWith('/') ? endpoint : `/${endpoint}`;
+    return `${base}${path}`;
 };
