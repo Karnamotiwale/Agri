@@ -159,7 +159,7 @@ export const cropService = {
     },
 
     toggleValve: async (valveId: string, status: boolean): Promise<boolean> => {
-        const ESP32_BASE_URL = "http://10.241.105.66";
+        const ESP32_BASE_URL = "http://10.51.197.66";
         let path = "";
 
         if (valveId === "irrigation" || valveId === "v1") {
@@ -180,27 +180,27 @@ export const cropService = {
 
             try {
                 console.log(`[ESP32] Connection Attempt ${attempt}/${maxRetries} to ${url}...`);
-                
+
                 // Use no-cors to prevent browser blocking, but we can still detect timeouts/network unreachable
-                await fetch(url, { 
+                await fetch(url, {
                     mode: 'no-cors',
                     signal: controller.signal
                 });
-                
+
                 clearTimeout(timeoutId);
                 console.log(`✅ [ESP32] Command Successful: ${valveId} -> ${status ? 'ON' : 'OFF'}`);
                 return true;
-                
+
             } catch (err: any) {
                 clearTimeout(timeoutId);
                 const isTimeout = err.name === 'AbortError';
                 console.error(`❌ [ESP32] Request ${isTimeout ? 'Timed out' : 'Failed'} on attempt ${attempt}:`, err.message || err);
-                
+
                 if (attempt === maxRetries) {
                     console.error("🚨 [ESP32] OFFLINE or UNREACHABLE. All retry attempts failed.");
                     throw new Error(`ESP32 Connection Failed: ${isTimeout ? '10s Timeout Reached' : 'Device Unreachable'} at ${ESP32_BASE_URL}`);
                 }
-                
+
                 // Wait 1 second before retrying
                 await new Promise(r => setTimeout(r, 1000));
             }

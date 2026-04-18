@@ -20,19 +20,19 @@ export interface ValveSchedule {
 
 const MOCK_VALVES: Valve[] = [
     { id: 'v1', farmId: 'f1', cropId: 'c1', valveNumber: 1, zoneName: 'Zone A – Main Field', isActive: false, status: 'IDLE' },
-    { id: 'v2', farmId: 'f1', cropId: 'c1', valveNumber: 2, zoneName: 'Zone B – North',       isActive: false, status: 'IDLE' },
-    { id: 'v3', farmId: 'f1', cropId: 'c1', valveNumber: 3, zoneName: 'Zone C – South',       isActive: false, status: 'IDLE' },
-    { id: 'v4', farmId: 'f1', cropId: 'c1', valveNumber: 4, zoneName: 'Zone D – East',        isActive: false, status: 'IDLE' },
+    { id: 'v2', farmId: 'f1', cropId: 'c1', valveNumber: 2, zoneName: 'Zone B – North', isActive: false, status: 'IDLE' },
+    { id: 'v3', farmId: 'f1', cropId: 'c1', valveNumber: 3, zoneName: 'Zone C – South', isActive: false, status: 'IDLE' },
+    { id: 'v4', farmId: 'f1', cropId: 'c1', valveNumber: 4, zoneName: 'Zone D – East', isActive: false, status: 'IDLE' },
 ];
 
 // ESP32 base URL — configurable via env var, falls back to local IP
 // NOTE: When deployed on HTTPS (Vercel), browser blocks HTTP (ESP32) requests.
 // This is a known Mixed-Content limitation. The app degrades gracefully.
-const ESP32_BASE_URL = import.meta.env.VITE_ESP32_URL || "http://10.241.105.66";
+const ESP32_BASE_URL = import.meta.env.VITE_ESP32_URL || "http://10.51.197.66";
 
 export const valveService = {
     getValvesForCrop: async (_cropId: string): Promise<Valve[]> => MOCK_VALVES,
-    
+
     checkESP32Connection: async (): Promise<boolean> => {
         try {
             const controller = new AbortController();
@@ -66,34 +66,34 @@ export const valveService = {
 
                 try {
                     console.log(`[ESP32 Valve] Attempt ${attempt}/${maxRetries} to ${url}...`);
-                    
-                    await fetch(url, { 
+
+                    await fetch(url, {
                         mode: 'no-cors',
                         signal: controller.signal
                     });
-                    
+
                     clearTimeout(timeoutId);
                     console.log(`✅ [ESP32 Valve] Command Successful: ${valveId} -> ${isActive ? 'ON' : 'OFF'}`);
                     break; // Success, exit retry loop
-                    
+
                 } catch (err: any) {
                     clearTimeout(timeoutId);
                     const isTimeout = err.name === 'AbortError';
                     const isMixedContent = window.location.protocol === 'https:' && ESP32_BASE_URL.startsWith('http:');
-                    
+
                     if (isMixedContent) {
                         console.warn('[ESP32 Valve] Mixed Content: Browser blocked HTTP request from HTTPS page. ESP32 must use HTTPS or be reached via backend proxy.');
                         break; // Don't retry — mixed content will always fail
                     }
-                    
+
                     console.error(`❌ [ESP32 Valve] Request ${isTimeout ? 'Timed out' : 'Failed'} on attempt ${attempt}:`, err.message || err);
-                    
+
                     if (attempt === maxRetries) {
                         console.error("🚨 [ESP32 Valve] OFFLINE or UNREACHABLE. All attempts failed.");
                         // Don't throw — log and continue so UI doesn't crash
                         break;
                     }
-                    
+
                     await new Promise(r => setTimeout(r, 1000));
                 }
             }
@@ -114,30 +114,30 @@ export const valveService = {
      * Call this after valve toggle succeeds.
      */
     logIrrigationEvent: async (params: {
-      farmId?: string | null;
-      farmName?: string;
-      cropName?: string;
-      valveId: string;
-      isActive: boolean;
-      durationMinutes?: number;
+        farmId?: string | null;
+        farmName?: string;
+        cropName?: string;
+        valveId: string;
+        isActive: boolean;
+        durationMinutes?: number;
     }): Promise<void> => {
-      if (!params.isActive) return; // Only log when turning ON
-      try {
-        await activityService.logIrrigation({
-          field_id: params.farmId,
-          farm_name: params.farmName,
-          crop_name: params.cropName,
-          valve_id: params.valveId,
-          duration_minutes: params.durationMinutes || 0,
-          operation: 'Drip Irrigation',
-          objective: 'Moisture Maintenance',
-          method: 'Drip',
-          water_source: 'Borewell',
-          growth_stage: 'Vegetative',
-        });
-        console.log('[ValveService] Irrigation activity logged');
-      } catch (e) {
-        console.warn('[ValveService] Failed to log irrigation activity:', e);
-      }
+        if (!params.isActive) return; // Only log when turning ON
+        try {
+            await activityService.logIrrigation({
+                field_id: params.farmId,
+                farm_name: params.farmName,
+                crop_name: params.cropName,
+                valve_id: params.valveId,
+                duration_minutes: params.durationMinutes || 0,
+                operation: 'Drip Irrigation',
+                objective: 'Moisture Maintenance',
+                method: 'Drip',
+                water_source: 'Borewell',
+                growth_stage: 'Vegetative',
+            });
+            console.log('[ValveService] Irrigation activity logged');
+        } catch (e) {
+            console.warn('[ValveService] Failed to log irrigation activity:', e);
+        }
     },
 };
