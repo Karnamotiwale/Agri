@@ -22,8 +22,7 @@ import { DashboardWeather } from '../../components/dashboard/DashboardWeather';
 import { WisdomCards } from '../../components/dashboard/WisdomCards';
 import { DashboardAIInsights } from '../../components/dashboard/DashboardAIInsights';
 import { BottomNav } from '../../components/layout/BottomNav';
-import SoilMoistureCard from '../../features/sensors/SoilMoistureCard';
-import NPKCard from '../../features/sensors/NPKCard';
+
 import SmartAlerts from '../../components/dashboard/SmartAlerts';
 
 import { useApp } from '../../context/AppContext';
@@ -100,14 +99,7 @@ export default function Dashboard() {
             <DashboardCarousel />
           </motion.div>
 
-          {/* Live IoT Sensor Cards */}
-          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }} className="px-6 mt-10">
-            <h2 className="text-base font-black mb-3" style={{ color: '#1B3A1B' }}>Live Field Sensors</h2>
-            <div className="flex flex-col gap-4">
-              <SoilMoistureCard />
-              <NPKCard />
-            </div>
-          </motion.div>
+
 
           {/* Existing Sections: Warnings & Alerts, Weather Advice */}
           <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.4 }} className="px-6 mt-6 space-y-6">
