@@ -49,7 +49,7 @@ export function DiseaseDetection() {
     try {
       const formData = new FormData();
       // The Flask backend expects the key 'image' for the crop image upload
-      formData.append("image", image); 
+      formData.append("image", image);
 
       // Send a direct POST request to the Flask backend's detect-disease endpoint
       const BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
@@ -92,15 +92,15 @@ export function DiseaseDetection() {
   return (
     <div className="w-full flex-shrink-0 animate-in slide-in-from-right duration-500">
       <div className="mx-6 bg-gradient-to-br from-green-50 to-green-100/50 rounded-[2.5rem] p-8 mt-6 relative overflow-hidden flex flex-col items-center justify-center min-h-[380px] shadow-sm border border-green-100/50">
-        
+
         {/* Background Decorations */}
         <div className="absolute top-0 right-0 w-32 h-32 bg-green-200/30 rounded-full blur-3xl -mr-16 -mt-16" />
         <div className="absolute bottom-0 left-0 w-32 h-32 bg-emerald-200/30 rounded-full blur-3xl -ml-16 -mb-16" />
 
-        <input 
-          type="file" 
-          accept="image/*" 
-          className="hidden" 
+        <input
+          type="file"
+          accept="image/*"
+          className="hidden"
           ref={fileInputRef}
           onChange={handleFileChange}
         />
@@ -116,7 +116,7 @@ export function DiseaseDetection() {
               Upload a clear photo of the affected crop leaf
             </p>
 
-            <button 
+            <button
               onClick={handleUploadClick}
               className="px-8 py-3.5 bg-green-600 text-white rounded-2xl font-bold flex items-center gap-2 shadow-lg shadow-green-600/30 hover:scale-[1.02] active:scale-[0.98] transition-all"
             >
@@ -130,29 +130,29 @@ export function DiseaseDetection() {
               <img src={preview} alt="Crop preview" className="w-full h-full object-cover" />
               {loading && (
                 <div className="absolute inset-0 bg-green-900/40 backdrop-blur-sm flex items-center justify-center">
-                   <div className="flex flex-col items-center gap-3">
-                     <Loader2 className="w-8 h-8 text-white animate-spin" />
-                     <span className="text-xs font-black text-white px-3 py-1 bg-white/20 rounded-full">ANALYZING</span>
-                   </div>
+                  <div className="flex flex-col items-center gap-3">
+                    <Loader2 className="w-8 h-8 text-white animate-spin" />
+                    <span className="text-xs font-black text-white px-3 py-1 bg-white/20 rounded-full">ANALYZING</span>
+                  </div>
                 </div>
               )}
             </div>
 
             {!result && !loading && !error && (
-               <div className="flex gap-3 w-full max-w-[240px]">
-                 <button 
+              <div className="flex gap-3 w-full max-w-[240px]">
+                <button
                   onClick={clearSelection}
                   className="flex-1 py-3.5 bg-white text-gray-500 rounded-2xl font-bold border border-gray-200 hover:bg-gray-50 active:scale-[0.98] transition-all"
-                 >
-                   Cancel
-                 </button>
-                 <button 
+                >
+                  Cancel
+                </button>
+                <button
                   onClick={handleDetect}
                   className="flex-[2] py-3.5 bg-green-600 text-white rounded-2xl font-bold shadow-lg shadow-green-600/30 hover:bg-green-700 active:scale-[0.98] transition-all"
-                 >
-                   Detect Disease
-                 </button>
-               </div>
+                >
+                  Detect Disease
+                </button>
+              </div>
             )}
           </div>
         )}
@@ -167,9 +167,9 @@ export function DiseaseDetection() {
               <p className="text-xs font-bold text-red-700 mt-1">{error}</p>
             </div>
           </div>
-          <button 
-             onClick={clearSelection}
-             className="mt-4 w-full py-4 bg-gray-100 text-gray-500 rounded-2xl font-black text-xs hover:bg-gray-200 transition-colors"
+          <button
+            onClick={clearSelection}
+            className="mt-4 w-full py-4 bg-gray-100 text-gray-500 rounded-2xl font-black text-xs hover:bg-gray-200 transition-colors"
           >
             TRY AGAIN
           </button>
@@ -194,7 +194,7 @@ export function DiseaseDetection() {
                 <p className="text-lg font-black">{result.confidence.toFixed(1)}%</p>
               </div>
             </div>
-            
+
             <div className="p-5 bg-gray-50/50">
               <div className={`p-4 rounded-2xl border shadow-sm ${result.disease.toLowerCase() === 'healthy' ? 'bg-green-50 border-green-100' : 'bg-red-50 border-red-100'}`}>
                 <h4 className={`text-[11px] font-black uppercase tracking-widest flex items-center gap-2 mb-1 ${result.disease.toLowerCase() === 'healthy' ? 'text-green-900' : 'text-red-900'}`}>
@@ -239,10 +239,10 @@ export function DiseaseDetection() {
               )}
             </div>
           </div>
-          
-          <button 
-             onClick={clearSelection}
-             className="w-full py-4 bg-gray-100 text-gray-500 rounded-2xl font-black text-xs hover:bg-gray-200 transition-colors"
+
+          <button
+            onClick={clearSelection}
+            className="w-full py-4 bg-gray-100 text-gray-500 rounded-2xl font-black text-xs hover:bg-gray-200 transition-colors"
           >
             SCAN ANOTHER CROP
           </button>
