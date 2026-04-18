@@ -40,6 +40,9 @@ export default function CropFullDetails() {
    const [loading, setLoading] = useState(true);
    const [hasAgronomicData, setHasAgronomicData] = useState(false);
 
+   const [timerMins, setTimerMins] = useState({ irrigation: 2, fertigation: 2 });
+   const [timeLeft, setTimeLeft] = useState({ irrigation: -1, fertigation: -1 });
+
    useEffect(() => {
       async function loadData() {
          try {
@@ -58,11 +61,50 @@ export default function CropFullDetails() {
       loadData();
    }, [cropId]);
 
+   useEffect(() => {
+      const interval = setInterval(() => {
+         setTimeLeft(prev => {
+            let updated = false;
+            const next = { ...prev };
+            
+            if (next.irrigation > 0) {
+               next.irrigation--;
+               updated = true;
+            } else if (next.irrigation === 0) {
+               cropService.toggleValve('irrigation', false).then(success => {
+                  if (success) setValves(v => ({ ...v, irrigation: false }));
+               });
+               next.irrigation = -1;
+               updated = true;
+            }
+
+            if (next.fertigation > 0) {
+               next.fertigation--;
+               updated = true;
+            } else if (next.fertigation === 0) {
+               cropService.toggleValve('fertigation', false).then(success => {
+                  if (success) setValves(v => ({ ...v, fertigation: false }));
+               });
+               next.fertigation = -1;
+               updated = true;
+            }
+
+            return updated ? next : prev;
+         });
+      }, 1000);
+      return () => clearInterval(interval);
+   }, []);
+
    const handleValveToggle = async (type: 'irrigation' | 'fertigation') => {
       const newStatus = !valves[type];
       const success = await cropService.toggleValve(type, newStatus);
       if (success) {
          setValves(prev => ({ ...prev, [type]: newStatus }));
+         if (newStatus && timerMins[type] > 0) {
+            setTimeLeft(prev => ({ ...prev, [type]: timerMins[type] * 60 }));
+         } else {
+            setTimeLeft(prev => ({ ...prev, [type]: -1 }));
+         }
       }
    };
 
@@ -253,7 +295,7 @@ export default function CropFullDetails() {
 
                <div className="space-y-4">
                   {/* Irrigation Valve */}
-                  <div className="flex items-center justify-between p-6 bg-blue-50/30 rounded-3xl border border-blue-100">
+                  <div className="flex flex-col md:flex-row items-start md:items-center justify-between p-6 bg-blue-50/30 rounded-3xl border border-blue-100 gap-4">
                      <div className="flex items-center gap-4">
                         <div className={`p-3 rounded-2xl ${valves.irrigation ? 'bg-blue-600 shadow-lg shadow-blue-600/30' : 'bg-white shadow-sm border border-blue-100'}`}>
                            <Droplets className={`w-6 h-6 ${valves.irrigation ? 'text-white' : 'text-blue-600'}`} />
@@ -263,19 +305,43 @@ export default function CropFullDetails() {
                            <p className="text-[10px] font-bold text-gray-400 uppercase">Main Field Sector</p>
                         </div>
                      </div>
-                     <button
-                        onClick={() => handleValveToggle('irrigation')}
-                        className={`px-6 py-2.5 rounded-full text-xs font-black transition-all ${valves.irrigation
-                              ? 'bg-red-50 text-red-600 hover:bg-red-100'
-                              : 'bg-blue-600 text-white hover:bg-blue-700 shadow-lg shadow-blue-600/20'
-                           }`}
-                     >
-                        {valves.irrigation ? 'STOP' : 'START'}
-                     </button>
+                     <div className="flex items-center gap-3 w-full md:w-auto justify-end">
+                        {valves.irrigation && timeLeft.irrigation > -1 ? (
+                           <div className="text-xs font-black text-blue-600 bg-white px-3 py-1.5 rounded-lg border border-blue-100 shadow-sm shadow-blue-600/5">
+                              {Math.floor(timeLeft.irrigation / 60)}:{(timeLeft.irrigation % 60).toString().padStart(2, '0')} min left
+                           </div>
+                        ) : (
+                           <label className="flex items-center gap-2">
+                              <span className="text-[10px] font-bold text-gray-400 uppercase">Timer:</span>
+                              <select 
+                                 className="text-xs font-bold text-gray-600 bg-white border border-gray-200 rounded-lg px-2 py-1.5 outline-none cursor-pointer focus:ring-2 focus:ring-blue-600/20"
+                                 value={timerMins.irrigation}
+                                 onChange={(e) => setTimerMins(prev => ({...prev, irrigation: parseInt(e.target.value)}))}
+                                 disabled={valves.irrigation}
+                              >
+                                 <option value={0}>Continuous</option>
+                                 <option value={1}>1 min</option>
+                                 <option value={2}>2 min</option>
+                                 <option value={3}>3 min</option>
+                                 <option value={5}>5 min</option>
+                                 <option value={10}>10 min</option>
+                              </select>
+                           </label>
+                        )}
+                        <button
+                           onClick={() => handleValveToggle('irrigation')}
+                           className={`px-6 py-2.5 rounded-full text-xs font-black transition-all ${valves.irrigation
+                                 ? 'bg-red-50 text-red-600 hover:bg-red-100 border border-red-100'
+                                 : 'bg-blue-600 text-white hover:bg-blue-700 shadow-lg shadow-blue-600/20'
+                              }`}
+                        >
+                           {valves.irrigation ? 'STOP' : 'START'}
+                        </button>
+                     </div>
                   </div>
 
                   {/* Fertigation Valve */}
-                  <div className="flex items-center justify-between p-6 bg-purple-50/30 rounded-3xl border border-purple-100">
+                  <div className="flex flex-col md:flex-row items-start md:items-center justify-between p-6 bg-purple-50/30 rounded-3xl border border-purple-100 gap-4">
                      <div className="flex items-center gap-4">
                         <div className={`p-3 rounded-2xl ${valves.fertigation ? 'bg-purple-600 shadow-lg shadow-purple-600/30' : 'bg-white shadow-sm border border-purple-100'}`}>
                            <FlaskConical className={`w-6 h-6 ${valves.fertigation ? 'text-white' : 'text-purple-600'}`} />
@@ -285,15 +351,39 @@ export default function CropFullDetails() {
                            <p className="text-[10px] font-bold text-gray-400 uppercase">Nutrient Injector</p>
                         </div>
                      </div>
-                     <button
-                        onClick={() => handleValveToggle('fertigation')}
-                        className={`px-6 py-2.5 rounded-full text-xs font-black transition-all ${valves.fertigation
-                              ? 'bg-red-50 text-red-600 hover:bg-red-100'
-                              : 'bg-purple-600 text-white hover:bg-purple-700 shadow-lg shadow-purple-600/20'
-                           }`}
-                     >
-                        {valves.fertigation ? 'STOP' : 'START'}
-                     </button>
+                     <div className="flex items-center gap-3 w-full md:w-auto justify-end">
+                        {valves.fertigation && timeLeft.fertigation > -1 ? (
+                           <div className="text-xs font-black text-purple-600 bg-white px-3 py-1.5 rounded-lg border border-purple-100 shadow-sm shadow-purple-600/5">
+                              {Math.floor(timeLeft.fertigation / 60)}:{(timeLeft.fertigation % 60).toString().padStart(2, '0')} min left
+                           </div>
+                        ) : (
+                           <label className="flex items-center gap-2">
+                              <span className="text-[10px] font-bold text-gray-400 uppercase">Timer:</span>
+                              <select 
+                                 className="text-xs font-bold text-gray-600 bg-white border border-gray-200 rounded-lg px-2 py-1.5 outline-none cursor-pointer focus:ring-2 focus:ring-purple-600/20"
+                                 value={timerMins.fertigation}
+                                 onChange={(e) => setTimerMins(prev => ({...prev, fertigation: parseInt(e.target.value)}))}
+                                 disabled={valves.fertigation}
+                              >
+                                 <option value={0}>Continuous</option>
+                                 <option value={1}>1 min</option>
+                                 <option value={2}>2 min</option>
+                                 <option value={3}>3 min</option>
+                                 <option value={5}>5 min</option>
+                                 <option value={10}>10 min</option>
+                              </select>
+                           </label>
+                        )}
+                        <button
+                           onClick={() => handleValveToggle('fertigation')}
+                           className={`px-6 py-2.5 rounded-full text-xs font-black transition-all ${valves.fertigation
+                                 ? 'bg-red-50 text-red-600 hover:bg-red-100 border border-red-100'
+                                 : 'bg-purple-600 text-white hover:bg-purple-700 shadow-lg shadow-purple-600/20'
+                              }`}
+                        >
+                           {valves.fertigation ? 'STOP' : 'START'}
+                        </button>
+                     </div>
                   </div>
                </div>
             </div>
